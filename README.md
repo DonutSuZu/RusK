@@ -125,8 +125,13 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 - ゲームのキャラ (骨格・アニメーション・当たり判定) はそのまま動かし、見た目だけを VRM にする
   - 動き: ゲームの骨の回転を、基準の姿勢 (T ポーズ) からの差分として毎フレーム VRM に写す
     (Unity の AvatarBuilder / HumanPoseHandler は IL2CPP 経由だとクラッシュするので使っていない)
-  - 材質: 透明部分の切り抜きのため URP Unlit で描く (ゲームのトゥーンシェーダーでは VRM の透明部分を扱えない)
+  - 材質: ゲームのトゥーンシェーダー (Custom/ToonLit_Crt) で、ゲームのキャラと同じ陰影・色調で描く。
+    透明部分はキャラ用の切り抜き (`_USEALPHACLIPPING_ON` + `_CharacterAlphaClipMap`、白い所が消える地図なので透明度を反転して渡す)。
+    両面表示の材質は裏向きの面をメッシュに足し (Outline パスは止める)、影は裏向きの面の無い「影だけ」のメッシュで落とす
   - 揺れ物 (SpringBone) と自動のまばたきに対応。武器は VRM の手の位置に合わせる
+  - 操作キャラだけでなく、タイトル画面・キャラクター画面・装備画面の見せるためのモデル (`CharacterShowController`) にも付ける。
+    どのキャラかは `InitialSetting(id)` で受け取り、動きは `CinemachineBrain.LateUpdate` の後で写す (タイトル画面では CameraController が動かない)。
+    元の体を描かないと Animator がアニメーションを止めるので、付けている間は `AnimatorCullingMode.AlwaysAnimate` にする
 - 設定は `RusK\data\model\assignments.txt`。ステージ移動などでキャラが作り直されても付け直す
 - **Model > ModelLab** はデバッグ用 (モデルの作りの書き出し・キャラ同士の見た目の入れ替え・切り抜き方式の比較)
 

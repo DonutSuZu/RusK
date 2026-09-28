@@ -213,6 +213,9 @@ internal sealed class Retargeter
 
     public int PairCount => _pairs.Count;
 
+    /// <summary>動きを写しているゲームの骨 (調査用)</summary>
+    public IEnumerable<Transform> MappedSources => _pairs.Select(p => p.src);
+
     // 骨に付いている物 (武器・装備品・エフェクト) を VRM の同じ骨の位置に合わせてずらす
     private readonly List<(Transform src, Transform dst)> _attachBones = new();
     private readonly Dictionary<IntPtr, (Transform t, Vector3 baseLocal, Vector3 written)> _attached = new();

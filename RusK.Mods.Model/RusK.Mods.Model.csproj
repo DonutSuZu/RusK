@@ -4,7 +4,7 @@
   <PropertyGroup>
     <AssemblyName>RuskModel</AssemblyName>
     <RootNamespace>RusK.Mods.Model</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.2.5</Version>
     <DeployDir>$(RuskGameDir)\mods</DeployDir>
   </PropertyGroup>
 
@@ -12,6 +12,8 @@
     <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
     <Reference Include="$(InteropDir)\UnityEngine.AnimationModule.dll" Private="false" />
     <Reference Include="$(InteropDir)\Animancer.dll" Private="false" />
+    <!-- 見せるためのモデルの更新 (CinemachineBrain.LateUpdate の後) -->
+    <Reference Include="$(InteropDir)\Cinemachine.dll" Private="false" />
     <!-- VRM のテクスチャ (png / jpg) の読み込み -->
     <Reference Include="$(InteropDir)\UnityEngine.ImageConversionModule.dll" Private="false" />
   </ItemGroup>

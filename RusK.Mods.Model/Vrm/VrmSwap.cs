@@ -23,8 +23,11 @@ internal static class VrmSwap
 {
     private sealed class Entry
     {
-        public IntPtr Key;
-        public PlayerController Player;
+        public IntPtr Key;            // キャラの根元 (Transform) のポインタ
+        public Transform Root;        // キャラの根元 (骨格 Bip001 の親)
+        public long Id;               // キャラの ID
+        public PlayerController Player; // 操作キャラなら。タイトル画面・キャラクター画面の見せるためのモデルは null
+        public bool IsShow;           // 見せるためのモデル (CharacterShowController)
         public string File;
         public VrmModel Model;
         public Retargeter Retargeter;
@@ -33,6 +36,9 @@ internal static class VrmSwap
         public readonly List<Renderer> Shadows = new();
         public MaterialController Materials;
         public (bool shown, bool firstPerson) LastState = (true, false);
+        /// <summary>元のキャラの Animator と、付ける前のカリングの設定 (外すときに戻す)</summary>
+        public Animator Animator;
+        public AnimatorCullingMode OriginalCulling;
     }
 
     private static readonly Dictionary<IntPtr, Entry> Entries = new();
@@ -66,7 +72,29 @@ internal static class VrmSwap
     public static IEnumerable<VrmModel> Models() => Entries.Values.Where(e => e.Model != null).Select(e => e.Model).ToList();
 
     public static string AppliedFile(PlayerController p) =>
-        p != null && Entries.TryGetValue(p.Pointer, out var e) ? e.Model.Title : null;
+        p != null && Entries.TryGetValue(KeyOf(p), out var e) ? e.Model.Title : null;
+
+    private static IntPtr KeyOf(PlayerController p) => p.transform.Pointer;
+
+    /// <summary>見せるためのモデル (CharacterShowController) → キャラの ID (InitialSetting で渡されたもの)</summary>
+    private static readonly Dictionary<IntPtr, long> ShowIds = new();
+
+    /// <summary>CharacterShowController.InitialSetting の後に呼ばれる (VrmShowPatch)</summary>
+    public static void OnShowInitialized(CharacterShowController show, double id)
+    {
+        if (show == null) return;
+        long newId = (long)Math.Round(id);
+        ShowIds[show.Pointer] = newId;
+        // 同じモデルを別のキャラに使い回したら、付けていた VRM を外して付け直す
+        var key = show.transform.Pointer;
+        if (Entries.TryGetValue(key, out var e) && e.Id != newId)
+        {
+            Entries.Remove(key);
+            Cleanup(e);
+        }
+        Failed.Remove(key);
+        _nextAuto = 0f;
+    }
 
     /// <summary>このキャラに設定されている VRM のファイル名 (無ければ null)</summary>
     public static string AssignedFile(PlayerController p)
@@ -118,22 +146,32 @@ internal static class VrmSwap
         var rel = Path.GetRelativePath(ModelsDir, file);
         Assignments[Id(player)] = rel;
         SaveAssignments();
-        Failed.Remove(player.Pointer);
-        Apply(player, file);
+        RestoreId(Id(player));
+        Apply(player.transform, Id(player), player, file);
     }
 
-    /// <summary>キャラの ID で設定する (file が null なら外す)。そのキャラが今の操作キャラなら、すぐに付け替える</summary>
+    /// <summary>
+    /// キャラの ID で設定する (file が null なら外す)。そのキャラに付けている VRM (操作キャラ・見せるためのモデル) は
+    /// 外して、自動の付け直しで新しい VRM を付ける
+    /// </summary>
     public static void AssignById(long id, string file)
     {
         if (file == null) Assignments.Remove(id);
         else Assignments[id] = Path.GetRelativePath(ModelsDir, file);
         SaveAssignments();
+        RestoreId(id);
+        _nextAuto = 0f;
+    }
 
-        var p = PlayerRef.Current;
-        if (p == null || Id(p) != id) return;
-        Failed.Remove(p.Pointer);
-        if (file == null) Restore(p);
-        else Apply(p, file);
+    /// <summary>このキャラの ID に付けている VRM をすべて外す (次の自動の付け直しを許す)</summary>
+    private static void RestoreId(long id)
+    {
+        foreach (var e in Entries.Values.Where(e => e.Id == id).ToList())
+        {
+            Entries.Remove(e.Key);
+            Cleanup(e);
+        }
+        Failed.Clear();
     }
 
     /// <summary>キャラの ID に設定されている VRM のファイル名 (無ければ null)</summary>
@@ -155,21 +193,30 @@ internal static class VrmSwap
         if (player == null) return;
         Assignments.Remove(Id(player));
         SaveAssignments();
-        Restore(player);
+        RestoreId(Id(player));
     }
 
     // ------------------------------------------------------------------ 付ける / 外す
 
-    private static void Apply(PlayerController player, string file)
+    /// <summary>
+    /// キャラ (根元 root の下に骨格 Bip001 と体のメッシュがあるもの) に VRM を付ける。
+    /// 操作キャラも、タイトル画面・キャラクター画面の見せるためのモデルも、骨格が同じなので同じ仕組みで付けられる
+    /// </summary>
+    private static void Apply(Transform character, long id, PlayerController player, string file)
     {
         var log = ModelLab.Ctx?.Log;
-        Restore(player);
-        ModelSwap.Restore(player);
+        var key = character.Pointer;
+        if (Entries.TryGetValue(key, out var old))
+        {
+            Entries.Remove(key);
+            Cleanup(old);
+        }
+        if (player != null) ModelSwap.Restore(player);
 
-        var entry = new Entry { Key = player.Pointer, Player = player, File = file };
+        var entry = new Entry { Key = key, Root = character, Id = id, Player = player, IsShow = player == null, File = file };
         try
         {
-            var body = BodyRenderers(player).ToList();
+            var body = BodyRenderers(character).ToList();
             if (body.Count == 0) throw new InvalidOperationException("キャラの体のメッシュが見つかりません");
 
             // 材質の元: ゲームの体の材質 (不透明) と、頬の赤み (半透明)
@@ -187,13 +234,14 @@ internal static class VrmSwap
 
             // 基準の姿勢 (VRM は読み込み直後の T ポーズ、根元が原点のうちに覚える)
             var dstRest = Humanoid.VrmRest(entry.Model);
-            var srcRest = Humanoid.BipedRest(player.transform, body);
+            var srcRest = Humanoid.BipedRest(character, body);
 
             // キャラの下には置かない: ゲームの材質の管理 (MaterialController) がキャラの下の描画部品を集めて
             // 材質を書き換える (ステージの移動で VRM の縁が黒くなっていた)。位置と向きだけ毎フレーム合わせる。
             // ステージの移動で消えないようにしておく (キャラが作り直されたら付け直す)
             Object.DontDestroyOnLoad(root.gameObject);
-            root.SetPositionAndRotation(player.transform.position, player.transform.rotation);
+            root.SetPositionAndRotation(character.position, character.rotation);
+            root.localScale = character.lossyScale; // 見せるためのモデルは大きさを変えて置かれていることがある
 
             // 描画のレイヤー・影はゲームの体に合わせる
             int layer = body[0].gameObject.layer;
@@ -206,9 +254,9 @@ internal static class VrmSwap
                 r.receiveShadows = body[0].receiveShadows;
             }
             int shadows = AddShadowCasters(entry.Model, layer, entry.Shadows);
-            try { entry.Materials = player.GetMaterialController(); } catch { }
+            try { entry.Materials = player != null ? player.GetMaterialController() : null; } catch { }
 
-            entry.Retargeter = new Retargeter(player.transform, srcRest, root, dstRest);
+            entry.Retargeter = new Retargeter(character, srcRest, root, dstRest);
 
             // 元の体を隠す。描画だけを止める (forceRenderingOff) ので、ゲームが演出で体を表示・非表示にした状態
             // (enabled) はそのまま残り、VRM の表示をそれに合わせられる
@@ -218,15 +266,24 @@ internal static class VrmSwap
                 entry.Hidden.Add(r);
             }
 
-            Entries[player.Pointer] = entry;
+            // 元の体を描かないと、Animator が「見えていないキャラ」としてアニメーションを止めることがある
+            // (見せるためのモデルは呼吸などの動きが止まっていた)。付けている間は常にアニメーションさせる
+            entry.Animator = character.GetComponent<Animator>();
+            if (entry.Animator != null)
+            {
+                entry.OriginalCulling = entry.Animator.cullingMode;
+                entry.Animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            }
+
+            Entries[key] = entry;
             entry.Retargeter.Update();
             entry.Model.Springs?.Reset();
-            log?.Info($"Model: {CharacterNames.Get(player.GetPlayerId())} の見た目を VRM '{entry.Model.Title}' に " +
+            log?.Info($"Model: {CharacterNames.Get(id)}{(entry.IsShow ? " (画面に見せるモデル)" : "")} の見た目を VRM '{entry.Model.Title}' に " +
                       $"(動きを写す骨 {entry.Retargeter.PairCount} 本、影のメッシュ {shadows} 個)");
         }
         catch (Exception e)
         {
-            Failed.Add(player.Pointer);
+            Failed.Add(key);
             log?.Error($"Model: VRM の読み込みに失敗 ({Path.GetFileName(file)}): {e}");
             ModelLab.Ctx?.Notify($"VRM を読み込めませんでした: {e.Message}", RusK.API.NotifyLevel.Error);
             Cleanup(entry);
@@ -235,8 +292,8 @@ internal static class VrmSwap
 
     public static void Restore(PlayerController player)
     {
-        if (player == null || !Entries.TryGetValue(player.Pointer, out var e)) return;
-        Entries.Remove(player.Pointer);
+        if (player == null || !Entries.TryGetValue(KeyOf(player), out var e)) return;
+        Entries.Remove(e.Key);
         Cleanup(e);
     }
 
@@ -250,6 +307,7 @@ internal static class VrmSwap
     {
         foreach (var r in e.Hidden)
             if (r != null) r.forceRenderingOff = false;
+        if (e.Animator != null) e.Animator.cullingMode = e.OriginalCulling;
         e.Retargeter?.RestoreAttachments();
         e.Model?.Destroy();
     }
@@ -320,13 +378,13 @@ internal static class VrmSwap
     }
 
     /// <summary>キャラの体のメッシュ (装備・武器は除く)</summary>
-    private static IEnumerable<SkinnedMeshRenderer> BodyRenderers(PlayerController p)
+    private static IEnumerable<SkinnedMeshRenderer> BodyRenderers(Transform character)
     {
-        foreach (var r in p.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        foreach (var r in character.GetComponentsInChildren<SkinnedMeshRenderer>(true))
         {
             if (!r.enabled) continue;
             bool equip = false;
-            for (var c = r.transform; c != null && c != p.transform; c = c.parent)
+            for (var c = r.transform; c != null && c != character; c = c.parent)
                 if (c.name.StartsWith("WeaponHolder") || c.name.StartsWith("Equip_") || c.name.StartsWith("RusK_"))
                     equip = true;
             if (!equip) yield return r;
@@ -350,7 +408,7 @@ internal static class VrmSwap
         // MaterialController の InTelepoting() は普段から True のことがある (テレポートの演出中という意味ではない) ので使わない。
         // 透明度 (GetLastAppliedCharacterAlpha) も、一度も変えていないときの値が分からないので使わない
 
-        bool firstPerson = RuskShared.Get("camera.hideBody", false) && PlayerRef.Current?.Pointer == e.Key;
+        bool firstPerson = !e.IsShow && RuskShared.Get("camera.hideBody", false) && PlayerRef.Current?.transform.Pointer == e.Key;
 
         // 調査用: 表示の状態が変わったら理由をログに出す
         var state = (shown, firstPerson);
@@ -373,22 +431,46 @@ internal static class VrmSwap
 
     // ------------------------------------------------------------------ 毎フレーム (CameraController.LateUpdate の後)
 
-    public static void LateTick()
+    private static int _lastShowFrame = -1;
+
+    /// <summary>調査用: 動きを記録するキャラ (見せるためのモデルを優先) と、VRM に写している骨</summary>
+    public static (Transform root, HashSet<IntPtr> mapped, string name)? RecordTarget()
     {
-        foreach (var e in Entries.Values.ToList())
+        var e = Entries.Values.Where(x => x.Root != null && x.Root.gameObject.activeInHierarchy)
+            .OrderByDescending(x => x.IsShow).FirstOrDefault();
+        if (e == null) return null;
+        var mapped = new HashSet<IntPtr>(e.Retargeter.MappedSources.Where(t => t != null).Select(t => t.Pointer));
+        return (e.Root, mapped, e.Root.name);
+    }
+
+    /// <summary>
+    /// 毎フレーム、アニメーションの後に呼ぶ。shows = false: 操作キャラ (CameraController.LateUpdate の後)。
+    /// shows = true: 見せるためのモデル (CinemachineBrain.LateUpdate の後。タイトル画面では CameraController が動かないため)
+    /// </summary>
+    public static void LateTick(bool shows = false)
+    {
+        if (shows)
         {
-            if (e.Player == null || e.Model?.Root == null)
+            if (Time.frameCount == _lastShowFrame) return; // カメラが複数あっても 1 フレームに 1 回
+            _lastShowFrame = Time.frameCount;
+        }
+        foreach (var e in Entries.Values.Where(x => x.IsShow == shows).ToList())
+        {
+            if (e.Root == null || (!e.IsShow && e.Player == null) || e.Model?.Root == null)
             {
                 // キャラが作り直された (ステージの移動など)。次の自動の付け直しで新しいキャラに付ける
                 Entries.Remove(e.Key);
                 Cleanup(e);
                 continue;
             }
-            // キャラが控えに回って非表示のときは VRM も隠す
-            bool active = e.Player.gameObject.activeInHierarchy;
+            // キャラが控えに回って非表示のとき (見せるためのモデルは画面を閉じたとき) は VRM も隠す
+            bool active = e.Root.gameObject.activeInHierarchy;
             if (e.Model.Root.activeSelf != active) e.Model.Root.SetActive(active);
             if (!active) continue;
-            e.Model.Root.transform.SetPositionAndRotation(e.Player.transform.position, e.Player.transform.rotation);
+            var vrmRoot = e.Model.Root.transform;
+            vrmRoot.SetPositionAndRotation(e.Root.position, e.Root.rotation);
+            var scale = e.Root.lossyScale;
+            if (vrmRoot.localScale != scale) vrmRoot.localScale = scale;
 
             UpdateVisibility(e);
 
@@ -399,6 +481,7 @@ internal static class VrmSwap
                 // 揺れ物と表情は、動きを写した後に (ゲームの時間の流れ = スローや一時停止に合わせる)
                 e.Model.Springs?.Update(Time.deltaTime);
                 e.Model.Expressions?.Update(Time.deltaTime);
+                MotionRecorder.Sample(e.Root);
             }
             catch (Exception ex)
             {
@@ -411,15 +494,14 @@ internal static class VrmSwap
         AutoApply();
     }
 
-    /// <summary>1 秒に 1 回、今のキャラに設定された VRM が付いていなければ付ける</summary>
+    /// <summary>
+    /// 1 秒に 1 回、設定された VRM が付いていないキャラに付ける。
+    /// 今の操作キャラと、タイトル画面・キャラクター画面・装備画面の見せるためのモデル (CharacterShowController)
+    /// </summary>
     private static void AutoApply()
     {
         if (Assignments.Count == 0 || Time.unscaledTime < _nextAuto) return;
         _nextAuto = Time.unscaledTime + 1f;
-
-        var p = PlayerRef.Current;
-        if (p == null || !p.gameObject.activeInHierarchy || Entries.ContainsKey(p.Pointer) || Failed.Contains(p.Pointer)) return;
-        if (!Assignments.TryGetValue(Id(p), out var rel)) return;
 
         try
         {
@@ -428,14 +510,49 @@ internal static class VrmSwap
         }
         catch { }
 
+        var p = PlayerRef.Current;
+        if (p != null && p.gameObject.activeInHierarchy) TryAuto(p.transform, Id(p), p);
+
+        foreach (var show in Resources.FindObjectsOfTypeAll<CharacterShowController>())
+        {
+            if (show == null || show.gameObject.scene.name == null || !show.gameObject.activeInHierarchy) continue;
+            long id = ShowIds.TryGetValue(show.Pointer, out var known) ? known : GuessId(show.gameObject.name);
+            if (id < 0) continue;
+            TryAuto(show.transform, id, null);
+        }
+    }
+
+    private static void TryAuto(Transform character, long id, PlayerController player)
+    {
+        var key = character.Pointer;
+        if (Entries.ContainsKey(key) || Failed.Contains(key)) return;
+        if (!Assignments.TryGetValue(id, out var rel)) return;
         var file = Path.Combine(ModelsDir, rel);
         if (!System.IO.File.Exists(file))
         {
-            Failed.Add(p.Pointer);
+            Failed.Add(key);
             ModelLab.Ctx?.Log.Warning($"Model: 設定された VRM がありません: {file}");
             return;
         }
-        Apply(p, file);
+        Apply(character, id, player, file);
+    }
+
+    /// <summary>
+    /// 見せるためのモデルの名前 (例: WhiteLight_show_Instance_0) から、キャラの ID を推測する。
+    /// InitialSetting を見逃したとき (Custom Model を読み込み直したときなど) 用。キャラのプレハブ名 (WhiteLight_skin) の頭と比べる
+    /// </summary>
+    private static long GuessId(string name)
+    {
+        int cut = name.IndexOf('_');
+        string head = cut > 0 ? name.Substring(0, cut) : name;
+        foreach (var m in ModelSwap.Characters())
+        {
+            string prefab = Path.GetFileNameWithoutExtension(m.prefabPath ?? "");
+            int c = prefab.IndexOf('_');
+            string ph = c > 0 ? prefab.Substring(0, c) : prefab;
+            if (string.Equals(ph, head, StringComparison.OrdinalIgnoreCase)) return (long)Math.Round(m.id);
+        }
+        return -1;
     }
 
     /// <summary>調査用: 材質の元にしたゲームの材質の設定を一度だけログに出す</summary>

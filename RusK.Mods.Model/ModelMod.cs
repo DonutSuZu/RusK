@@ -14,7 +14,7 @@ namespace RusK.Mods.Model;
 /// ゲームのキャラ (骨格・アニメーション・当たり判定) はそのまま動かし、見た目だけを VRM にする。
 /// Model Lab はデバッグ用 (モデルの作りの書き出し・キャラ同士の見た目の入れ替え・切り抜きの方式の比較)。
 /// </summary>
-[RuskMod("model", "Custom Model", "1.0.0",
+[RuskMod("model", "Custom Model", "1.2.5",
     Author = "you",
     GameVersion = "0.0.1872",
     Description = "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)")]
@@ -26,6 +26,8 @@ public sealed class ModelMod : RuskMod
         Vrm.VrmEnv.Ctx = Context;
         Vrm.VrmSwap.LoadAssignments();
         Context.Harmony.PatchAll(typeof(Vrm.VrmLatePatch));
+        Context.Harmony.PatchAll(typeof(Vrm.VrmShowPatch));
+        Context.Harmony.PatchAll(typeof(Vrm.VrmBrainPatch));
         var main = new CustomModelWindow();
         Context.RegisterWindow(main);
         Context.RegisterModule(new CustomModelModule(main));
@@ -88,6 +90,9 @@ public sealed class ModelLabWindow : RuskWindow
             RuskStyle.TextDim, small: true);
         gui.Header("今のキャラ", p != null ? CharacterNames.Get(p.GetPlayerId()) : "(なし)");
         if (gui.Button("調べて書き出す", enabled: p != null, accent: true)) ModelLab.Report();
+        if (gui.Button("画面のキャラを調べる (タイトル・キャラ画面など)")) ModelLab.ScanScene();
+        if (gui.Button(MotionRecorder.Recording ? "動きを記録中..." : "VRM のキャラの動きを 3 秒記録する", enabled: !MotionRecorder.Recording))
+            MotionRecorder.Start();
         if (ModelLab.LastFile != null)
             gui.Label($"書き出し: {Path.GetFileName(ModelLab.LastFile)}", RuskStyle.TextDim, small: true);
 
@@ -241,6 +246,79 @@ internal static class ModelLab
             foreach (var mm in model.Masks)
                 if (mm.Material != null)
                     sb.AppendLine((mm.Solid ? "[透明なし] " : "") + Describe(mm.Material));
+    }
+
+    /// <summary>
+    /// プレイヤー以外のキャラ (タイトル画面・キャラクター画面・装備画面の見せるためのモデル) を調べて書き出す。
+    /// Custom Model をこれらにも付けるための下調べ
+    /// </summary>
+    public static void ScanScene()
+    {
+        var sb = new StringBuilder();
+        string scenes = "";
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            scenes += UnityEngine.SceneManagement.SceneManager.GetSceneAt(i).name + " ";
+        sb.AppendLine($"シーン: {scenes}/ プレイヤー: {(PlayerRef.Current != null ? PlayerRef.Current.gameObject.name : "なし")}");
+        sb.AppendLine();
+
+        Section(sb, "骨格 (Bip001) を持つ Animator", () =>
+        {
+            foreach (var a in Resources.FindObjectsOfTypeAll<Animator>())
+            {
+                if (a == null || a.gameObject.scene.name == null) continue;
+                var bip = FindChild(a.transform, "Bip001", 3);
+                if (bip == null) continue;
+                var t = a.transform;
+                string path = t.name;
+                for (var c = t.parent; c != null; c = c.parent) path = c.name + "/" + path;
+                bool player = a.GetComponentInParent<PlayerController>(true) != null;
+                string comps = string.Join(", ", a.GetComponents<Component>().Select(c => c.GetIl2CppType().Name));
+                string parentComps = t.parent != null
+                    ? string.Join(", ", t.parent.GetComponents<Component>().Select(c => c.GetIl2CppType().Name)) : "-";
+                sb.AppendLine($"'{path}' 表示={a.gameObject.activeInHierarchy} レイヤー={LayerMask.LayerToName(a.gameObject.layer)}({a.gameObject.layer}) " +
+                              $"シーン='{a.gameObject.scene.name}' プレイヤー={player} avatar='{a.avatar?.name}' " +
+                              $"controller='{a.runtimeAnimatorController?.name}'");
+                sb.AppendLine($"    部品: {comps}");
+                sb.AppendLine($"    親の部品: {parentComps}");
+                foreach (var r in a.GetComponentsInChildren<SkinnedMeshRenderer>(true).Take(6))
+                    sb.AppendLine($"    メッシュ '{r.name}' 表示={r.enabled && r.gameObject.activeInHierarchy} 材質=[" +
+                                  string.Join(", ", r.sharedMaterials.Where(m => m != null).Select(m => $"{m.name}<{m.shader?.name}>")) + "]");
+            }
+        });
+
+        Section(sb, "カメラ", () =>
+        {
+            foreach (var c in Resources.FindObjectsOfTypeAll<Camera>())
+            {
+                if (c == null || c.gameObject.scene.name == null) continue;
+                var layers = Enumerable.Range(0, 32).Where(l => (c.cullingMask & (1 << l)) != 0)
+                    .Select(l => LayerMask.LayerToName(l)).Where(n => !string.IsNullOrEmpty(n));
+                sb.AppendLine($"'{c.name}' 有効={c.enabled && c.gameObject.activeInHierarchy} 深さ={c.depth} " +
+                              $"描き先={(c.targetTexture != null ? c.targetTexture.name : "画面")} 映すレイヤー=[{string.Join(" ", layers)}]");
+            }
+        });
+
+        try
+        {
+            Directory.CreateDirectory(Ctx.DataDirectory);
+            LastFile = Path.Combine(Ctx.DataDirectory, $"scene_{DateTime.Now:HHmmss}.txt");
+            File.WriteAllText(LastFile, sb.ToString(), new UTF8Encoding(false));
+            Ctx.Notify("画面のキャラを書き出しました", NotifyLevel.Success);
+            Ctx.Log.Info($"Model Lab: {LastFile}");
+        }
+        catch (Exception e) { Ctx.Log.Error($"Model Lab: 書き出しに失敗: {e}"); }
+    }
+
+    private static Transform FindChild(Transform t, string name, int depth)
+    {
+        if (t.name == name) return t;
+        if (depth <= 0) return null;
+        for (int i = 0; i < t.childCount; i++)
+        {
+            var f = FindChild(t.GetChild(i), name, depth - 1);
+            if (f != null) return f;
+        }
+        return null;
     }
 
     private static void Section(StringBuilder sb, string title, Action body)
@@ -437,6 +515,91 @@ internal static class PassUi
                 ModelLab.Ctx?.Log.Info($"Model Lab: パス '{name}' (LightMode={mode}) を{(off ? "戻しました" : "止めました")}");
             }
         }
+    }
+}
+
+/// <summary>
+/// 調査用: VRM を付けたキャラ (元のゲームのキャラ) の全部の骨の動きを 3 秒記録して、よく動く骨を書き出す。
+/// 呼吸のような細かい動きが、どの骨の回転・位置・大きさで作られているか調べる
+/// </summary>
+internal static class MotionRecorder
+{
+    private sealed class Track
+    {
+        public Transform T;
+        public string Path;
+        public bool Mapped;
+        public Quaternion Rot0;
+        public Vector3 Pos0, Scale0;
+        public float MaxAngle, MaxPos, MaxScale;
+    }
+
+    private static System.Collections.Generic.List<Track> _tracks;
+    private static Transform _root;
+    private static float _end;
+    public static bool Recording => _tracks != null;
+
+    public static void Start()
+    {
+        var target = Vrm.VrmSwap.RecordTarget();
+        if (target == null) { ModelLab.Ctx?.Notify("VRM を付けたキャラがいません", NotifyLevel.Warning); return; }
+        var (root, mapped, _) = target.Value;
+        _root = root;
+        _tracks = new System.Collections.Generic.List<Track>();
+        foreach (var t in root.GetComponentsInChildren<Transform>(true))
+        {
+            string path = t.name;
+            for (var c = t.parent; c != null && c != root; c = c.parent) path = c.name + "/" + path;
+            _tracks.Add(new Track
+            {
+                T = t, Path = path, Mapped = mapped.Contains(t.Pointer),
+                Rot0 = t.localRotation, Pos0 = t.localPosition, Scale0 = t.localScale,
+            });
+        }
+        _end = Time.unscaledTime + 3f;
+        ModelLab.Ctx?.Notify($"{root.name} の動きを 3 秒記録します", NotifyLevel.Info);
+    }
+
+    /// <summary>VrmSwap.LateTick から毎フレーム (アニメーションの後) 呼ばれる</summary>
+    public static void Sample(Transform root)
+    {
+        if (_tracks == null || root == null || root.Pointer != _root.Pointer) return;
+        foreach (var k in _tracks)
+        {
+            if (k.T == null) continue;
+            k.MaxAngle = Mathf.Max(k.MaxAngle, Quaternion.Angle(k.Rot0, k.T.localRotation));
+            k.MaxPos = Mathf.Max(k.MaxPos, (k.T.localPosition - k.Pos0).magnitude);
+            k.MaxScale = Mathf.Max(k.MaxScale, (k.T.localScale - k.Scale0).magnitude);
+        }
+        if (Time.unscaledTime >= _end) Finish();
+    }
+
+    private static void Finish()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"キャラ: {_root.name} (3 秒間の最大の変化。★ = VRM に動きを写している骨)");
+        sb.AppendLine();
+        sb.AppendLine("===== 回転 (度) =====");
+        foreach (var k in _tracks.Where(k => k.MaxAngle > 0.05f).OrderByDescending(k => k.MaxAngle).Take(60))
+            sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxAngle,7:0.00}  {k.Path}");
+        sb.AppendLine();
+        sb.AppendLine("===== 位置 (m) =====");
+        foreach (var k in _tracks.Where(k => k.MaxPos > 0.0001f).OrderByDescending(k => k.MaxPos).Take(40))
+            sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxPos,8:0.0000}  {k.Path}");
+        sb.AppendLine();
+        sb.AppendLine("===== 大きさ =====");
+        foreach (var k in _tracks.Where(k => k.MaxScale > 0.0001f).OrderByDescending(k => k.MaxScale).Take(40))
+            sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxScale,8:0.0000}  {k.Path}");
+        try
+        {
+            Directory.CreateDirectory(ModelLab.Ctx.DataDirectory);
+            var file = Path.Combine(ModelLab.Ctx.DataDirectory, $"motion_{DateTime.Now:HHmmss}.txt");
+            File.WriteAllText(file, sb.ToString(), new UTF8Encoding(false));
+            ModelLab.LastFile = file;
+            ModelLab.Ctx.Notify("動きを書き出しました", NotifyLevel.Success);
+        }
+        catch (Exception e) { ModelLab.Ctx?.Log.Error($"Model Lab: 書き出しに失敗: {e}"); }
+        _tracks = null;
     }
 }
 
