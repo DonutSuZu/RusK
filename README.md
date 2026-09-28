@@ -133,6 +133,7 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
   - 操作キャラだけでなく、タイトル画面・キャラクター画面・装備画面の見せるためのモデル (`CharacterShowController`) にも付ける。
     どのキャラかは `InitialSetting(id)` で受け取り、動きは `CinemachineBrain.LateUpdate` の後で写す (タイトル画面では CameraController が動かない)。
     元の体を描かないと Animator がアニメーションを止めるので、付けている間は `AnimatorCullingMode.AlwaysAnimate` にする
+- 装飾品 (WeaponHolder_1～4: 頭・肩・腰・背中) は部位ごとに隠せる (`accessories.txt`、描画だけ止める)
 - 設定は `RusK\data\model\assignments.txt`。ステージ移動などでキャラが作り直されても付け直す
 - **Model > ModelLab** はデバッグ用 (モデルの作りの書き出し・キャラ同士の見た目の入れ替え・切り抜き方式の比較)
 
