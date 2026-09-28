@@ -127,6 +127,47 @@ internal sealed class ReleaseClient
         File.Move(part, destPath);
     }
 
+    /// <summary>
+    /// GitHub 以外のファイル (BepInEx の公式の zip) をダウンロードする。GitHub の認証は付けない。
+    /// sha256 を渡すと、落としたファイルと比べて違えば消して例外にする (壊れた・すり替えられたファイルを使わない)
+    /// </summary>
+    public static void DownloadFile(string url, string destPath, string sha256, Action<long, long> progress)
+    {
+        ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
+        http.DefaultRequestHeaders.UserAgent.ParseAdd($"RusK-Setup/{InstallEngine.PayloadVersion}");
+        using var res = http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
+        if (!res.IsSuccessStatusCode)
+            throw new InvalidOperationException($"{(int)res.StatusCode} {res.ReasonPhrase}");
+        long total = res.Content.Headers.ContentLength ?? 0;
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath));
+        using (var src = res.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
+        using (var dst = File.Create(destPath))
+        {
+            var buf = new byte[81920];
+            long got = 0;
+            int n;
+            while ((n = src.Read(buf, 0, buf.Length)) > 0)
+            {
+                dst.Write(buf, 0, n);
+                got += n;
+                progress(got, total);
+            }
+        }
+        if (!string.IsNullOrEmpty(sha256))
+        {
+            string actual;
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            using (var f = File.OpenRead(destPath))
+                actual = BitConverter.ToString(sha.ComputeHash(f)).Replace("-", "").ToLowerInvariant();
+            if (actual != sha256.ToLowerInvariant())
+            {
+                File.Delete(destPath);
+                throw new InvalidOperationException(Strings.T("ダウンロードしたファイルが壊れています (SHA256 が一致しません)"));
+            }
+        }
+    }
+
     private static string VersionOf(string tag)
     {
         if (string.IsNullOrEmpty(tag)) return "";

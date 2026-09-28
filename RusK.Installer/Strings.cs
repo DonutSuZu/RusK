@@ -61,7 +61,7 @@ internal static class Strings
          "  ・キー割り当て、アクショントリガー、設定プロファイル\n\n" +
          "必要なもの\n" +
          "  ・VED:Recure (Steam 版)  … 対応バージョン {0}\n" +
-         "  ・BepInEx 6 (IL2CPP 版)  … 入っていなければ次の画面で案内します\n" +
+         "  ・BepInEx 6 (IL2CPP 版)  … 入っていなければ一緒にダウンロードしてインストールします\n" +
          "  ・インターネット接続  … 選んだ Mod を GitHub のリリースからダウンロードします\n\n" +
          "注意\n" +
          "  ・インストール中はゲームを終了しておいてください"] = (
@@ -72,7 +72,7 @@ internal static class Strings
             "  - Key bindings, action triggers and setting profiles\n\n" +
             "Requirements\n" +
             "  - VED:Recure (Steam)  … supported version {0}\n" +
-            "  - BepInEx 6 (IL2CPP)  … if it's missing, the next page explains how to get it\n" +
+            "  - BepInEx 6 (IL2CPP)  … if it's missing, it is downloaded and installed too\n" +
             "  - An internet connection  … the mods you choose are downloaded from GitHub releases\n\n" +
             "Note\n" +
             "  - Please close the game while installing",
@@ -83,7 +83,7 @@ internal static class Strings
             "  ・按键设置、动作触发器、设置方案\n\n" +
             "需要\n" +
             "  ・VED:Recure (Steam 版)  … 支持版本 {0}\n" +
-            "  ・BepInEx 6 (IL2CPP 版)  … 如未安装, 下一页会提供说明\n" +
+            "  ・BepInEx 6 (IL2CPP 版)  … 如未安装, 会一并下载并安装\n" +
             "  ・网络连接  … 所选的 Mod 会从 GitHub 的发布页下载\n\n" +
             "注意\n" +
             "  ・安装时请先关闭游戏"),
@@ -96,10 +96,15 @@ internal static class Strings
         ["Steam のライブラリに VED:Recure が見つかりませんでした。\n「参照...」から選んでください。"] = (
             "VED:Recure was not found in your Steam libraries.\nPlease choose it with \"Browse...\".",
             "在 Steam 库中找不到 VED:Recure。\n请通过「浏览...」选择。"),
-        ["BepInEx 6 (IL2CPP 版、動作確認済みの be.788) が必要です。\n下のリンクから zip をダウンロードして、「zip を選択...」で選んでください。"] = (
-            "BepInEx 6 (IL2CPP, tested version be.788) is required.\nDownload the zip from the link below and choose it with \"Choose zip...\".",
-            "需要 BepInEx 6 (IL2CPP 版, 已验证的 be.788)。\n请从下方链接下载 zip, 然后通过「选择 zip...」选择。"),
-        ["BepInEx be.788 の zip をダウンロードする"] = ("Download the BepInEx be.788 zip", "下载 BepInEx be.788 的 zip"),
+        ["BepInEx 6 (IL2CPP 版) が必要です。動作確認済みの be.788 を入れます。"] = (
+            "BepInEx 6 (IL2CPP) is required. The tested version be.788 will be installed.",
+            "需要 BepInEx 6 (IL2CPP 版)。将安装已验证的 be.788。"),
+        ["自動でダウンロードしてインストールする (おすすめ・約 33 MB)"] = ("Download and install it automatically (recommended, about 33 MB)", "自动下载并安装 (推荐, 约 33 MB)"),
+        ["ダウンロードした zip を選ぶ"] = ("Choose a zip you downloaded", "选择已下载的 zip"),
+        ["be.788 の zip のリンク"] = ("Link to the be.788 zip", "be.788 的 zip 链接"),
+        ["BepInEx: 入っていません (RusK と一緒に入れます)"] = ("BepInEx: not installed (it will be installed with RusK)", "BepInEx: 未安装 (将与 RusK 一起安装)"),
+        ["BepInEx {0} をダウンロードしています..."] = ("Downloading BepInEx {0}...", "正在下载 BepInEx {0}..."),
+        ["ダウンロードしたファイルが壊れています (SHA256 が一致しません)"] = ("The downloaded file is corrupted (SHA256 mismatch)", "下载的文件已损坏 (SHA256 不一致)"),
         ["zip を選択..."] = ("Choose zip...", "选择 zip..."),
         ["BepInEx の zip を選択"] = ("Choose the BepInEx zip", "选择 BepInEx 的 zip"),
         ["RusK はすでにインストールされています。どうしますか？"] = ("RusK is already installed. What would you like to do?", "RusK 已安装。要做什么?"),

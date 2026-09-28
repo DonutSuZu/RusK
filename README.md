@@ -28,7 +28,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 ## インストール (利用者向け)
 1. [Releases](https://github.com/DonutSuZu/RusK/releases) から `RusK-Setup-vX.Y.Z.exe` をダウンロード
 2. 実行して、画面の案内に従う (ゲームフォルダは Steam から自動検出。表示は日本語 / English / 中文)
-   - BepInEx 6 (IL2CPP 版) が入っていなければ、セットアップの中でダウンロード先を案内する
+   - BepInEx 6 (IL2CPP 版) が入っていなければ、動作確認済みの公式 be.788 をセットアップがダウンロードして一緒に入れる (SHA256 で確認)
    - セットアップには RusK 本体だけが入っていて、選んだ Mod は GitHub のリリースから最新版をダウンロードする
    - Mod の DLL だけ欲しいときは、各 Mod のリリース (例: Custom VRM Loader Mod) から落として `RusK\mods` に置く
 3. ゲームを起動して **Insert** キーでメニューを開く

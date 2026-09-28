@@ -27,8 +27,7 @@ internal sealed class SetupForm : Form
     private static readonly Color Warn = Color.FromArgb(242, 191, 76);
 
     // 動作確認した BepInEx (公式の 6.0.0-be.788) の zip に固定する。開発版のページの最新だと、確認していない版が入ることがある
-    private const string BepInExUrl =
-        "https://builds.bepinex.dev/projects/bepinex_be/788/BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.788%2B5b766a3.zip";
+    private const string BepInExUrl = InstallEngine.BepInExUrl;
 
     private static readonly string[] StepNames = { "ようこそ", "インストール先", "コンポーネント", "インストール", "完了" };
 
@@ -61,6 +60,9 @@ internal sealed class SetupForm : Form
     private readonly Label _ruskStatus = new();
     private readonly Panel _bepPanel = new();
     private readonly TextBox _bepZip = new();
+    private readonly RadioButton _bepAuto = new();
+    private readonly RadioButton _bepManual = new();
+    private readonly Button _pickZip = new();
     private readonly Panel _modePanel = new();
     private readonly RadioButton _modeInstall = new();
     private readonly RadioButton _modeUninstall = new();
@@ -226,7 +228,7 @@ internal sealed class SetupForm : Form
                 "  ・キー割り当て、アクショントリガー、設定プロファイル\n\n" +
                 "必要なもの\n" +
                 "  ・VED:Recure (Steam 版)  … 対応バージョン {0}\n" +
-                "  ・BepInEx 6 (IL2CPP 版)  … 入っていなければ次の画面で案内します\n" +
+                "  ・BepInEx 6 (IL2CPP 版)  … 入っていなければ一緒にダウンロードしてインストールします\n" +
                 "  ・インターネット接続  … 選んだ Mod を GitHub のリリースからダウンロードします\n\n" +
                 "注意\n" +
                 "  ・インストール中はゲームを終了しておいてください", InstallEngine.SupportedGameVersion),
@@ -269,34 +271,44 @@ internal sealed class SetupForm : Form
         p.Controls.AddRange(new Control[] { _gameStatus, _bepStatus, _ruskStatus });
 
         // BepInEx が無いときだけ出す
-        _bepPanel.SetBounds(0, 150, 540, 110);
+        _bepPanel.SetBounds(0, 150, 540, 112);
         _bepPanel.BackColor = Field;
         _bepPanel.Controls.Add(new Label
         {
-            Text = Strings.T("BepInEx 6 (IL2CPP 版、動作確認済みの be.788) が必要です。\n下のリンクから zip をダウンロードして、「zip を選択...」で選んでください。"),
-            Location = new Point(10, 8), Size = new Size(520, 40), ForeColor = TextColor,
+            Text = Strings.T("BepInEx 6 (IL2CPP 版) が必要です。動作確認済みの be.788 を入れます。"),
+            Location = new Point(10, 6), Size = new Size(520, 20), ForeColor = TextColor,
         });
+        // 自動: セットアップが公式の zip をダウンロードして入れる (おすすめ)
+        _bepAuto.Text = Strings.T("自動でダウンロードしてインストールする (おすすめ・約 33 MB)");
+        _bepAuto.SetBounds(10, 28, 520, 22);
+        _bepAuto.Checked = true;
+        _bepAuto.CheckedChanged += (_, _) => { UpdateBepControls(); UpdateButtons(); };
+        _bepPanel.Controls.Add(_bepAuto);
+        // 手動: 自分で落とした zip を選ぶ (インターネットに繋がらないときなど)
+        _bepManual.Text = Strings.T("ダウンロードした zip を選ぶ");
+        _bepManual.SetBounds(10, 52, 300, 22);
+        _bepPanel.Controls.Add(_bepManual);
         var link = new LinkLabel
         {
-            Text = Strings.T("BepInEx be.788 の zip をダウンロードする"), Location = new Point(10, 50), AutoSize = true,
+            Text = Strings.T("be.788 の zip のリンク"), Location = new Point(320, 55), AutoSize = true,
             LinkColor = Accent, ActiveLinkColor = Accent,
         };
         link.LinkClicked += (_, _) => Open(BepInExUrl);
         _bepPanel.Controls.Add(link);
         StyleTextBox(_bepZip);
-        _bepZip.SetBounds(10, 74, 410, 26);
+        _bepZip.SetBounds(28, 78, 392, 26);
         _bepZip.ReadOnly = true;
         _bepZip.TextChanged += (_, _) => UpdateButtons();
         _bepPanel.Controls.Add(_bepZip);
-        var pickZip = new Button();
-        StyleButton(pickZip, Strings.T("zip を選択..."), false);
-        pickZip.SetBounds(426, 72, 106, 29);
-        pickZip.Click += (_, _) =>
+        StyleButton(_pickZip, Strings.T("zip を選択..."), false);
+        _pickZip.SetBounds(426, 76, 106, 29);
+        _pickZip.Click += (_, _) =>
         {
             using var dlg = new OpenFileDialog { Filter = "BepInEx zip (*.zip)|*.zip", Title = Strings.T("BepInEx の zip を選択") };
             if (dlg.ShowDialog(this) == DialogResult.OK) _bepZip.Text = dlg.FileName;
         };
-        _bepPanel.Controls.Add(pickZip);
+        _bepPanel.Controls.Add(_pickZip);
+        UpdateBepControls();
         p.Controls.Add(_bepPanel);
 
         // RusK が入っているときだけ出す
@@ -310,6 +322,13 @@ internal sealed class SetupForm : Form
         _modeInstall.CheckedChanged += (_, _) => UpdateButtons();
         _modePanel.Controls.AddRange(new Control[] { _modeInstall, _modeUninstall });
         p.Controls.Add(_modePanel);
+    }
+
+    /// <summary>BepInEx を手動で選ぶときだけ、zip の欄とボタンを使えるようにする</summary>
+    private void UpdateBepControls()
+    {
+        _bepZip.Enabled = _bepManual.Checked;
+        _pickZip.Enabled = _bepManual.Checked;
     }
 
     private void BrowseGame()
@@ -341,7 +360,7 @@ internal sealed class SetupForm : Form
         bool bep = GameLocator.HasBepInEx(dir);
         SetStatus(_bepStatus, bep, bep
             ? Strings.T("BepInEx: 導入済み ({0})", GameLocator.BepInExVersion(dir))
-            : Strings.T("BepInEx: 入っていません (下で zip を選ぶと一緒に導入します)"), warnInsteadOfBad: true);
+            : Strings.T("BepInEx: 入っていません (RusK と一緒に入れます)"), warnInsteadOfBad: true);
         _bepPanel.Visible = !bep;
 
         var rusk = GameLocator.RuskVersion(dir);
@@ -476,7 +495,8 @@ internal sealed class SetupForm : Form
                 var o = new InstallOptions
                 {
                     GameDir = dir,
-                    BepInExZip = string.IsNullOrWhiteSpace(_bepZip.Text) ? null : _bepZip.Text,
+                    BepInExZip = _bepManual.Checked && !string.IsNullOrWhiteSpace(_bepZip.Text) ? _bepZip.Text : null,
+                    DownloadBepInEx = _bepAuto.Checked,
                     CreateMusicFolder = _musicFolder.Checked,
                 };
                 foreach (var kv in _componentChecks)
@@ -606,7 +626,7 @@ internal sealed class SetupForm : Form
             case 1:
                 var dir = _path.Text.Trim();
                 bool ok = GameLocator.IsGameFolder(dir) &&
-                          (GameLocator.HasBepInEx(dir) || Uninstalling || File.Exists(_bepZip.Text));
+                          (GameLocator.HasBepInEx(dir) || Uninstalling || _bepAuto.Checked || File.Exists(_bepZip.Text));
                 _next.Text = Strings.T("次へ >");
                 _next.Enabled = ok;
                 break;

@@ -23,6 +23,7 @@ internal sealed class InstallOptions
 {
     public string GameDir;
     public string BepInExZip;          // BepInEx が無いときに展開する zip (無ければ null)
+    public bool DownloadBepInEx;       // BepInEx が無いときに、動作確認済みの公式版を自動でダウンロードして入れる
     public HashSet<string> Components = new();
     public bool CreateMusicFolder = true;
 }
@@ -81,6 +82,12 @@ internal static class InstallEngine
         },
     };
 
+    /// <summary>動作確認した BepInEx (公式の 6.0.0-be.788) の zip と、その SHA256</summary>
+    public const string BepInExVersion = "6.0.0-be.788";
+    public const string BepInExUrl =
+        "https://builds.bepinex.dev/projects/bepinex_be/788/BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.788%2B5b766a3.zip";
+    public const string BepInExSha256 = "f4cc496bd098a0df4164b81e3737297707f13a47c2478dba2f60eefab784817a";
+
     /// <summary>このセットアップが対応しているゲームのバージョン</summary>
     public const string SupportedGameVersion = "0.0.1872 (9e092a0)";
 
@@ -96,10 +103,36 @@ internal static class InstallEngine
         // 1. BepInEx (無い場合だけ、選ばれた zip を展開)
         if (!GameLocator.HasBepInEx(o.GameDir))
         {
-            if (string.IsNullOrEmpty(o.BepInExZip))
-                throw new InvalidOperationException(Strings.T("BepInEx が入っていません。BepInEx の zip を選んでください。"));
+            string zip = o.BepInExZip;
+            bool downloaded = false;
+            if (string.IsNullOrEmpty(zip))
+            {
+                if (!o.DownloadBepInEx)
+                    throw new InvalidOperationException(Strings.T("BepInEx が入っていません。BepInEx の zip を選んでください。"));
+                // 動作確認済みの公式版を一時フォルダにダウンロードする
+                log(Strings.T("BepInEx {0} をダウンロードしています...", BepInExVersion));
+                zip = Path.Combine(Path.GetTempPath(), $"RusK-BepInEx-{BepInExVersion}.zip");
+                try
+                {
+                    ReleaseClient.DownloadFile(BepInExUrl, zip, BepInExSha256, (got, total) =>
+                    {
+                        status(Strings.T("{0}: {1} / {2}", "BepInEx", ReleaseClient.FormatSize(got), ReleaseClient.FormatSize(total)));
+                        if (total > 0) progress(5 + (int)(15 * got / total));
+                    });
+                }
+                catch (Exception e) when (e is not InvalidOperationException)
+                {
+                    throw new InvalidOperationException(Strings.T("{0} をダウンロードできませんでした: {1}", "BepInEx", e.Message), e);
+                }
+                status("");
+                downloaded = true;
+            }
             log(Strings.T("BepInEx を展開しています..."));
-            ExtractBepInEx(o.BepInExZip, o.GameDir, log);
+            ExtractBepInEx(zip, o.GameDir, log);
+            if (downloaded)
+            {
+                try { File.Delete(zip); } catch { }
+            }
             if (!GameLocator.HasBepInEx(o.GameDir))
                 throw new InvalidOperationException(Strings.T("BepInEx を展開しましたが、IL2CPP 版の BepInEx が見つかりません。\n「BepInEx-Unity.IL2CPP-win-x64」の zip か確認してください。"));
             log(Strings.T("  BepInEx を導入しました"));
