@@ -678,6 +678,16 @@ internal static class SkirtUi
     public static void Draw(WindowGui gui)
     {
         gui.Space(6f);
+        gui.Header("装飾品の表示");
+        gui.Label("VRM にしたキャラの装飾品を部位ごとに隠せます (頭の装飾品が髪に埋まる・頭にめり込むときなど)。", RuskStyle.TextDim, small: true);
+        foreach (var (slot, name) in Vrm.AccessoryVisibility.Slots)
+        {
+            bool shown = Vrm.AccessoryVisibility.IsShown(slot);
+            bool next = gui.Toggle($"{name}の装飾品を表示する", shown);
+            if (next != shown) Vrm.AccessoryVisibility.Set(slot, next);
+        }
+
+        gui.Space(6f);
         gui.Header("明るさ・影");
         gui.Label(Vrm.MaskModes.IsUrp
             ? "明るさ: 服や髪が白く浮いて見えるときは下げる。影の濃さ: 髪や帽子が顔に落とす影 (1.00 でゲームのキャラと同じ)。"

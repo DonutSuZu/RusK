@@ -42,6 +42,9 @@ internal static class VrmSwap
         /// <summary>ゲームのキャラの顔 (表情・口パクのブレンドシェイプ) と、名前 → 番号</summary>
         public SkinnedMeshRenderer Face;
         public readonly Dictionary<string, int> FaceShapes = new();
+        /// <summary>装飾品の差し込み口 (番号 1～4 → WeaponHolder_n) と、表示の設定で隠した装飾品の描画部品</summary>
+        public List<(int slot, Transform holder)> Holders;
+        public readonly Dictionary<IntPtr, Renderer> HiddenAccessories = new();
     }
 
     private static readonly Dictionary<IntPtr, Entry> Entries = new();
@@ -112,6 +115,7 @@ internal static class VrmSwap
     {
         MaskModes.Load();
         SkirtTuning.Load();
+        AccessoryVisibility.Load();
         Assignments.Clear();
         try
         {
@@ -324,6 +328,9 @@ internal static class VrmSwap
         foreach (var r in e.Hidden)
             if (r != null) r.forceRenderingOff = false;
         if (e.Animator != null) e.Animator.cullingMode = e.OriginalCulling;
+        foreach (var r in e.HiddenAccessories.Values)
+            if (r != null) r.forceRenderingOff = false;
+        e.HiddenAccessories.Clear();
         e.Retargeter?.RestoreAttachments();
         e.Model?.Destroy();
     }
@@ -449,6 +456,43 @@ internal static class VrmSwap
 
     private static int _lastShowFrame = -1;
 
+    /// <summary>
+    /// 装飾品の表示の設定 (AccessoryVisibility) を当てる。隠す部位の装飾品は描画だけを止め、表示に戻したら止めたものだけ戻す
+    /// (Custom Item Model が元の装飾品を隠しているのは触らない)。装備の付け替えで中身が変わるので 10 フレームごとに見直す
+    /// </summary>
+    private static void UpdateAccessories(Entry e)
+    {
+        if (e.Holders != null && Time.frameCount % 10 != 0) return;
+        if (e.Holders == null)
+        {
+            e.Holders = new List<(int, Transform)>();
+            foreach (var t in e.Root.GetComponentsInChildren<Transform>(true))
+            {
+                if (!t.name.StartsWith("WeaponHolder_")) continue;
+                if (int.TryParse(t.name.Substring("WeaponHolder_".Length), out var slot) && slot >= 1 && slot <= 4)
+                    e.Holders.Add((slot, t));
+            }
+        }
+        foreach (var (slot, holder) in e.Holders)
+        {
+            if (holder == null) continue;
+            bool hide = !AccessoryVisibility.IsShown(slot);
+            foreach (var r in holder.GetComponentsInChildren<Renderer>(true))
+            {
+                if (hide)
+                {
+                    if (!r.forceRenderingOff)
+                    {
+                        r.forceRenderingOff = true;
+                        e.HiddenAccessories[r.Pointer] = r;
+                    }
+                }
+                else if (e.HiddenAccessories.Remove(r.Pointer))
+                    r.forceRenderingOff = false;
+            }
+        }
+    }
+
     /// <summary>調査用: 動きを記録するキャラ (見せるためのモデルを優先) と、VRM に写している骨</summary>
     public static (Transform root, HashSet<IntPtr> mapped, string name)? RecordTarget()
     {
@@ -489,6 +533,7 @@ internal static class VrmSwap
             if (vrmRoot.localScale != scale) vrmRoot.localScale = scale;
 
             UpdateVisibility(e);
+            UpdateAccessories(e);
 
             try
             {
