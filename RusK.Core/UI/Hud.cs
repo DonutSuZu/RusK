@@ -35,7 +35,7 @@ internal sealed class Hud
         if (_t.ShowNotifications) DrawNotifications(watermarkHeight);
     }
 
-    /// <summary>右下に「RusK v1.0.0」。描いた高さ (余白込み) を返す</summary>
+    /// <summary>右下に「RusK v1.1.0」。描いた高さ (余白込み) を返す</summary>
     private float DrawWatermark()
     {
         string name = Rusk.Name;

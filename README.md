@@ -18,8 +18,10 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 
 ## インストール (利用者向け)
 1. [Releases](https://github.com/DonutSuZu/RusK/releases) から `RusK-Setup-vX.Y.Z.exe` をダウンロード
-2. 実行して、画面の案内に従う (ゲームフォルダは Steam から自動検出)
+2. 実行して、画面の案内に従う (ゲームフォルダは Steam から自動検出。表示は日本語 / English / 中文)
    - BepInEx 6 (IL2CPP 版) が入っていなければ、セットアップの中でダウンロード先を案内する
+   - セットアップには RusK 本体だけが入っていて、選んだ Mod は GitHub のリリースから最新版をダウンロードする
+   - Mod の DLL だけ欲しいときは、各 Mod のリリース (例: Custom VRM Loader Mod) から落として `RusK\mods` に置く
 3. ゲームを起動して **Insert** キーでメニューを開く
 
 ※ 署名していない exe なので、初回は SmartScreen の警告が出ることがある (「詳細情報」→「実行」)
@@ -67,7 +69,18 @@ RusK/
 
 対応ゲームバージョンが変わったら: `RusK.Installer\InstallEngine.cs` の `SupportedGameVersion` / 各 Mod の `GameVersion` / このファイルと `Docs\README.txt`
 
-Mod を増やしたら: `RusK.Installer\InstallEngine.cs` の `Components` と `RusK.Installer.csproj` の同梱リスト
+Mod を増やしたら: `RusK.Installer\InstallEngine.cs` の `Components` (DLL の名前) と `RusK.Installer\Strings.cs` (説明の訳)
+
+## リリースの分け方
+- 本体: タグ `vX.Y.Z`「RusK vX.Y.Z」に `RusK-Setup-vX.Y.Z.exe` (セットアップには本体だけが入る)
+- Mod: タグ `<Mod の ID>-vX.Y.Z` (例: `model-v1.2.5`「Custom VRM Loader Mod v1.2.5」) に DLL (例: `RuskModel.dll`)
+- セットアップはリリースを新しい順に見て、Mod ごとにその DLL がある最初のリリースを最新として落とす。
+  Mod だけ更新したいときは、その Mod のリリースを出すだけでよい (本体のリリースを「Latest」のままにするため `--latest=false`)
+
+## 言語ファイル
+- 各プロジェクトの `lang/translations.tsv` (元の文 / 英語 / 中国語) に訳を書き、`python tools/langgen.py <プロジェクト>` で
+  `lang/ja.json`・`en.json`・`zh.json` を作る (訳の無い文は一覧に出て、tsv の最後に空欄で足される)
+- json は DLL に埋め込まれる (`RusK.props`)。表示する文は `L.T("...")` で包む (モジュール名・説明・設定は本体が自動で訳す)
 
 ## ビルド
 `build.bat` をダブルクリック。または:

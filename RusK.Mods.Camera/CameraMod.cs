@@ -14,7 +14,7 @@ namespace RusK.Mods.Camera;
 /// CameraController.LateUpdate の直後に毎フレーム上書きするので、ゲームが値を戻しても効く。
 /// パリィや QTE などの演出カメラには手を出さない (設定で全カメラにも効かせられる)。
 /// </summary>
-[RuskMod("camera", "Camera View", "1.0.0",
+[RuskMod("camera", "Camera View", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1872",
     Description = "視点変更 (近い肩越し / 真後ろ / 一人称 / カスタム)")]

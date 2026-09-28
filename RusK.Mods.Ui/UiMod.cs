@@ -6,7 +6,7 @@ namespace RusK.Mods.Ui;
 /// ゲームバランスに影響しない、見た目と操作の補助。
 /// ZZZ 風ボタン HUD (追加攻撃が撃てるときに光る)・攻撃予兆 (キラーン)・キー追加。
 /// </summary>
-[RuskMod("ui", "RusK UI", "1.0.0",
+[RuskMod("ui", "RusK UI", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1872",
     Description = "ボタン HUD・攻撃予兆・キー追加 (ゲームバランスに影響しない補助)")]

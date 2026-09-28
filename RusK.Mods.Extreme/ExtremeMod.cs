@@ -9,7 +9,7 @@ namespace RusK.Mods.Extreme;
 /// この Mod はそれを設定画面の「難易度」と初回の難易度選択画面に出し、選ばれている間は敵をさらに強化する。
 /// 表示名・説明文がゲームに無い場合だけ RusK が補う。
 /// </summary>
-[RuskMod("extreme", "EXTREME Difficulty", "1.0.0",
+[RuskMod("extreme", "EXTREME Difficulty", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1872",
     Description = "難易度 EXTREME を解放し、敵の HP・攻撃力・攻撃頻度・シールドを強化")]

@@ -2,7 +2,7 @@
   <!--
     RusK のセットアップウィザード。
     .NET Framework 4.8 (Windows 10/11 に標準で入っている) の WinForms アプリなので、利用者は追加インストール不要。
-    ビルド時に RusK 本体と Mod を payload.zip にまとめて exe に埋め込む (exe 1 つで配布できる)。
+    ビルド時に RusK 本体を payload.zip にまとめて exe に埋め込む。Mod はインストール時に GitHub のリリースからダウンロードする。
   -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -16,7 +16,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- icon.ico は ..\icon.png から作ったもの (16～256px) -->
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Product>RusK</Product>
     <Company>RusK</Company>
     <Description>RusK Mod Loader Setup</Description>
@@ -29,6 +29,9 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <!-- Mod を GitHub のリリースからダウンロードする (HttpClient と、リリース一覧の JSON の読み取り) -->
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
   </ItemGroup>
 
   <ItemGroup>
@@ -74,12 +77,10 @@
     </PropertyGroup>
     <ItemGroup>
       <_Core Include="$(CoreOut)RusK.Core.dll;$(CoreOut)RusK.Core.pdb;$(CoreOut)RusK.API.dll;$(CoreOut)RusK.API.pdb" />
-      <_Mods Include="$(UiOut)RuskUi.dll;$(UiOut)RuskUi.pdb;$(MusicOut)RuskMusic.dll;$(MusicOut)RuskMusic.pdb;$(ExtremeOut)RuskExtreme.dll;$(ExtremeOut)RuskExtreme.pdb;$(CameraOut)RuskCamera.dll;$(CameraOut)RuskCamera.pdb;$(PartyOut)RuskParty.dll;$(PartyOut)RuskParty.pdb;$(ModelOut)RuskModel.dll;$(ModelOut)RuskModel.pdb;$(ItemModelOut)RuskItemModel.dll;$(ItemModelOut)RuskItemModel.pdb" />
     </ItemGroup>
     <Error Condition="!Exists('$(CoreOut)RusK.Core.dll')" Text="RusK.Core.dll が見つかりません: $(CoreOut)" />
     <RemoveDir Directories="$(PayloadStaging)" />
     <Copy SourceFiles="@(_Core)" DestinationFolder="$(PayloadStaging)BepInEx\plugins\RusK" Condition="Exists('%(FullPath)')" />
-    <Copy SourceFiles="@(_Mods)" DestinationFolder="$(PayloadStaging)RusK\mods" Condition="Exists('%(FullPath)')" />
     <Copy SourceFiles="$(MSBuildThisFileDirectory)Docs\README.txt" DestinationFolder="$(PayloadStaging)RusK" />
     <ZipDirectory SourceDirectory="$(PayloadStaging)" DestinationFile="$(PayloadZip)" Overwrite="true" />
     <ItemGroup>

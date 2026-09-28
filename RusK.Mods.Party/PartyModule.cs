@@ -11,7 +11,7 @@ namespace RusK.Mods.Party;
 /// アクティブ3人 (ZZZ 風のキャラ切り替え)。
 /// 選んだ仲間 2 人を戦闘ステージで控えに用意し、「次へ」「前へ」のキーで切り替える。
 /// </summary>
-[RuskMod("party", "Party", "1.0.0",
+[RuskMod("party", "Party", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1872",
     Description = "アクティブ3人。仲間を選んで、戦闘中にキーでキャラを切り替える")]

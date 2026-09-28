@@ -5,7 +5,7 @@ namespace RusK.Mods.Music;
 /// <summary>
 /// 音楽マネージャー。ゲーム/RusK/music 以下の曲を、戦闘中にゲームの BGM と置き換えて流す。
 /// </summary>
-[RuskMod("music", "Music Manager", "1.0.0",
+[RuskMod("music", "Music Manager", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1872",
     Description = "戦闘中の BGM を RusK/music の曲に置き換える")]
