@@ -1,0 +1,45 @@
+<Project>
+  <!-- RusK 本体と Mod で共有するビルド設定 -->
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <GameDir Condition="'$(GameDir)' == ''">Y:\SteamLibrary\steamapps\common\Ved疗愈所</GameDir>
+    <BepInExDir>$(GameDir)\BepInEx</BepInExDir>
+    <InteropDir>$(BepInExDir)\interop</InteropDir>
+    <RuskGameDir>$(GameDir)\RusK</RuskGameDir>
+    <DeployToGame Condition="'$(DeployToGame)' == ''">true</DeployToGame>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(BepInExDir)\core\0Harmony.dll" Private="false" />
+    <Reference Include="$(BepInExDir)\core\Il2CppInterop.Runtime.dll" Private="false" />
+    <Reference Include="$(BepInExDir)\core\Il2CppInterop.Common.dll" Private="false" />
+    <Reference Include="$(InteropDir)\Il2Cppmscorlib.dll" Private="false" />
+    <Reference Include="$(InteropDir)\Il2CppSystem.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.IMGUIModule.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.TextRenderingModule.dll" Private="false" />
+    <Reference Include="$(InteropDir)\Unity.InputSystem.dll" Private="false" />
+  </ItemGroup>
+
+  <!-- 各プロジェクトで DeployDir を決めると、ビルド後にそこへコピーされる -->
+  <Target Name="RuskDeploy" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true' And '$(DeployDir)' != ''">
+    <ItemGroup>
+      <_RuskDeployFiles Include="$(TargetPath)" />
+      <_RuskDeployFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+      <_RuskDeployFiles Include="@(RuskExtraDeploy)" />
+    </ItemGroup>
+    <MakeDir Directories="$(DeployDir)" />
+    <Copy SourceFiles="@(_RuskDeployFiles)" DestinationFolder="$(DeployDir)" />
+    <Message Importance="high" Text="$(TargetName) -&gt; $(DeployDir)" />
+  </Target>
+</Project>

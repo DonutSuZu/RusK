@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RusK.API</AssemblyName>
+    <RootNamespace>RusK.API</RootNamespace>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="RusK.Core" />
+  </ItemGroup>
+</Project>

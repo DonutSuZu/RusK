@@ -1,0 +1,11 @@
+# ビルド生成物
+bin/
+obj/
+dist/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo

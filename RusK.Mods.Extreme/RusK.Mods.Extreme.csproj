@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RuskExtreme</AssemblyName>
+    <RootNamespace>RusK.Mods.Extreme</RootNamespace>
+    <Version>1.0.0</Version>
+    <DeployDir>$(RuskGameDir)\mods</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+    <!-- 難易度選択画面の UI (Image / LayoutGroup / TextMeshPro / UnityEvent) -->
+    <Reference Include="$(InteropDir)\UnityEngine.UI.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.UIModule.dll" Private="false" />
+    <Reference Include="$(InteropDir)\Unity.TextMeshPro.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
+  </ItemGroup>
+</Project>

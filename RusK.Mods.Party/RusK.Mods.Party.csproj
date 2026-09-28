@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RuskParty</AssemblyName>
+    <RootNamespace>RusK.Mods.Party</RootNamespace>
+    <Version>1.0.0</Version>
+    <DeployDir>$(RuskGameDir)\mods</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\RusK.Mods.Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
+  </ItemGroup>
+</Project>

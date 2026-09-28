@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RuskItemModel</AssemblyName>
+    <RootNamespace>RusK.Mods.ItemModel</RootNamespace>
+    <Version>1.0.0</Version>
+    <DeployDir>$(RuskGameDir)\mods</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.AnimationModule.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.ImageConversionModule.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\RusK.Mods.Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+    <!-- glb の読み込みは Custom Model の部品をソースごと取り込む (VRM 専用の動きの部分は使わない) -->
+    <Compile Include="..\RusK.Mods.Model\Vrm\Glb.cs" Link="Gltf\Glb.cs" />
+    <Compile Include="..\RusK.Mods.Model\Vrm\VrmLoader.cs" Link="Gltf\VrmLoader.cs" />
+    <Compile Include="..\RusK.Mods.Model\Vrm\VrmEnv.cs" Link="Gltf\VrmEnv.cs" />
+    <Compile Include="..\RusK.Mods.Model\Vrm\MaskModes.cs" Link="Gltf\MaskModes.cs" />
+    <Compile Include="..\RusK.Mods.Model\Vrm\SpringBone.cs" Link="Gltf\SpringBone.cs" />
+    <Compile Include="..\RusK.Mods.Model\Vrm\Expressions.cs" Link="Gltf\Expressions.cs" />
+    <Compile Include="..\RusK.Mods.Model\Vrm\SkirtFollow.cs" Link="Gltf\SkirtFollow.cs" />
+    <Compile Include="..\RusK.Mods.Model\Vrm\SkirtTuning.cs" Link="Gltf\SkirtTuning.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
+  </ItemGroup>
+</Project>

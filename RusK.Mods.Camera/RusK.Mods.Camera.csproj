@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RuskCamera</AssemblyName>
+    <RootNamespace>RusK.Mods.Camera</RootNamespace>
+    <Version>1.0.0</Version>
+    <DeployDir>$(RuskGameDir)\mods</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+    <!-- カメラは Cinemachine の仮想カメラ (肩越しの Cinemachine3rdPersonFollow) -->
+    <Reference Include="$(InteropDir)\Cinemachine.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
+  </ItemGroup>
+</Project>

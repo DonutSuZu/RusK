@@ -1,0 +1,77 @@
+RusK - VED:Recure Mod Loader
+============================================================
+
+■ RusK とは
+VED:Recure 用の Mod ローダーです。ゲーム内メニューから Mod の機能を ON/OFF したり、
+Mod を読み込み・取り外し・再読み込みしたりできます。
+
+■ 対応ゲームバージョン
+- 0.0.1872 (9e092a0)
+  ゲーム画面の左下に出る「Version 0.0.1872_9e092a0」と同じか確認してください。
+  ゲームが更新されたときは、メニューの Mods > Check で動かなくなった Mod を確認できます。
+
+■ 必要なもの
+- VED:Recure (Steam 版)
+- BepInEx 6 (IL2CPP 版)
+
+■ 使い方
+- ゲームを起動すると、画面右下に「RusK v1.0.0」と表示されます
+- Insert キーでメニューを開閉します
+    ↑↓: 選択 / → か Enter: 開く・ON/OFF / ← か Backspace: 戻る
+    設定の列では ←→ で値を変更、Enter でキー割り当て
+- マウス操作のメニューにしたいときは Visual > Menu > GUI を「Click」にします
+- 各モジュールの「ShowInList」を OFF にすると、右上の一覧 (ArrayList) に出なくなります
+  (一覧全体を消すときは Visual > Menu > ArrayList を OFF)
+- 初回起動時は BepInEx の準備に時間がかかることがあります
+
+■ 同梱の Mod
+- RusK UI     : ZZZ 風ボタン HUD・攻撃予兆エフェクト (キラーン)・キー追加
+                ゲームバランスに影響しない、見た目と操作の補助です
+                ボタン HUD はゼンゼロと同じ並び (攻撃・回避・スキル・ガード、ガードの上に追加攻撃)。
+                スキルのゲージはボタンの中に液体がたまる見た目で、追加攻撃は撃てるときに光ります
+                (並びは Visual > ButtonHUD の Layout で Arc / Row / Column にも変えられます)
+- EXTREME Difficulty: 難易度 EXTREME を解放します (設定 > ゲーム設定 > 難易度)
+                 選んでいる間は、敵の HP・攻撃力・攻撃頻度・シールドをさらに強化します
+                 (倍率はメニューの Combat > EXTREME で変更できます)
+- Music Manager: 戦闘中の BGM を好きな曲に置き換えます
+                 このフォルダの music に mp3 / ogg / wav を入れてください
+                 (music\boss に入れた曲はボス戦で流れます)
+- Camera View : 視点を切り替えます (Visual > CameraView の View)
+                近い肩越し / 真後ろ / 一人称 / カスタム。一人称の目の高さはキャラごとに覚えます
+                一人称では自分の体を隠して影だけ残します (Custom Model の VRM も同じく隠れます)
+- Party       : アクティブ3人。仲間 2 人と一緒に戦い、戦闘中にキャラを交代できます
+                1. 拠点で Party > Party > SelectMembers を開き、仲間を 2 人選ぶ
+                   (リーダーは拠点で選んだキャラ。戦闘中は編成を変更できません)
+                2. 戦闘ステージで C キーで次、Z キーで前のキャラに交代 (クールタイム 3 秒)
+                3. 攻撃が当たる直前に交代すると、出てきたキャラがガードでパリィします
+                4. 操作中のキャラが倒れると、生きている仲間に自動で交代します
+                   (全員倒れるとゲームオーバー)
+                キー・クールタイム・HUD の位置は Party > Party の設定で変更できます
+
+- Custom Model: キャラの見た目を VRM にします
+                1. このフォルダの models に .vrm を置く
+                   (VRoid Studio のモデルなど。利用条件で改変・利用が許可されたものを使ってください)
+                2. Visual > CustomModel を開き、キャラを選んでから VRM を選ぶ
+                3. そのキャラを操作しているときに見た目が VRM になります (動きはゲームのキャラのまま)
+                髪やスカートの揺れ・まばたき・影にも対応しています
+                走ったときに脚がスカートから出るときは、同じ画面の「スカートの調整」で抑えられます
+- Custom Item Model: 武器・装飾品の見た目を glb (Blender などから書き出せる 3D モデル) にします
+                1. このフォルダの props に .glb を置く (FBX は Blender で開いて glb で書き出してください)
+                2. Visual > CustomItemModel を開き、装備を選んでから glb を選ぶ
+                3. 位置・回転・大きさのずれを、同じ画面で調整する
+                「発光」で光らせることもできます (glb に発光が入っていれば、それも光ります)
+
+■ フォルダ
+- RusK\mods     : Mod の DLL (ここに置くと読み込まれます)
+- RusK\configs  : 設定 (プロファイル)
+- RusK\data     : Mod のデータ
+- RusK\music    : Music Manager の曲
+- RusK\models   : Custom Model の VRM (アンインストールしても消しません)
+- RusK\props    : Custom Item Model の glb (アンインストールしても消しません)
+
+■ 注意
+- 不具合が出たときは BepInEx\LogOutput.log を確認してください
+
+■ アンインストール
+セットアップ (RusK-Setup.exe) を起動し、「アンインストール」を選んでください。
+BepInEx は削除されません。
