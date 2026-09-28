@@ -791,6 +791,16 @@ internal static class VrmLoader
         ClearTex(mat, "_HeigtMap");
         SetFloat(mat, "_HEIGHTMAPSHADOW", 0f);
         mat.DisableKeyword("_HEIGHTMAPSHADOW");
+
+        // 元のキャラのフェード (カメラが近いときなどに縞模様で消す: _AlphaMap = DitherStripes) と、
+        // 元のキャラの体を切り抜く地図 (_CharacterAlphaClipMap) も外す。キャラクター画面・装備画面の元のキャラは
+        // フェードの途中の設定のことがあり、それを写すと VRM の顔などが消えていた。値はゲームのキャラの普段の設定に合わせる
+        ClearTex(mat, "_AlphaMap");
+        SetFloat(mat, "_Cutoff", 0.5f);
+        SetFloat(mat, "_ClipInterVal", 1f);
+        SetFloat(mat, "_UseAlphaClipping", 0f);
+        ClearTex(mat, "_CharacterAlphaClipMap");
+        SetFloat(mat, "_UseCharacterAlphaClipMap", 0f);
     }
 
     private static void ClearTex(Material m, string prop)
