@@ -37,7 +37,7 @@ public sealed class RuskModAttribute : Attribute
     public string Description { get; set; } = "";
 
     /// <summary>
-    /// 動作確認したゲームのバージョン (build_info.txt の buildVersion、例: "0.0.1872")。
+    /// 動作確認したゲームのバージョン (build_info.txt の buildVersion、例: "0.0.1873")。
     /// 書いておくと、ゲームが更新されたときに RusK の Check が「未確認のバージョン」と知らせる
     /// </summary>
     public string GameVersion { get; set; } = "";

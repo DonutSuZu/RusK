@@ -16,7 +16,7 @@ namespace RusK.Mods.Model;
 /// </summary>
 [RuskMod("model", "Custom VRM Loader", "1.2.6",
     Author = "you",
-    GameVersion = "0.0.1872",
+    GameVersion = "0.0.1873",
     Description = "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)")]
 public sealed class ModelMod : RuskMod
 {

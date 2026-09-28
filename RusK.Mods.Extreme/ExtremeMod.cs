@@ -11,7 +11,7 @@ namespace RusK.Mods.Extreme;
 /// </summary>
 [RuskMod("extreme", "EXTREME Difficulty", "1.1.0",
     Author = "you",
-    GameVersion = "0.0.1872",
+    GameVersion = "0.0.1873",
     Description = "難易度 EXTREME を解放し、敵の HP・攻撃力・攻撃頻度・シールドを強化")]
 public sealed class ExtremeMod : RuskMod
 {

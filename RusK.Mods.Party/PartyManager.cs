@@ -91,6 +91,7 @@ internal static class PartyManager
         _pending = null;
         _rescueTo = null;
         JustSwitch.Reset();
+        BuffShare.Reset();
     }
 
     // ------------------------------------------------------------------ 戦闘不能と自動交代

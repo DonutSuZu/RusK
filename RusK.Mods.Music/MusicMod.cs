@@ -7,7 +7,7 @@ namespace RusK.Mods.Music;
 /// </summary>
 [RuskMod("music", "Music Manager", "1.1.0",
     Author = "you",
-    GameVersion = "0.0.1872",
+    GameVersion = "0.0.1873",
     Description = "戦闘中の BGM を RusK/music の曲に置き換える")]
 public sealed class MusicMod : RuskMod
 {

@@ -56,3 +56,4 @@
 パーティ編成	Party Setup	队伍编成
 パリィ	parry	招架
 ガード	guard	防御
+戦闘中に獲得したパッシブバフをパーティ全員で共有する (操作中のキャラが得たバフを控えにも付ける)	Share passive buffs gained during battle with the whole party (buffs the active character gains are also given to the reserves)	在战斗中获得的被动增益由全队共享 (当前操作角色获得的增益也会给后备角色)

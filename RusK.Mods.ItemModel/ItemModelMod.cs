@@ -15,7 +15,7 @@ namespace RusK.Mods.ItemModel;
 /// </summary>
 [RuskMod("itemmodel", "Custom Item Model", "1.1.0",
     Author = "you",
-    GameVersion = "0.0.1872",
+    GameVersion = "0.0.1873",
     Description = "武器・装備品の見た目を glb にする (RusK\\props に .glb を置く)")]
 public sealed class ItemModelMod : RuskMod
 {

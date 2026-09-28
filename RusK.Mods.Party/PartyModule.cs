@@ -11,9 +11,9 @@ namespace RusK.Mods.Party;
 /// アクティブ3人 (ZZZ 風のキャラ切り替え)。
 /// 選んだ仲間 2 人を戦闘ステージで控えに用意し、「次へ」「前へ」のキーで切り替える。
 /// </summary>
-[RuskMod("party", "Party", "1.1.0",
+[RuskMod("party", "Party", "1.2.0",
     Author = "you",
-    GameVersion = "0.0.1872",
+    GameVersion = "0.0.1873",
     Description = "アクティブ3人。仲間を選んで、戦闘中にキーでキャラを切り替える")]
 public sealed class PartyMod : RuskMod
 {
@@ -53,6 +53,7 @@ public sealed class PartyModule : Module
     private readonly FloatSetting _justWindow;
     private readonly FloatSetting _guardTime;
     private readonly BoolSetting _justIgnoreCooldown;
+    private readonly BoolSetting _shareBuffs;
     private readonly BoolSetting _showHud;
     private readonly FloatSetting _hudX;
     private readonly FloatSetting _hudY;
@@ -77,6 +78,8 @@ public sealed class PartyModule : Module
             "攻撃の予兆 (キラーン) からこの秒数以内なら、クールタイム中でも切り替えられる"));
         _justIgnoreCooldown = AddSetting(new BoolSetting("JustIgnoresCooldown", true,
             "予兆の直後はクールタイム中でも切り替えられる"));
+        _shareBuffs = AddSetting(new BoolSetting("ShareBuffs", true,
+            "戦闘中に獲得したパッシブバフをパーティ全員で共有する (操作中のキャラが得たバフを控えにも付ける)"));
         _showHud = AddSetting(new BoolSetting("ShowHud", true, "パーティ HUD (顔・HP・必殺技ゲージ) を出す"));
         _hudX = AddSetting(new FloatSetting("HudX", 0.015f, 0f, 1f, 0.005f, "0.000", "パーティ HUD の横位置 (画面比)"));
         _hudY = AddSetting(new FloatSetting("HudY", 0.34f, 0f, 1f, 0.005f, "0.000", "パーティ HUD の縦位置 (画面比)"));
@@ -95,8 +98,10 @@ public sealed class PartyModule : Module
         JustSwitch.Window = _justWindow.Value;
         JustSwitch.GuardTime = _guardTime.Value;
         JustSwitch.IgnoreCooldown = _justIgnoreCooldown.Value;
+        BuffShare.Enabled = _shareBuffs.Value;
         PartyManager.Tick();
         PartyManager.SyncLeader();
+        BuffShare.Tick();
 
         if (_autoSpawn.Value) PartyManager.AutoSpawn();
 

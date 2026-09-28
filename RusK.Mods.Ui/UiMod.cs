@@ -8,7 +8,7 @@ namespace RusK.Mods.Ui;
 /// </summary>
 [RuskMod("ui", "RusK UI", "1.1.0",
     Author = "you",
-    GameVersion = "0.0.1872",
+    GameVersion = "0.0.1873",
     Description = "ボタン HUD・攻撃予兆・キー追加 (ゲームバランスに影響しない補助)")]
 public sealed class UiMod : RuskMod
 {

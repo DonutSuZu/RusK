@@ -89,7 +89,7 @@ internal static class InstallEngine
     public const string BepInExSha256 = "f4cc496bd098a0df4164b81e3737297707f13a47c2478dba2f60eefab784817a";
 
     /// <summary>このセットアップが対応しているゲームのバージョン</summary>
-    public const string SupportedGameVersion = "0.0.1872 (9e092a0)";
+    public const string SupportedGameVersion = "0.0.1873 (45c7c82)";
 
     /// <summary>このセットアップに入っている RusK のバージョン</summary>
     public static string PayloadVersion =>

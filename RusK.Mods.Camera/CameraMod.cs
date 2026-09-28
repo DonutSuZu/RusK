@@ -16,7 +16,7 @@ namespace RusK.Mods.Camera;
 /// </summary>
 [RuskMod("camera", "Camera View", "1.1.0",
     Author = "you",
-    GameVersion = "0.0.1872",
+    GameVersion = "0.0.1873",
     Description = "視点変更 (近い肩越し / 真後ろ / 一人称 / カスタム)")]
 public sealed class CameraMod : RuskMod
 {

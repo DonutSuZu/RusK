@@ -20,7 +20,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143135" src="https://github.com/user-attachments/assets/558d6ad4-841f-498c-a79c-dd3b4c886368" />
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143139" src="https://github.com/user-attachments/assets/7828f779-6900-49a0-81b5-01cdc945e14e" />
 
-**対応ゲームバージョン: 0.0.1872 (9e092a0)** — ゲーム画面の左下に出る `Version 0.0.1872_9e092a0` と同じか確認してください。
+**対応ゲームバージョン: 0.0.1873 (45c7c82)** — ゲーム画面の左下に出る `Version 0.0.1873_45c7c82` と同じか確認してください。
 ゲームが更新されたときは、メニューの Mods > Check で動かなくなった Mod を確認できます。
 
 ## インストール (利用者向け)
@@ -178,7 +178,7 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 
 Mod 作者は、動作確認したゲームの版を書いておくと、更新時に「未確認のバージョン」と表示される:
 ```csharp
-[RuskMod("mymod", "My Mod", "1.0.0", GameVersion = "0.0.1872")]
+[RuskMod("mymod", "My Mod", "1.0.0", GameVersion = "0.0.1873")]
 ```
 
 ## Flex Window（Mod 用ウィンドウ）
