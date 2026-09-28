@@ -26,7 +26,9 @@ internal sealed class SetupForm : Form
     private static readonly Color Bad = Color.FromArgb(242, 102, 102);
     private static readonly Color Warn = Color.FromArgb(242, 191, 76);
 
-    private const string BepInExUrl = "https://builds.bepinex.dev/projects/bepinex_be";
+    // 動作確認した BepInEx (公式の 6.0.0-be.788) の zip に固定する。開発版のページの最新だと、確認していない版が入ることがある
+    private const string BepInExUrl =
+        "https://builds.bepinex.dev/projects/bepinex_be/788/BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.788%2B5b766a3.zip";
 
     private static readonly string[] StepNames = { "ようこそ", "インストール先", "コンポーネント", "インストール", "完了" };
 
@@ -271,12 +273,12 @@ internal sealed class SetupForm : Form
         _bepPanel.BackColor = Field;
         _bepPanel.Controls.Add(new Label
         {
-            Text = Strings.T("BepInEx 6 (IL2CPP 版) が必要です。公式サイトから\n「BepInEx-Unity.IL2CPP-win-x64-...zip」をダウンロードして、下で選んでください。"),
+            Text = Strings.T("BepInEx 6 (IL2CPP 版、動作確認済みの be.788) が必要です。\n下のリンクから zip をダウンロードして、「zip を選択...」で選んでください。"),
             Location = new Point(10, 8), Size = new Size(520, 40), ForeColor = TextColor,
         });
         var link = new LinkLabel
         {
-            Text = Strings.T("BepInEx のダウンロードページを開く"), Location = new Point(10, 50), AutoSize = true,
+            Text = Strings.T("BepInEx be.788 の zip をダウンロードする"), Location = new Point(10, 50), AutoSize = true,
             LinkColor = Accent, ActiveLinkColor = Accent,
         };
         link.LinkClicked += (_, _) => Open(BepInExUrl);

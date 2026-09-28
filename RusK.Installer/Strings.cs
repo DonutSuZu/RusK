@@ -96,10 +96,10 @@ internal static class Strings
         ["Steam のライブラリに VED:Recure が見つかりませんでした。\n「参照...」から選んでください。"] = (
             "VED:Recure was not found in your Steam libraries.\nPlease choose it with \"Browse...\".",
             "在 Steam 库中找不到 VED:Recure。\n请通过「浏览...」选择。"),
-        ["BepInEx 6 (IL2CPP 版) が必要です。公式サイトから\n「BepInEx-Unity.IL2CPP-win-x64-...zip」をダウンロードして、下で選んでください。"] = (
-            "BepInEx 6 (IL2CPP) is required. Download\n\"BepInEx-Unity.IL2CPP-win-x64-...zip\" from the official site and choose it below.",
-            "需要 BepInEx 6 (IL2CPP 版)。请从官方网站下载\n「BepInEx-Unity.IL2CPP-win-x64-...zip」, 并在下方选择。"),
-        ["BepInEx のダウンロードページを開く"] = ("Open the BepInEx download page", "打开 BepInEx 下载页面"),
+        ["BepInEx 6 (IL2CPP 版、動作確認済みの be.788) が必要です。\n下のリンクから zip をダウンロードして、「zip を選択...」で選んでください。"] = (
+            "BepInEx 6 (IL2CPP, tested version be.788) is required.\nDownload the zip from the link below and choose it with \"Choose zip...\".",
+            "需要 BepInEx 6 (IL2CPP 版, 已验证的 be.788)。\n请从下方链接下载 zip, 然后通过「选择 zip...」选择。"),
+        ["BepInEx be.788 の zip をダウンロードする"] = ("Download the BepInEx be.788 zip", "下载 BepInEx be.788 的 zip"),
         ["zip を選択..."] = ("Choose zip...", "选择 zip..."),
         ["BepInEx の zip を選択"] = ("Choose the BepInEx zip", "选择 BepInEx 的 zip"),
         ["RusK はすでにインストールされています。どうしますか？"] = ("RusK is already installed. What would you like to do?", "RusK 已安装。要做什么?"),
