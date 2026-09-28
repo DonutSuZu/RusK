@@ -91,8 +91,12 @@ public sealed class ModelLabWindow : RuskWindow
         gui.Header("今のキャラ", p != null ? CharacterNames.Get(p.GetPlayerId()) : "(なし)");
         if (gui.Button("調べて書き出す", enabled: p != null, accent: true)) ModelLab.Report();
         if (gui.Button("画面のキャラを調べる (タイトル・キャラ画面など)")) ModelLab.ScanScene();
-        if (gui.Button(MotionRecorder.Recording ? "動きを記録中..." : "VRM のキャラの動きを 3 秒記録する", enabled: !MotionRecorder.Recording))
-            MotionRecorder.Start();
+        MotionRecorder.Tick();
+        if (gui.Button(MotionRecorder.Recording ? "記録中... (押すと止めて書き出す)" : "キャラの動きと表情を 10 秒記録する"))
+        {
+            if (MotionRecorder.Recording) MotionRecorder.Stop();
+            else MotionRecorder.Start();
+        }
         if (ModelLab.LastFile != null)
             gui.Label($"書き出し: {Path.GetFileName(ModelLab.LastFile)}", RuskStyle.TextDim, small: true);
 
@@ -534,36 +538,50 @@ internal static class MotionRecorder
         public float MaxAngle, MaxPos, MaxScale;
     }
 
-    private static System.Collections.Generic.List<Track> _tracks;
+    /// <summary>ブレンドシェイプ (顔の表情・口)。キャラを切り替えても「メッシュ名 / 名前」でまとめて集計する</summary>
+    private sealed class Shape { public float Min = float.MaxValue, Max = float.MinValue; public int Samples; }
+
+    private static System.Collections.Generic.List<Track> _tracks;       // VRM を付けたキャラの骨 (いれば)
+    private static System.Collections.Generic.Dictionary<string, Shape> _shapes;
+    private static System.Collections.Generic.List<Transform> _roots = new();
     private static Transform _root;
-    private static float _end;
-    public static bool Recording => _tracks != null;
+    private static float _end, _nextRoots;
+    private static int _samples, _lastFrame = -1;
+
+    public static bool Recording => _shapes != null;
 
     public static void Start()
     {
+        _shapes = new System.Collections.Generic.Dictionary<string, Shape>();
+        _tracks = null;
+        _root = null;
         var target = Vrm.VrmSwap.RecordTarget();
-        if (target == null) { ModelLab.Ctx?.Notify("VRM を付けたキャラがいません", NotifyLevel.Warning); return; }
-        var (root, mapped, _) = target.Value;
-        _root = root;
-        _tracks = new System.Collections.Generic.List<Track>();
-        foreach (var t in root.GetComponentsInChildren<Transform>(true))
+        if (target != null)
         {
-            string path = t.name;
-            for (var c = t.parent; c != null && c != root; c = c.parent) path = c.name + "/" + path;
-            _tracks.Add(new Track
+            var (root, mapped, _) = target.Value;
+            _root = root;
+            _tracks = new System.Collections.Generic.List<Track>();
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
             {
-                T = t, Path = path, Mapped = mapped.Contains(t.Pointer),
-                Rot0 = t.localRotation, Pos0 = t.localPosition, Scale0 = t.localScale,
-            });
+                string path = t.name;
+                for (var c = t.parent; c != null && c != root; c = c.parent) path = c.name + "/" + path;
+                _tracks.Add(new Track
+                {
+                    T = t, Path = path, Mapped = mapped.Contains(t.Pointer),
+                    Rot0 = t.localRotation, Pos0 = t.localPosition, Scale0 = t.localScale,
+                });
+            }
         }
-        _end = Time.unscaledTime + 3f;
-        ModelLab.Ctx?.Notify($"{root.name} の動きを 3 秒記録します", NotifyLevel.Info);
+        _end = Time.unscaledTime + 10f;
+        _nextRoots = 0f;
+        _samples = 0;
+        ModelLab.Ctx?.Notify("キャラの動きと表情を 10 秒記録します", NotifyLevel.Info);
     }
 
-    /// <summary>VrmSwap.LateTick から毎フレーム (アニメーションの後) 呼ばれる</summary>
+    /// <summary>VrmSwap.LateTick から毎フレーム (アニメーションの後) 呼ばれる: VRM を付けたキャラの骨</summary>
     public static void Sample(Transform root)
     {
-        if (_tracks == null || root == null || root.Pointer != _root.Pointer) return;
+        if (_tracks == null || root == null || _root == null || root.Pointer != _root.Pointer) return;
         foreach (var k in _tracks)
         {
             if (k.T == null) continue;
@@ -571,35 +589,87 @@ internal static class MotionRecorder
             k.MaxPos = Mathf.Max(k.MaxPos, (k.T.localPosition - k.Pos0).magnitude);
             k.MaxScale = Mathf.Max(k.MaxScale, (k.T.localScale - k.Scale0).magnitude);
         }
+    }
+
+    /// <summary>
+    /// Model Lab の画面から毎フレーム呼ばれる: 画面に出ているキャラ (見せるためのモデル・操作キャラ) の顔のブレンドシェイプ。
+    /// VRM を付けていないキャラも記録する。時間が来たら書き出す
+    /// </summary>
+    public static void Tick()
+    {
+        if (_shapes == null || Time.frameCount == _lastFrame) return;
+        _lastFrame = Time.frameCount;
+        if (Time.unscaledTime >= _nextRoots)
+        {
+            _nextRoots = Time.unscaledTime + 0.5f;
+            _roots.Clear();
+            foreach (var s in Resources.FindObjectsOfTypeAll<CharacterShowController>())
+                if (s != null && s.gameObject.scene.name != null && s.gameObject.activeInHierarchy) _roots.Add(s.transform);
+            var p = PlayerRef.Current;
+            if (p != null && p.gameObject.activeInHierarchy) _roots.Add(p.transform);
+        }
+        _samples++;
+        foreach (var root in _roots)
+        {
+            if (root == null) continue;
+            string who = root.name.Split('_')[0];
+            foreach (var r in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                var mesh = r.sharedMesh;
+                if (mesh == null || mesh.blendShapeCount == 0) continue;
+                for (int i = 0; i < mesh.blendShapeCount; i++)
+                {
+                    string key = $"{who} {r.name} / {mesh.GetBlendShapeName(i)}";
+                    if (!_shapes.TryGetValue(key, out var sh)) _shapes[key] = sh = new Shape();
+                    float w = r.GetBlendShapeWeight(i);
+                    sh.Min = Mathf.Min(sh.Min, w);
+                    sh.Max = Mathf.Max(sh.Max, w);
+                    sh.Samples++;
+                }
+            }
+        }
         if (Time.unscaledTime >= _end) Finish();
+    }
+
+    public static void Stop()
+    {
+        if (_shapes != null) Finish();
     }
 
     private static void Finish()
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"キャラ: {_root.name} (3 秒間の最大の変化。★ = VRM に動きを写している骨)");
+        sb.AppendLine($"記録したフレーム {_samples}");
         sb.AppendLine();
-        sb.AppendLine("===== 回転 (度) =====");
-        foreach (var k in _tracks.Where(k => k.MaxAngle > 0.05f).OrderByDescending(k => k.MaxAngle).Take(60))
-            sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxAngle,7:0.00}  {k.Path}");
+        sb.AppendLine("===== ブレンドシェイプ (顔の表情・口。記録中の最小～最大。動いたものから) =====");
+        foreach (var kv in _shapes.OrderByDescending(kv => kv.Value.Max - kv.Value.Min).ThenBy(kv => kv.Key))
+            sb.AppendLine($"   {kv.Value.Min,7:0.0} ～ {kv.Value.Max,7:0.0}  {kv.Key}");
         sb.AppendLine();
-        sb.AppendLine("===== 位置 (m) =====");
-        foreach (var k in _tracks.Where(k => k.MaxPos > 0.0001f).OrderByDescending(k => k.MaxPos).Take(40))
-            sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxPos,8:0.0000}  {k.Path}");
-        sb.AppendLine();
-        sb.AppendLine("===== 大きさ =====");
-        foreach (var k in _tracks.Where(k => k.MaxScale > 0.0001f).OrderByDescending(k => k.MaxScale).Take(40))
-            sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxScale,8:0.0000}  {k.Path}");
+
+        if (_tracks != null)
+        {
+            sb.AppendLine($"===== VRM を付けたキャラ {(_root != null ? _root.name : "?")} の骨 (最大の変化。★ = VRM に動きを写している骨) =====");
+            sb.AppendLine("--- 回転 (度)");
+            foreach (var k in _tracks.Where(k => k.MaxAngle > 0.05f).OrderByDescending(k => k.MaxAngle).Take(60))
+                sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxAngle,7:0.00}  {k.Path}");
+            sb.AppendLine("--- 位置 (m)");
+            foreach (var k in _tracks.Where(k => k.MaxPos > 0.0001f).OrderByDescending(k => k.MaxPos).Take(40))
+                sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxPos,8:0.0000}  {k.Path}");
+            sb.AppendLine("--- 大きさ");
+            foreach (var k in _tracks.Where(k => k.MaxScale > 0.0001f).OrderByDescending(k => k.MaxScale).Take(40))
+                sb.AppendLine($"{(k.Mapped ? "★" : "  ")} {k.MaxScale,8:0.0000}  {k.Path}");
+        }
         try
         {
             Directory.CreateDirectory(ModelLab.Ctx.DataDirectory);
             var file = Path.Combine(ModelLab.Ctx.DataDirectory, $"motion_{DateTime.Now:HHmmss}.txt");
             File.WriteAllText(file, sb.ToString(), new UTF8Encoding(false));
             ModelLab.LastFile = file;
-            ModelLab.Ctx.Notify("動きを書き出しました", NotifyLevel.Success);
+            ModelLab.Ctx.Notify("動きと表情を書き出しました", NotifyLevel.Success);
         }
         catch (Exception e) { ModelLab.Ctx?.Log.Error($"Model Lab: 書き出しに失敗: {e}"); }
         _tracks = null;
+        _shapes = null;
     }
 }
 

@@ -128,7 +128,8 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
   - 材質: ゲームのトゥーンシェーダー (Custom/ToonLit_Crt) で、ゲームのキャラと同じ陰影・色調で描く。
     透明部分はキャラ用の切り抜き (`_USEALPHACLIPPING_ON` + `_CharacterAlphaClipMap`、白い所が消える地図なので透明度を反転して渡す)。
     両面表示の材質は裏向きの面をメッシュに足し (Outline パスは止める)、影は裏向きの面の無い「影だけ」のメッシュで落とす
-  - 揺れ物 (SpringBone) と自動のまばたきに対応。武器は VRM の手の位置に合わせる
+  - 揺れ物 (SpringBone) に対応。武器は VRM の手の位置に合わせる
+  - 表情: ゲームの顔のブレンドシェイプ (Mouth_Shout = 口パク、Mouth_Smile02、Eyes_Closed、Pupil_* など) を VRM の表情 (A / Fun / Blink / LookUp など) に写す。ゲームの顔がまばたきしないときは自動のまばたき
   - 操作キャラだけでなく、タイトル画面・キャラクター画面・装備画面の見せるためのモデル (`CharacterShowController`) にも付ける。
     どのキャラかは `InitialSetting(id)` で受け取り、動きは `CinemachineBrain.LateUpdate` の後で写す (タイトル画面では CameraController が動かない)。
     元の体を描かないと Animator がアニメーションを止めるので、付けている間は `AnimatorCullingMode.AlwaysAnimate` にする

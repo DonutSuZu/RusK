@@ -39,6 +39,9 @@ internal static class VrmSwap
         /// <summary>元のキャラの Animator と、付ける前のカリングの設定 (外すときに戻す)</summary>
         public Animator Animator;
         public AnimatorCullingMode OriginalCulling;
+        /// <summary>ゲームのキャラの顔 (表情・口パクのブレンドシェイプ) と、名前 → 番号</summary>
+        public SkinnedMeshRenderer Face;
+        public readonly Dictionary<string, int> FaceShapes = new();
     }
 
     private static readonly Dictionary<IntPtr, Entry> Entries = new();
@@ -266,6 +269,19 @@ internal static class VrmSwap
                 entry.Hidden.Add(r);
             }
 
+            // ゲームのキャラの顔 (口パク・表情・まばたきのブレンドシェイプを持つメッシュ) を探しておく
+            foreach (var r in body)
+            {
+                var mesh = r.sharedMesh;
+                if (mesh == null || mesh.blendShapeCount == 0) continue;
+                var names = new Dictionary<string, int>();
+                for (int i = 0; i < mesh.blendShapeCount; i++) names[mesh.GetBlendShapeName(i)] = i;
+                if (!names.ContainsKey("Eyes_Closed") && !names.ContainsKey("Mouth_Shout")) continue;
+                entry.Face = r;
+                foreach (var kv in names) entry.FaceShapes[kv.Key] = kv.Value;
+                break;
+            }
+
             // 元の体を描かないと、Animator が「見えていないキャラ」としてアニメーションを止めることがある
             // (見せるためのモデルは呼吸などの動きが止まっていた)。付けている間は常にアニメーションさせる
             entry.Animator = character.GetComponent<Animator>();
@@ -480,7 +496,11 @@ internal static class VrmSwap
                 e.Model.Skirt?.Update();
                 // 揺れ物と表情は、動きを写した後に (ゲームの時間の流れ = スローや一時停止に合わせる)
                 e.Model.Springs?.Update(Time.deltaTime);
-                e.Model.Expressions?.Update(Time.deltaTime);
+                // 表情: ゲームのキャラの顔を写す (口パク・表情・まばたき)。顔が無ければ自動のまばたき
+                if (e.Face != null)
+                    e.Model.Expressions?.FromGame(n => e.FaceShapes.TryGetValue(n, out var i) ? e.Face.GetBlendShapeWeight(i) : 0f, Time.deltaTime);
+                else
+                    e.Model.Expressions?.Update(Time.deltaTime);
                 MotionRecorder.Sample(e.Root);
             }
             catch (Exception ex)
