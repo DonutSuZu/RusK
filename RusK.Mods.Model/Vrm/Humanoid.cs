@@ -123,6 +123,7 @@ internal static class Humanoid
             foreach (var (_, t) in human) MakeShadow(t, shadow, restRoot, bind);
 
             EnforceTPose(shadow, human);
+            LogHands(root, shadow, human, bind);
 
             var result = new Dictionary<HumanBodyBones, (Transform, Rest)>();
             foreach (var (bone, t) in human)
@@ -149,6 +150,20 @@ internal static class Humanoid
         var rest = bind.TryGetValue(t.Pointer, out var b)
             ? b
             : parentRest * Matrix4x4.TRS(t.localPosition, t.localRotation, t.localScale);
+        if (!bind.ContainsKey(t.Pointer))
+        {
+            // メッシュに使われていない骨は、今のアニメーションの姿勢になってしまう (腕のねじれがずれる)。
+            // Biped は上腕・前腕の代わりにねじれ用の子の骨 (UpArmTwist / ForeTwist) にメッシュを付けることがある (霜色)。
+            // ねじれ用の骨は基準の姿勢で親と同じ向きなので、その向きを使う (位置は親からの位置のまま)
+            for (int i = 0; i < t.childCount; i++)
+            {
+                var c = t.GetChild(i);
+                if (!c.name.Contains("Twist") || !bind.TryGetValue(c.Pointer, out var cb)) continue;
+                var pos = new Vector3(rest.m03, rest.m13, rest.m23);
+                rest = Matrix4x4.TRS(pos, cb.rotation, Vector3.one);
+                break;
+            }
+        }
         restRoot[t.Pointer] = rest;
 
         var local = parentRest.inverse * rest;
@@ -158,6 +173,62 @@ internal static class Humanoid
         s.localRotation = local.rotation;
         shadow[t.Pointer] = s;
         return s;
+    }
+
+    /// <summary>
+    /// 調査用: 基準の姿勢での手の向き・手のひらの向き・指の曲がりをログに出す (キャラによって手がねじれる件)。
+    /// bind なし = その骨がメッシュに使われておらず、今のアニメーションの姿勢を基準にしてしまっている
+    /// </summary>
+    private static void LogHands(Transform root, Dictionary<IntPtr, Transform> shadow, List<(HumanBodyBones bone, Transform t)> human,
+        Dictionary<IntPtr, Matrix4x4> bind)
+    {
+        try
+        {
+            Transform S(HumanBodyBones b)
+            {
+                var h = human.FirstOrDefault(x => x.bone == b);
+                return h.t != null && shadow.TryGetValue(h.t.Pointer, out var s) ? s : null;
+            }
+            bool B(HumanBodyBones b)
+            {
+                var h = human.FirstOrDefault(x => x.bone == b);
+                return h.t != null && bind.ContainsKey(h.t.Pointer);
+            }
+            string V(Vector3 v) => $"({v.x:0.00},{v.y:0.00},{v.z:0.00})";
+            var sb = new System.Text.StringBuilder($"Model: 手の基準の姿勢 '{root.name}'");
+            foreach (var (side, hand, lower, index, middle, little, thumb) in new[]
+                     {
+                         ("左", HumanBodyBones.LeftHand, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftIndexProximal,
+                             HumanBodyBones.LeftMiddleProximal, HumanBodyBones.LeftLittleProximal, HumanBodyBones.LeftThumbProximal),
+                         ("右", HumanBodyBones.RightHand, HumanBodyBones.RightLowerArm, HumanBodyBones.RightIndexProximal,
+                             HumanBodyBones.RightMiddleProximal, HumanBodyBones.RightLittleProximal, HumanBodyBones.RightThumbProximal),
+                     })
+            {
+                var h = S(hand); var m = S(middle); var i = S(index); var l = S(little); var lo = S(lower);
+                if (h == null || m == null || i == null || l == null || lo == null) { sb.Append($" / {side}: 骨が足りない"); continue; }
+                var arm = (h.position - lo.position).normalized;
+                var dir = (m.position - h.position).normalized;
+                var palm = Vector3.Cross(i.position - h.position, l.position - h.position).normalized;
+                sb.Append($" / {side}: 腕 {V(arm)} 手 {V(dir)} (腕との角度 {Vector3.Angle(arm, dir):0}) 手のひら {V(palm)}");
+                sb.Append($" bind 手={B(hand)} 指={B(middle)}");
+                var sh = side == "左" ? HumanBodyBones.LeftShoulder : HumanBodyBones.RightShoulder;
+                var up = side == "左" ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm;
+                sb.Append($" 肩={B(sh)} 上腕={B(up)} 前腕={B(lower)}");
+                // 腕まわりの骨 (ねじれの骨など) の名前
+                var upT = human.FirstOrDefault(x => x.bone == up).t;
+                if (upT != null)
+                    sb.Append(" 上腕の子=[" + string.Join(",", Enumerable.Range(0, upT.childCount).Select(k => upT.GetChild(k).name)) + "]");
+                var loT = human.FirstOrDefault(x => x.bone == lower).t;
+                if (loT != null)
+                    sb.Append(" 前腕の子=[" + string.Join(",", Enumerable.Range(0, loT.childCount).Select(k => loT.GetChild(k).name)) + "]");
+                // 中指の曲がり (付け根 → 2 節目の向きと手の向きの角度)
+                var m2 = human.FirstOrDefault(x => x.bone == middle + 1);
+                if (m2.t != null && shadow.TryGetValue(m2.t.Pointer, out var s2))
+                    sb.Append($" 中指の曲がり {Vector3.Angle(dir, (s2.position - m.position).normalized):0}°");
+            }
+            VrmEnv.Ctx?.Log.Info(sb.ToString());
+        }
+        catch (Exception e) { VrmEnv.Ctx?.Log.Warning($"Model: 手の調査に失敗: {e.Message}"); }
     }
 
     /// <summary>腕 (上腕・前腕) を、根元から見て真横 (左手は -X、右手は +X) に向ける</summary>

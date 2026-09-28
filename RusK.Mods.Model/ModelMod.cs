@@ -14,7 +14,7 @@ namespace RusK.Mods.Model;
 /// ゲームのキャラ (骨格・アニメーション・当たり判定) はそのまま動かし、見た目だけを VRM にする。
 /// Model Lab はデバッグ用 (モデルの作りの書き出し・キャラ同士の見た目の入れ替え・切り抜きの方式の比較)。
 /// </summary>
-[RuskMod("model", "Custom VRM Loader", "1.2.5",
+[RuskMod("model", "Custom VRM Loader", "1.2.6",
     Author = "you",
     GameVersion = "0.0.1872",
     Description = "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)")]
