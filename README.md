@@ -19,7 +19,8 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143127" src="https://github.com/user-attachments/assets/6d459b0f-1843-423b-b61d-34582da4b3ad" />
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143135" src="https://github.com/user-attachments/assets/558d6ad4-841f-498c-a79c-dd3b4c886368" />
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143139" src="https://github.com/user-attachments/assets/7828f779-6900-49a0-81b5-01cdc945e14e" />
-
+Mod Trailer:
+https://cdn.discordapp.com/attachments/1441000938893742120/1554017977488117820/trailer.mp4?ex=6abb5b86&is=6aba0a06&hm=60f0530be9000d5785ccc84d237ffb6ce24490422ae06a59e53caa83acd40088&
 
 
 **対応ゲームバージョン: 0.0.1872 (9e092a0)** — ゲーム画面の左下に出る `Version 0.0.1872_9e092a0` と同じか確認してください。
