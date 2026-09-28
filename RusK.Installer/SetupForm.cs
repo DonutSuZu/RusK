@@ -195,7 +195,7 @@ internal sealed class SetupForm : Form
     private void BuildWelcome()
     {
         var p = _pages[0];
-        p.Controls.Add(Caption(Strings.T("表示の言語") + " / Language / 语言", 0, 2));
+        p.Controls.Add(Caption("言語 / Language / 语言", 0, 2));
         _language.DropDownStyle = ComboBoxStyle.DropDownList;
         _language.FlatStyle = FlatStyle.Flat;
         _language.BackColor = Field;
@@ -399,6 +399,7 @@ internal sealed class SetupForm : Form
             _componentPanel.Controls.Add(new Label
             {
                 Text = Strings.T(c.Description), ForeColor = Dim, Location = new Point(20, y + 22), Size = new Size(495, 20),
+                AutoEllipsis = true,
             });
             y += 38;
         }
