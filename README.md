@@ -12,6 +12,15 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 - **RusK Check**: ゲームの更新で壊れた Mod を教える診断機能
 
 **ゲーム**: [VED:Recure (Steam)](https://store.steampowered.com/app/3255500/Ved/)
+<img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143100" src="https://github.com/user-attachments/assets/fc1d804d-1a30-4ef0-8e89-dce345236e2c" />
+
+<img width="2559" height="1439" alt="スクリーンショット 2026-09-28 133951" src="https://github.com/user-attachments/assets/4d212f47-ec62-4f92-b872-2479d8ff2fe1" />
+<img width="2559" height="1439" alt="スクリーンショット 2026-09-28 134006" src="https://github.com/user-attachments/assets/8c5b5815-bbac-444b-9181-ef8d9f84f38c" />
+<img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143127" src="https://github.com/user-attachments/assets/6d459b0f-1843-423b-b61d-34582da4b3ad" />
+<img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143135" src="https://github.com/user-attachments/assets/558d6ad4-841f-498c-a79c-dd3b4c886368" />
+<img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143139" src="https://github.com/user-attachments/assets/7828f779-6900-49a0-81b5-01cdc945e14e" />
+
+
 
 **対応ゲームバージョン: 0.0.1872 (9e092a0)** — ゲーム画面の左下に出る `Version 0.0.1872_9e092a0` と同じか確認してください。
 ゲームが更新されたときは、メニューの Mods > Check で動かなくなった Mod を確認できます。
