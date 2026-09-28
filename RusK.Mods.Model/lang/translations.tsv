@@ -1,0 +1,37 @@
+# 元の文	英語	中国語 (簡体字)
+キャラを選んでから、VRM を選んでください。そのキャラを操作しているときに見た目が VRM になります。	Pick a character, then pick a VRM. The character looks like the VRM while you play as them.	先选择角色, 再选择 VRM。操作该角色时外观会变为 VRM。
+キャラ	Characters	角色
+キャラ一覧を取得できません (ゲームに入ってから開いてください)	Can't get the character list (open this after entering the game)	无法获取角色列表 (请进入游戏后再打开)
+元の見た目	Original look	原外观
+(操作中)	(active)	(操作中)
+{0} の見た目	Look of {0}	{0} 的外观
+見た目	Look	外观
+元の見た目にする	Restore the original look	恢复原外观
+フォルダを開く	Open folder	打开文件夹
+RusK\models に .vrm ファイルを置いてください。	Put .vrm files in RusK\models.	请将 .vrm 文件放入 RusK\models。
+キャラの見た目を VRM にする画面を開く	Open the window for turning characters into VRM models	打开将角色外观替换为 VRM 的窗口
+装飾品の表示	Accessories	饰品显示
+VRM にしたキャラの装飾品を部位ごとに隠せます (頭の装飾品が髪に埋まる・頭にめり込むときなど)。	Hide the accessories of VRM characters by body part (e.g. when a head accessory sinks into the hair or clips into the head).	可按部位隐藏 VRM 角色的饰品 (例如头部饰品埋进头发或穿进头部时)。
+{0}の装飾品を表示する	Show {0} accessories	显示{0}饰品
+明るさ・影	Brightness / shadows	亮度 / 阴影
+明るさ: 服や髪が白く浮いて見えるときは下げる。影の濃さ: 髪や帽子が顔に落とす影 (1.00 でゲームのキャラと同じ)。	Brightness: lower it if clothes or hair look washed out. Shadow strength: shadows cast by hair or hats on the face (1.00 is the same as the game's characters).	亮度: 衣服或头发显得发白时调低。阴影浓度: 头发或帽子投在脸上的阴影 (1.00 与游戏角色相同)。
+影の濃さ: 髪や帽子が顔などに落とす影 (1.00 でゲームのキャラと同じ)。	Shadow strength: shadows cast by hair or hats on the face (1.00 is the same as the game's characters).	阴影浓度: 头发或帽子投在脸上等处的阴影 (1.00 与游戏角色相同)。
+明るさ・影を初期値に戻す	Reset brightness / shadows	重置亮度 / 阴影
+スカートの調整	Skirt tuning	裙子调整
+脚がスカートから出るのと、スカートのめくれ具合のバランスを調整します。	Balance legs poking out of the skirt against how much the skirt flips up.	调整腿穿出裙子与裙子掀起程度之间的平衡。
+初期値に戻す	Reset to defaults	恢复默认值
+キャラの見た目を VRM にする (RusK\models に .vrm を置く)	Turn characters into VRM models (put .vrm files in RusK\models)	将角色外观替换为 VRM (把 .vrm 放入 RusK\models)
+今のキャラのモデルを調べて書き出す	Inspect the current character's model and write a report	检查当前角色的模型并导出
+入れ替えた見た目の更新 (常に ON にしておいてください)	Keeps replaced looks updated (keep this ON)	更新替换后的外观 (请保持开启)
+明るさ	Brightness	亮度
+影の濃さ	Shadow strength	阴影浓度
+前後の開き	Front/back spread	前后张开
+横の開き	Side spread	左右张开
+脚の振り	Leg swing	腿部摆动
+当たり判定の太さ	Collider thickness	碰撞体粗细
+頭	head	头部
+肩	shoulder	肩部
+腰	waist	腰部
+背中	back	背部
+切り抜きなし	No cutout	不裁剪
+VRM を読み込めませんでした: {0}	Could not load the VRM: {0}	无法加载 VRM: {0}

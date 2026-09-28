@@ -158,7 +158,7 @@ internal sealed class WindowManager
         Render.Rect(s.X, s.Y, s.W, s.H, _t.Background, 6f);
         Render.Rect(s.X, s.Y, s.W, hh, _t.Header, 6f);
         Render.Rect(s.X, s.Y + hh - 2f, s.W, 2f, _t.Accent());
-        Render.Text(s.X + 10f, s.Y, s.W - hh - 14f, hh, e.Window.Title, _t.Text, _t.FontSize, TextAnchor.MiddleLeft, bold: true);
+        Render.Text(s.X + 10f, s.Y, s.W - hh - 14f, hh, RuskLang.T(e.Owner?.Info?.Id, e.Window.Title), _t.Text, _t.FontSize, TextAnchor.MiddleLeft, bold: true);
 
         // ✕ ボタン
         float cx = s.X + s.W - hh;
@@ -206,7 +206,7 @@ internal sealed class WindowManager
         {
             Rusk.Log.LogError($"[{e.Window.Id}] Draw failed: {ex}");
             e.Window.Visible = false;
-            Rusk.Notifications.Push($"{e.Window.Title} でエラー (ログを確認)", NotifyLevel.Error);
+            Rusk.Notifications.Push(L.T("{0} でエラー (ログを確認)", e.Window.Title), NotifyLevel.Error);
         }
         finally
         {

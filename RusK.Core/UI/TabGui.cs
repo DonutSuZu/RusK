@@ -123,7 +123,7 @@ internal sealed class TabGui
             bool sel = i == _cat;
             float ry = top + i * rowH;
             DrawRowBg(x, ry, catW, rowH, sel, _level == 0);
-            Render.Text(x + 10f * s, ry, catW - 20f * s, rowH, cats[i], sel ? _t.Text : _t.TextDim, _t.FontSize);
+            Render.Text(x + 10f * s, ry, catW - 20f * s, rowH, RuskLang.T(RuskLang.CoreId, cats[i]), sel ? _t.Text : _t.TextDim, _t.FontSize);
             if (sel && _level >= 1)
                 Render.Text(x, ry, catW - 6f * s, rowH, "›", _t.Accent(), _t.FontSize, TextAnchor.MiddleRight);
         }
@@ -147,13 +147,13 @@ internal sealed class TabGui
                 if (e.Active) Render.Rect(ex, ry, 2.5f, rowH, _t.Accent(i * 0.05f));
 
                 var color = e.Active ? _t.Accent(i * 0.05f) : e.Dim ? _t.TextDim : _t.Text;
-                Render.Text(ex + 10f * s, ry, entryW - 20f * s, rowH, e.Label, color, _t.FontSize);
+                Render.Text(ex + 10f * s, ry, entryW - 20f * s, rowH, L.T(e.Label), color, _t.FontSize);
 
                 string right = e.Suffix ?? (e.Rows.Count > 0 ? "›" : null);
                 if (right != null)
                     Render.Text(ex, ry, entryW - 8f * s, rowH, right, _t.TextDim, _t.SmallFontSize, TextAnchor.MiddleRight);
 
-                if (sel) description = e.Description;
+                if (sel) description = L.T(e.Description);
             }
             bottom = Mathf.Max(bottom, top + entries.Count * rowH);
 
@@ -171,7 +171,7 @@ internal sealed class TabGui
                     float ry = top + i * rowH;
                     DrawRowBg(rx, ry, rowW, rowH, sel, true);
                     DrawSettingRow(r, rx, ry, rowW, rowH, sel);
-                    if (sel) description = r.Description;
+                    if (sel) description = r.TDescription;
                 }
                 bottom = Mathf.Max(bottom, top + rows.Count * rowH);
             }
@@ -187,7 +187,7 @@ internal sealed class TabGui
     {
         float s = _t.Scale;
         float pad = 10f * s;
-        Render.Text(x + pad, y, w - pad * 2, h, r.Label, sel ? _t.Text : _t.TextDim, _t.SmallFontSize);
+        Render.Text(x + pad, y, w - pad * 2, h, r.TLabel, sel ? _t.Text : _t.TextDim, _t.SmallFontSize);
 
         float valueRight = w - pad;
         if (r.Swatch.HasValue)
@@ -198,7 +198,7 @@ internal sealed class TabGui
         }
 
         var valueColor = r.Capturing ? _t.Accent() : sel ? _t.Accent() : _t.Text;
-        string value = sel && r.Normalized == null && !r.Capturing && !(r is ActionRow) ? $"‹ {r.Value} ›" : r.Value;
+        string value = sel && r.Normalized == null && !r.Capturing && !(r is ActionRow) ? $"‹ {r.TValue} ›" : r.TValue;
         Render.Text(x, y, valueRight, h, value, valueColor, _t.SmallFontSize, TextAnchor.MiddleRight);
 
         if (r.Normalized is float n)

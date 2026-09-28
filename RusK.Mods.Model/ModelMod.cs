@@ -14,7 +14,7 @@ namespace RusK.Mods.Model;
 /// ゲームのキャラ (骨格・アニメーション・当たり判定) はそのまま動かし、見た目だけを VRM にする。
 /// Model Lab はデバッグ用 (モデルの作りの書き出し・キャラ同士の見た目の入れ替え・切り抜きの方式の比較)。
 /// </summary>
-[RuskMod("model", "Custom Model", "1.2.5",
+[RuskMod("model", "Custom VRM Loader", "1.2.5",
     Author = "you",
     GameVersion = "0.0.1872",
     Description = "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)")]
@@ -678,45 +678,45 @@ internal static class SkirtUi
     public static void Draw(WindowGui gui)
     {
         gui.Space(6f);
-        gui.Header("装飾品の表示");
-        gui.Label("VRM にしたキャラの装飾品を部位ごとに隠せます (頭の装飾品が髪に埋まる・頭にめり込むときなど)。", RuskStyle.TextDim, small: true);
+        gui.Header(L.T("装飾品の表示"));
+        gui.Label(L.T("VRM にしたキャラの装飾品を部位ごとに隠せます (頭の装飾品が髪に埋まる・頭にめり込むときなど)。"), RuskStyle.TextDim, small: true);
         foreach (var (slot, name) in Vrm.AccessoryVisibility.Slots)
         {
             bool shown = Vrm.AccessoryVisibility.IsShown(slot);
-            bool next = gui.Toggle($"{name}の装飾品を表示する", shown);
+            bool next = gui.Toggle(L.T("{0}の装飾品を表示する", L.T(name)), shown);
             if (next != shown) Vrm.AccessoryVisibility.Set(slot, next);
         }
 
         gui.Space(6f);
-        gui.Header("明るさ・影");
-        gui.Label(Vrm.MaskModes.IsUrp
+        gui.Header(L.T("明るさ・影"));
+        gui.Label(L.T(Vrm.MaskModes.IsUrp
             ? "明るさ: 服や髪が白く浮いて見えるときは下げる。影の濃さ: 髪や帽子が顔に落とす影 (1.00 でゲームのキャラと同じ)。"
-            : "影の濃さ: 髪や帽子が顔などに落とす影 (1.00 でゲームのキャラと同じ)。", RuskStyle.TextDim, small: true);
+            : "影の濃さ: 髪や帽子が顔などに落とす影 (1.00 でゲームのキャラと同じ)。"), RuskStyle.TextDim, small: true);
         float b = Vrm.MaskModes.Brightness;
         if (Vrm.MaskModes.IsUrp && Tune(gui, "明るさ", ref b, 0.05f, 0.3f, 1.5f)) Vrm.MaskModes.SetBrightness(b, Vrm.VrmSwap.Models());
         float sh = Vrm.MaskModes.ShadowStrength;
         if (Tune(gui, "影の濃さ", ref sh, 0.1f, 0f, 1f)) Vrm.MaskModes.SetShadowStrength(sh, Vrm.VrmSwap.Models());
-        if (gui.Button("明るさ・影を初期値に戻す"))
+        if (gui.Button(L.T("明るさ・影を初期値に戻す")))
         {
             Vrm.MaskModes.SetBrightness(Vrm.MaskModes.DefaultBrightness, Vrm.VrmSwap.Models());
             Vrm.MaskModes.SetShadowStrength(Vrm.MaskModes.DefaultShadowStrength, Vrm.VrmSwap.Models());
         }
 
         gui.Space(6f);
-        gui.Header("スカートの調整");
-        gui.Label("脚がスカートから出るのと、スカートのめくれ具合のバランスを調整します。", RuskStyle.TextDim, small: true);
+        gui.Header(L.T("スカートの調整"));
+        gui.Label(L.T("脚がスカートから出るのと、スカートのめくれ具合のバランスを調整します。"), RuskStyle.TextDim, small: true);
         bool changed = false;
         changed |= Tune(gui, "前後の開き", ref Vrm.SkirtTuning.FrontBack, 0.1f, 0f, 1f);
         changed |= Tune(gui, "横の開き", ref Vrm.SkirtTuning.Side, 0.1f, 0f, 1f);
         changed |= Tune(gui, "脚の振り", ref Vrm.SkirtTuning.LegSwing, 0.05f, 0.5f, 1f);
         changed |= Tune(gui, "当たり判定の太さ", ref Vrm.SkirtTuning.Collider, 0.05f, 0.5f, 2f);
         if (changed) Vrm.SkirtTuning.Save();
-        if (gui.Button("初期値に戻す")) Vrm.SkirtTuning.Reset();
+        if (gui.Button(L.T("初期値に戻す"))) Vrm.SkirtTuning.Reset();
     }
 
     private static bool Tune(WindowGui gui, string label, ref float value, float step, float min, float max)
     {
-        int s = gui.Stepper(label, value.ToString("0.00"));
+        int s = gui.Stepper(L.T(label), value.ToString("0.00"));
         if (s == 0) return false;
         value = Mathf.Clamp(Mathf.Round((value + s * step) * 100f) / 100f, min, max);
         return true;

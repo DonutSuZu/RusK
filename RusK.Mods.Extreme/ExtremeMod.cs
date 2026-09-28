@@ -65,7 +65,7 @@ internal static class ExtremeState
         try
         {
             GameUtil.SetDifficultyType(type, true);
-            _ctx?.Notify($"難易度: {(type == GameDifficultyType.Extreme ? "EXTREME" : type.ToString())}",
+            _ctx?.Notify(L.T("難易度: {0}", type == GameDifficultyType.Extreme ? "EXTREME" : type.ToString()),
                 type == GameDifficultyType.Extreme ? NotifyLevel.Warning : NotifyLevel.Info);
         }
         catch (Exception e)
@@ -81,7 +81,8 @@ internal static class ExtremeState
         {
             var m = ExtremeModule.Instance;
             if (m == null) return "";
-            return $"RusK: HP ×{m.Hp.Value:0.0} / 攻撃力 ×{m.Damage.Value:0.0} / 攻撃頻度 ×{m.AttackRate.Value:0.0} / シールド ×{m.Shield.Value:0.0}";
+            return L.T("RusK: HP ×{0:0.0} / 攻撃力 ×{1:0.0} / 攻撃頻度 ×{2:0.0} / シールド ×{3:0.0}",
+                m.Hp.Value, m.Damage.Value, m.AttackRate.Value, m.Shield.Value);
         }
     }
 }

@@ -85,7 +85,7 @@ public sealed class PartyModule : Module
         Enabled = true;
     }
 
-    public override string Suffix => $"{PartyManager.Members.Count}人";
+    public override string Suffix => L.T("{0}人", PartyManager.Members.Count);
 
     public override void OnUpdate()
     {

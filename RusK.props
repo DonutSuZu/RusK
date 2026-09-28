@@ -31,6 +31,11 @@
     <Reference Include="$(InteropDir)\Unity.InputSystem.dll" Private="false" />
   </ItemGroup>
 
+  <!-- 言語ファイル: 各プロジェクトの lang\ja.json などを DLL に埋め込む (名前は lang.ja.json)。RuskLang が読む -->
+  <ItemGroup>
+    <EmbeddedResource Include="lang\*.json" LogicalName="lang.%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <!-- 各プロジェクトで DeployDir を決めると、ビルド後にそこへコピーされる -->
   <Target Name="RuskDeploy" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true' And '$(DeployDir)' != ''">
     <ItemGroup>

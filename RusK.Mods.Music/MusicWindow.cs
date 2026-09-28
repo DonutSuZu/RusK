@@ -20,12 +20,12 @@ internal sealed class MusicWindow : RuskWindow
         var player = _module.Player;
         bool fight = MusicModule.InFight(out bool boss);
 
-        string state = !_module.Enabled ? "OFF (MusicManager を ON にすると置き換えます)"
+        string state = L.T(!_module.Enabled ? "OFF (MusicManager を ON にすると置き換えます)"
             : player.Loading ? "読み込み中..."
             : player.Current != null ? (player.Paused ? "一時停止中" : boss ? "ボス戦" : "再生中")
-            : fight ? "曲がありません" : "戦闘になったら再生します";
+            : fight ? "曲がありません" : "戦闘になったら再生します");
         gui.Header("Now Playing", state);
-        gui.Label(player.Current?.Name ?? "(再生していません)",
+        gui.Label(player.Current?.Name ?? L.T("(再生していません)"),
             player.Current != null ? RuskStyle.Text : RuskStyle.TextDim, bold: true);
 
         // 進行バー
@@ -37,27 +37,27 @@ internal sealed class MusicWindow : RuskWindow
         gui.Label($"{Format(t)} / {Format(len)}", RuskStyle.TextDim, anchor: TextAnchor.MiddleRight, small: true);
 
         gui.BeginRow(1f, 1.2f, 1f);
-        if (gui.Button("◀◀ 前へ", enabled: player.Current != null)) player.Previous();
-        if (gui.Button(player.Paused ? "▶ 再開" : "一時停止", enabled: player.Current != null, accent: true))
+        if (gui.Button(L.T("◀◀ 前へ"), enabled: player.Current != null)) player.Previous();
+        if (gui.Button(L.T(player.Paused ? "▶ 再開" : "一時停止"), enabled: player.Current != null, accent: true))
             player.TogglePause();
-        if (gui.Button("次へ ▶▶", enabled: player.Current != null)) player.Next();
+        if (gui.Button(L.T("次へ ▶▶"), enabled: player.Current != null)) player.Next();
 
-        _module.Volume.Value = gui.Slider("volume", "音量", _module.Volume.Value, 0f, 1f, "0%");
+        _module.Volume.Value = gui.Slider("volume", L.T("音量"), _module.Volume.Value, 0f, 1f, "0%");
 
         gui.BeginRow(1f, 1f);
-        _module.Enabled = gui.Toggle("BGM を置き換える", _module.Enabled);
-        bool shuffle = gui.Toggle("シャッフル", _module.Order.Value == 0);
+        _module.Enabled = gui.Toggle(L.T("BGM を置き換える"), _module.Enabled);
+        bool shuffle = gui.Toggle(L.T("シャッフル"), _module.Order.Value == 0);
         _module.Order.Value = shuffle ? 0 : 1;
 
         gui.BeginRow(1f, 1f);
-        if (gui.Button("フォルダを開く")) _module.OpenFolder();
-        if (gui.Button("再スキャン")) player.Scan();
+        if (gui.Button(L.T("フォルダを開く"))) _module.OpenFolder();
+        if (gui.Button(L.T("再スキャン"))) player.Scan();
 
         gui.Space(6f);
-        gui.Header("曲一覧", $"{player.Tracks.Count} 曲");
+        gui.Header(L.T("曲一覧"), L.T("{0} 曲", player.Tracks.Count));
         if (player.Tracks.Count == 0)
         {
-            gui.Label("music フォルダに mp3 / ogg / wav を入れて「再スキャン」", RuskStyle.TextDim, small: true);
+            gui.Label(L.T("music フォルダに mp3 / ogg / wav を入れて「再スキャン」"), RuskStyle.TextDim, small: true);
             gui.Label(player.Folder, RuskStyle.TextDim, small: true);
             return;
         }

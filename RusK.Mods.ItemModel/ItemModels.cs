@@ -353,7 +353,7 @@ internal static class ItemModels
         {
             FailedFiles.Add(file);
             VrmEnv.Ctx?.Log.Error($"ItemModel: glb を読み込めません ({file}): {e}");
-            VrmEnv.Ctx?.Notify($"glb を読み込めませんでした: {Path.GetFileName(file)}", RusK.API.NotifyLevel.Error);
+            VrmEnv.Ctx?.Notify(L.T("glb を読み込めませんでした: {0}", Path.GetFileName(file)), RusK.API.NotifyLevel.Error);
             return null;
         }
     }

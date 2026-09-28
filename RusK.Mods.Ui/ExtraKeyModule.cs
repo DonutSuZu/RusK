@@ -153,7 +153,7 @@ public sealed class ExtraKeyModule : Module
         catch (Exception e)
         {
             Context.Log.Error($"ExtraKey apply failed: {e}");
-            Context.Notify("キーの追加に失敗しました (ログを確認)", NotifyLevel.Error);
+            Context.Notify(L.T("キーの追加に失敗しました (ログを確認)"), NotifyLevel.Error);
             Enabled = false;
         }
     }

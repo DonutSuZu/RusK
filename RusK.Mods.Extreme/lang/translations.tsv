@@ -1,0 +1,14 @@
+# 元の文	英語	中国語 (簡体字)
+エクストリーム	Extreme	极限
+HARD をさらに超える最高難度。敵の強さは<color=#FF6666>最高</color>で、HP・攻撃力・攻撃の頻度・シールドが大幅に強化されます。	The highest difficulty, beyond HARD. Enemies are at their <color=#FF6666>strongest</color>, with greatly increased HP, attack, attack frequency and shields.	超越 HARD 的最高难度。敌人强度为<color=#FF6666>最高</color>, 生命值、攻击力、攻击频率和护盾都大幅强化。
+難易度: {0}	Difficulty: {0}	难度: {0}
+EXTREME	EXTREME	EXTREME
+RusK: HP ×{0:0.0} / 攻撃力 ×{1:0.0} / 攻撃頻度 ×{2:0.0} / シールド ×{3:0.0}	RusK: HP ×{0:0.0} / Attack ×{1:0.0} / Attack rate ×{2:0.0} / Shield ×{3:0.0}	RusK: 生命值 ×{0:0.0} / 攻击力 ×{1:0.0} / 攻击频率 ×{2:0.0} / 护盾 ×{3:0.0}
+難易度 EXTREME を解放し、敵の HP・攻撃力・攻撃頻度・シールドを強化	Unlocks the EXTREME difficulty and strengthens enemy HP, attack, attack frequency and shields	解锁 EXTREME 难度, 强化敌人的生命值、攻击力、攻击频率和护盾
+難易度 EXTREME を解放し、選んでいる間は敵を強化する	Unlocks the EXTREME difficulty and strengthens enemies while it is selected	解锁 EXTREME 难度, 选择该难度时强化敌人
+敵の HP の倍率	Enemy HP multiplier	敌人生命值倍率
+敵の攻撃力 (プレイヤーが受けるダメージ) の倍率	Enemy attack multiplier (damage the player takes)	敌人攻击力倍率 (玩家受到的伤害)
+敵の攻撃の頻度 (攻撃間隔を短くする)	Enemy attack frequency (shortens the time between attacks)	敌人攻击频率 (缩短攻击间隔)
+敵のシールドポイントの倍率	Enemy shield point multiplier	敌人护盾值倍率
+今すぐ難易度を EXTREME にする (設定画面を使わない場合)	Switch to EXTREME now (without using the settings screen)	立即切换为 EXTREME 难度 (不使用设置画面时)
+難易度を HARD に戻す	Set the difficulty back to HARD	将难度恢复为 HARD

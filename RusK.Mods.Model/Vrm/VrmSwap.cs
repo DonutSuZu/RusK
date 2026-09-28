@@ -305,7 +305,7 @@ internal static class VrmSwap
         {
             Failed.Add(key);
             log?.Error($"Model: VRM の読み込みに失敗 ({Path.GetFileName(file)}): {e}");
-            ModelLab.Ctx?.Notify($"VRM を読み込めませんでした: {e.Message}", RusK.API.NotifyLevel.Error);
+            ModelLab.Ctx?.Notify(L.T("VRM を読み込めませんでした: {0}", e.Message), RusK.API.NotifyLevel.Error);
             Cleanup(entry);
         }
     }

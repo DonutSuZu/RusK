@@ -153,7 +153,7 @@ public sealed class CameraViewModule : Module
     {
         if (!Enabled) Enabled = true;
         else View.Next();
-        Context?.Notify($"視点: {View.Selected}");
+        Context?.Notify(L.T("視点: {0}", View.Selected));
     }
 
     public override void OnDisable() => CameraOverride.RestoreAll();

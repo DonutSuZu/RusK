@@ -98,7 +98,7 @@ internal sealed class Hud
 
         var active = Rusk.Modules.All
             .Where(m => m.Enabled && m.ShownInArrayList)
-            .Select(m => (m.Id, label: m.Suffix == null ? m.Name : $"{m.Name} {m.Suffix}"))
+            .Select(m => (m.Id, label: m.Suffix == null ? RuskLang.T(m.Context?.Info?.Id, m.Name) : $"{RuskLang.T(m.Context?.Info?.Id, m.Name)} {m.Suffix}"))
             .Select(a => (a.Id, a.label, width: Render.TextWidth(a.label, _t.FontSize, bold: true)))
             .OrderByDescending(a => a.width)
             .ToList();

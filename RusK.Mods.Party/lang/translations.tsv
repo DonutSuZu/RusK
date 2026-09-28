@@ -1,0 +1,58 @@
+# 元の文	英語	中国語 (簡体字)
+)} 動作='{motion}'	)} 動作='{motion}'	)} 動作='{motion}'
+{0} が戦闘不能になりました	{0} has been knocked out	{0} 已无法战斗
+{0} がリーダーなので、仲間から外しました	{0} is the leader, so they were removed from the companions	{0} 是队长, 已从队友中移除
+戦闘中は編成を変更できません	You can't change the party during a battle	战斗中无法更改编队
+仲間は {0} 人までです	You can have up to {0} companions	最多只能有 {0} 名队友
+交代できる仲間がいません	No companion to switch to	没有可切换的队友
+クールタイム中 (あと {0:0.0} 秒)	On cooldown ({0:0.0}s left)	冷却中 (剩余 {0:0.0} 秒)
+スロー演出中	During slow motion	慢动作演出中
+回避中	While dodging	闪避中
+ジャスト回避中	During a perfect dodge	完美闪避中
+パリィ中	During a parry	招架中
+戦闘不能	Knocked out	无法战斗
+(なし)	(none)	(无)
+解放	unlocked	已解锁
+未解放	locked	未解锁
+{0}人	{0}	{0}人
+アクティブ3人。仲間を選んで、戦闘中にキーでキャラを切り替える	Three active characters. Pick companions and switch characters with keys during battle	三人同时上场。选择队友, 战斗中用按键切换角色
+パーティの次のキャラに切り替える	Switch to the next character in the party	切换到队伍中的下一个角色
+パーティの前のキャラに切り替える	Switch to the previous character in the party	切换到队伍中的上一个角色
+仲間の選択画面を開く / 閉じる	Open / close the companion selection window	打开 / 关闭队友选择窗口
+アクティブ3人。戦闘中に「次へ」「前へ」のキーでキャラを切り替える	Three active characters. Switch characters in battle with the Next / Previous keys	三人同时上场。战斗中用「下一个」「上一个」键切换角色
+次のキャラに切り替えるキー	Key to switch to the next character	切换到下一个角色的按键
+前のキャラに切り替えるキー	Key to switch to the previous character	切换到上一个角色的按键
+切り替えのクールタイム	Switch cooldown	切换冷却时间
+回避中・スロー演出中などは切り替えない	Don't switch while dodging, during slow motion, etc.	闪避中、慢动作演出中等情况下不切换
+戦闘ステージで、選んだ仲間を自動で控えに用意する	Automatically prepare the chosen companions on battle stages	在战斗关卡中自动准备所选队友
+切り替えを「ガードを押した」扱いにする。攻撃の直前に切り替えると、出てきたキャラがゲーム本来のガードでパリィする	Treat a switch as pressing guard. Switching right before an attack makes the incoming character parry with the game's own guard	将切换视为「按下防御」。在攻击命中前切换, 登场的角色会用游戏本身的防御进行招架
+切り替えの後、この秒数の間に受けた攻撃をガードで受ける (パリィになるかはゲームのガードと同じ判定)	Attacks taken within this many seconds after a switch are guarded (whether it becomes a parry follows the game's guard rules)	切换后此秒数内受到的攻击会用防御接下 (是否成为招架与游戏防御的判定相同)
+攻撃の予兆 (キラーン) からこの秒数以内なら、クールタイム中でも切り替えられる	Within this many seconds of an attack warning (glint), you can switch even on cooldown	在攻击预警 (闪光) 后此秒数内, 即使在冷却中也可以切换
+予兆の直後はクールタイム中でも切り替えられる	Allow switching on cooldown right after an attack warning	攻击预警后即使在冷却中也可以切换
+パーティ HUD (顔・HP・必殺技ゲージ) を出す	Show the party HUD (portraits, HP, ultimate gauge)	显示队伍 HUD (头像、生命值、必杀技槽)
+パーティ HUD の横位置 (画面比)	Party HUD horizontal position (fraction of the screen)	队伍 HUD 的横向位置 (屏幕比例)
+パーティ HUD の縦位置 (画面比)	Party HUD vertical position (fraction of the screen)	队伍 HUD 的纵向位置 (屏幕比例)
+パーティ HUD の大きさ	Party HUD size	队伍 HUD 的大小
+仲間の選択画面を開く	Open the companion selection window	打开队友选择窗口
+閉じる	Close	关闭
+戦闘中は編成を変更できません。拠点に戻ると変更できます。	You can't change the party during a battle. Return to the base to change it.	战斗中无法更改编队。回到据点后即可更改。
+今のパーティ	Current party	当前队伍
+{0} 人	{0} members	{0} 人
+リーダー	Leader	队长
+仲間	Companion	队友
+操作中	Active	操作中
+控え	Reserve	待机
+不参加	Not joined	未参加
+リーダー (拠点で選んだキャラ) に加えて、仲間を {0} 人まで選べます。仲間は戦闘ステージに入ると控えに用意されます。	In addition to the leader (the character chosen at the base), you can choose up to {0} companions. Companions are prepared in reserve when you enter a battle stage.	除了队长 (在据点选择的角色) 以外, 最多可以选择 {0} 名队友。进入战斗关卡时队友会作为待机角色准备好。
+編成	Party	编队
+リーダー: {0}	Leader: {0}	队长: {0}
+(ゲーム中に表示)	(shown in game)	(游戏中显示)
+仲間 {0}: {1}	Companion {0}: {1}	队友 {0}: {1}
+キャラ	Characters	角色
+クリックで仲間に入れる / 外す	Click to add / remove as a companion	点击加入 / 移出队友
+キャラ一覧を取得できません (ゲームに入ってから開いてください)	Can't get the character list (open this after entering the game)	无法获取角色列表 (请进入游戏后再打开)
+仲間 {0}	Companion {0}	队友 {0}
+仲間を全員外す	Remove all companions	移除所有队友
+パーティ編成	Party Setup	队伍编成
+パリィ	parry	招架
+ガード	guard	防御

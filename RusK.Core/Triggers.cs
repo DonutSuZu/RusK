@@ -142,7 +142,7 @@ internal sealed class TriggerManager
         catch (Exception e)
         {
             Rusk.Log.LogError($"Trigger '{target.Id}' failed: {e}");
-            Rusk.Notifications.Push($"{target.Name} でエラー", NotifyLevel.Error);
+            Rusk.Notifications.Push(L.T("{0} でエラー", target.Name), NotifyLevel.Error);
         }
     }
 

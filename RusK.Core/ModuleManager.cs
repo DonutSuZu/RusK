@@ -95,7 +95,7 @@ internal sealed class ModuleManager
             Rusk.Log.LogError($"[{module.Id}] {(module.Enabled ? "OnEnable" : "OnDisable")} failed: {e}");
             Rusk.Doctor.RecordRuntimeError(module.Context, $"{module.Name}.{(module.Enabled ? "OnEnable" : "OnDisable")}", e);
             module.SetEnabledSilently(false);
-            Rusk.Notifications.Push($"{module.Name} でエラー (ログを確認)", NotifyLevel.Error);
+            Rusk.Notifications.Push(L.T("{0} でエラー (ログを確認)", module.Name), NotifyLevel.Error);
             return;
         }
 
@@ -112,6 +112,6 @@ internal sealed class ModuleManager
         Rusk.Log.LogError($"[{module.Id}] {where} threw, disabling: {e}");
         Rusk.Doctor.RecordRuntimeError(module.Context, $"{module.Name}.{where} (停止しました)", e);
         Quietly(() => module.Enabled = false);
-        Rusk.Notifications.Push($"{module.Name} を停止しました (エラー)", NotifyLevel.Error);
+        Rusk.Notifications.Push(L.T("{0} を停止しました (エラー)", module.Name), NotifyLevel.Error);
     }
 }

@@ -1,0 +1,37 @@
+# 元の文	英語	中国語 (簡体字)
+戦闘中の BGM を RusK/music の曲に置き換える	Replace the battle music with songs from RusK/music	将战斗 BGM 替换为 RusK/music 中的歌曲
+次の曲へ	Next song	下一首
+前の曲へ	Previous song	上一首
+一時停止 / 再開	Pause / resume	暂停 / 继续
+プレイヤー画面を開く / 閉じる	Open / close the player window	打开 / 关闭播放器窗口
+FightOnly: 戦闘中だけ / Always: いつでも	FightOnly: only in battle / Always: all the time	FightOnly: 仅战斗中 / Always: 始终
+曲順	Play order	播放顺序
+音量 (ゲームの音楽ボリューム設定にさらに掛かる)	Volume (applied on top of the game's music volume)	音量 (在游戏音乐音量的基础上再乘以此值)
+切り替えのフェード時間	Fade time when switching	切换时的淡入淡出时间
+boss フォルダの曲をボス戦で流す	Play songs from the boss folder in boss battles	Boss 战时播放 boss 文件夹中的歌曲
+曲が変わったら通知する	Show a notification when the song changes	切换歌曲时显示通知
+プレイヤー画面を開く	Open the player window	打开播放器窗口
+music フォルダを開く	Open the music folder	打开 music 文件夹
+曲を探し直す	Rescan for songs	重新扫描歌曲
+次の戦闘で「{0}」から流します	"{0}" will play from the next battle	下一场战斗将从「{0}」开始播放
+曲を再生できませんでした (ログを確認)	Could not play the song (check the log)	无法播放歌曲 (请查看日志)
+OFF (MusicManager を ON にすると置き換えます)	OFF (turn MusicManager ON to replace the music)	OFF (开启 MusicManager 后才会替换)
+読み込み中...	Loading...	加载中...
+一時停止中	Paused	已暂停
+ボス戦	Boss battle	Boss 战
+再生中	Playing	播放中
+曲がありません	No songs	没有歌曲
+戦闘になったら再生します	Plays when a battle starts	进入战斗后播放
+(再生していません)	(not playing)	(未在播放)
+◀◀ 前へ	◀◀ Prev	◀◀ 上一首
+▶ 再開	▶ Resume	▶ 继续
+一時停止	Pause	暂停
+次へ ▶▶	Next ▶▶	下一首 ▶▶
+音量	Volume	音量
+BGM を置き換える	Replace the BGM	替换 BGM
+シャッフル	Shuffle	随机播放
+フォルダを開く	Open folder	打开文件夹
+再スキャン	Rescan	重新扫描
+曲一覧	Songs	歌曲列表
+{0} 曲	{0} songs	{0} 首
+music フォルダに mp3 / ogg / wav を入れて「再スキャン」	Put mp3 / ogg / wav files in the music folder and press "Rescan"	将 mp3 / ogg / wav 放入 music 文件夹后点击「重新扫描」

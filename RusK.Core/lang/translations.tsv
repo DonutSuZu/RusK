@@ -1,0 +1,86 @@
+# 元の文	英語	中国語 (簡体字)
+メニューと Mod の表示の言語	Language of the menu and mods	菜单和 Mod 的显示语言
+表示の言語 (Auto: パソコンの言語に合わせる)	Display language (Auto: follow your PC's language)	显示语言 (Auto: 跟随电脑的语言)
+RusK のメニューと HUD の見た目	Look of the RusK menu and HUD	RusK 菜单和 HUD 的外观
+メニューの種類 (Tab: キーボード操作 / Click: マウス操作)	Menu type (Tab: keyboard / Click: mouse)	菜单类型 (Tab: 键盘操作 / Click: 鼠标操作)
+メニューを開閉するキー	Key to open / close the menu	打开 / 关闭菜单的按键
+背景の不透明度	Background opacity	背景不透明度
+アクセントカラー	Accent color	强调色
+Static: 固定色 / Rainbow: 虹色 / Breathing: 明滅 / Wave: 色の波	Static: fixed color / Rainbow: rainbow / Breathing: pulsing / Wave: color wave	Static: 固定颜色 / Rainbow: 彩虹 / Breathing: 呼吸闪烁 / Wave: 颜色波浪
+ライティングの速さ	Lighting speed	灯光速度
+有効なモジュール一覧を右上に表示	Show the list of enabled modules at the top right	在右上角显示已启用的模块列表
+ArrayList のアニメーション速度 (小さいほどゆっくり)	ArrayList animation speed (smaller is slower)	ArrayList 动画速度 (越小越慢)
+右下に RusK のバージョンを表示	Show the RusK version at the bottom right	在右下角显示 RusK 版本
+通知トーストを表示	Show notification toasts	显示通知提示
+Config '{0}' が壊れています	Config '{0}' is corrupted	配置 '{0}' 已损坏
+Config の保存に失敗	Failed to save the config	保存配置失败
+✗ {0} エラー	✗ {0} errors	✗ {0} 个错误
+▲ {0} 注意	▲ {0} warnings	▲ {0} 个警告
+✓ 問題なし	✓ No problems	✓ 没有问题
+ゲームが更新されました (v{0} → v{1})	The game was updated (v{0} → v{1})	游戏已更新 (v{0} → v{1})
+Check: {0} (Mods > Check で詳細)	Check: {0} (details in Mods > Check)	Check: {0} (详情见 Mods > Check)
+動作確認していないゲームのバージョン	Untested game version	未验证的游戏版本
+型を読み込めません	Can't load types	无法加载类型
+ゲームの関数・型が見つかりません	Game functions or types not found	找不到游戏的函数或类型
+パッチ先が見つかりません	Patch target not found	找不到补丁目标
+パッチ先を調べられません	Can't inspect the patch target	无法检查补丁目标
+実行中にエラー	Error while running	运行时出错
+{0} の読み込みに失敗	Failed to load {0}	加载 {0} 失败
+{0} の初期化に失敗	Failed to initialize {0}	初始化 {0} 失败
+IRuskMod を実装し [RuskMod] が付いたクラスがない	No class implements IRuskMod with a [RuskMod] attribute	没有实现 IRuskMod 并带有 [RuskMod] 特性的类
+{0} でエラー (ログを確認)	Error in {0} (check the log)	{0} 出错 (请查看日志)
+{0} を停止しました (エラー)	{0} was stopped (error)	已停止 {0} (出错)
+{0} {1} loaded — {2} でメニュー	{0} {1} loaded — press {2} for the menu	{0} {1} 已加载 — 按 {2} 打开菜单
+true: アンロード時に Mod のアセンブリをメモリから解放する (実験的)。\n	true: free the mod's assembly from memory when unloading (experimental).\n	true: 卸载时从内存中释放 Mod 的程序集 (实验性)。\n
+false: パッチとモジュールは解除するが、アセンブリはメモリに残る (安定)	false: remove patches and modules but keep the assembly in memory (stable)	false: 移除补丁和模块, 但程序集保留在内存中 (稳定)
+起動時に読み込む Config プロファイル	Config profile to load at startup	启动时加载的配置方案
+前回起動したときのゲームのバージョン (更新の検出用。書き換え不要)	Game version at the last launch (used to detect updates; don't edit)	上次启动时的游戏版本 (用于检测更新, 无需修改)
+RusK Check (Mod の診断) を開く	Open RusK Check (mod diagnostics)	打开 RusK Check (Mod 诊断)
+{0} でエラー	Error in {0}	{0} 出错
+発動するキー (修飾キーも可)	Key that triggers it (modifier keys allowed)	触发的按键 (可使用修饰键)
+Press: 押すたびに実行 / Hold: 押している間だけ (モジュールは押している間 ON)	Press: run on each press / Hold: only while held (modules stay ON while held)	Press: 每次按下时执行 / Hold: 仅在按住期间 (模块在按住期间开启)
+このトリガーを削除	Delete this trigger	删除此触发器
+実行する Mod アクション / モジュール	Mod action / module to run	要执行的 Mod 动作 / 模块
+ゲーム	Game	游戏
+バージョン不明	Unknown version	版本未知
+結果: {0}	Result: {0}	结果: {0}
+再チェック	Recheck	重新检查
+レポートを書き出す	Export report	导出报告
+RusK\check_report.txt に書き出しました	Exported to RusK\check_report.txt	已导出到 RusK\check_report.txt
+{0} 個	{0}	{0} 个
+読み込んだ Mod はありません	No mods loaded	没有已加载的 Mod
+正常	OK	正常
+{0} 件	{0} issues	{0} 项
+メソッド {0} 個 / パッチ {1} 個を検査	Checked {0} methods / {1} patches	已检查 {0} 个方法 / {1} 个补丁
+確認済みゲーム v{0}	Tested with game v{0}	已验证游戏 v{0}
+(確認済みゲームの版の記載なし)	(no tested game version given)	(未注明已验证的游戏版本)
+問題は見つかりませんでした	No problems found	未发现问题
+新しいアクショントリガーを追加	Add a new action trigger	添加新的动作触发器
+未読み込みの Mod。実行すると読み込む	A mod that isn't loaded. Run it to load it	未加载的 Mod。执行后加载
+mods フォルダの新しい DLL を読み込む	Load new DLLs from the mods folder	加载 mods 文件夹中的新 DLL
+キーを押すと Mod アクションを実行する	Runs a mod action when you press the key	按下按键时执行 Mod 动作
+DLL を読み直す (ビルドし直した後に)	Reload the DLL (after rebuilding it)	重新加载 DLL (重新构建后)
+この Mod を外す	Unload this mod	卸载此 Mod
+←/→ でプロファイルを切り替え (今の状態は保存してから切り替える)	Switch profiles with ←/→ (the current state is saved first)	用 ←/→ 切换配置方案 (切换前会保存当前状态)
+今の状態を保存	Save the current state	保存当前状态
+保存済みの状態に戻す	Go back to the saved state	恢复到已保存的状态
+今の状態を新しいプロファイルとして保存	Save the current state as a new profile	将当前状态保存为新配置方案
+設定プロファイルの保存 / 読み込み	Save / load setting profiles	保存 / 加载设置方案
+Mod の診断 (ゲームの更新で壊れた Mod や、エラーが出ている Mod を調べる)	Mod diagnostics (finds mods broken by game updates or mods with errors)	Mod 诊断 (检查因游戏更新而损坏或出错的 Mod)
+ (Esc: キャンセル / Del: 解除)	 (Esc: cancel / Del: clear)	 (Esc: 取消 / Del: 清除)
+[ press a key ]	[ press a key ]	[ 请按键 ]
+Auto	Auto	自动
+Combat	Combat	战斗
+Visual	Visual	视觉
+Player	Player	玩家
+Movement	Movement	移动
+Misc	Misc	其他
+Model	Model	模型
+Party	Party	队伍
+Music	Music	音乐
+Triggers	Triggers	触发器
+Mods	Mods	Mod
+Hue	Hue	色相
+Sat	Sat	饱和度
+Bright	Bright	亮度
+World	World	世界

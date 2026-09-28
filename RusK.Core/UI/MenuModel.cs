@@ -97,18 +97,19 @@ internal sealed class ModuleEntry : IMenuEntry
     public ModuleEntry(Module m) => _m = m;
 
     public Module Module => _m;
-    public string Label => _m.Name;
+    private string ModId => _m.Context?.Info?.Id ?? RuskLang.CoreId;
+    public string Label => RuskLang.T(ModId, _m.Name);
     public string Suffix => _m.Toggleable && !_m.Keybind.IsNone ? _m.Keybind.Display : null;
-    public string Description => _m.Description;
+    public string Description => RuskLang.T(ModId, _m.Description);
     public bool Active => _m.Enabled;
     public bool Dim => false;
     public EntryKind Kind => _m.Toggleable ? EntryKind.Toggle : EntryKind.Expand;
 
     /// <summary>トグルできるモジュールは先頭に「Bind」(トグルキー) 行と、ArrayList に出すかの行が付く</summary>
     public IReadOnlyList<Row> Rows =>
-        _rows ??= (_m.Toggleable ? Row.For(_m.BindSetting) : Enumerable.Empty<Row>())
-            .Concat(_m.Toggleable && _m.VisibleInArrayList ? Row.For(_m.ListSetting) : Enumerable.Empty<Row>())
-            .Concat(Row.For(_m.Settings)).ToList();
+        _rows ??= (_m.Toggleable ? Row.For(_m.BindSetting, RuskLang.CoreId) : Enumerable.Empty<Row>())
+            .Concat(_m.Toggleable && _m.VisibleInArrayList ? Row.For(_m.ListSetting, RuskLang.CoreId) : Enumerable.Empty<Row>())
+            .Concat(Row.For(_m.Settings, ModId)).ToList();
 
     /// <summary>Bind 行 (Shift+クリックでのキー割り当てに使う)</summary>
     public Row BindRow => _m.Toggleable ? Rows[0] : null;
@@ -153,7 +154,7 @@ internal sealed class LoadedModEntry : IMenuEntry
 
     public string Label => _mod.DisplayName;
     public string Suffix => null;
-    public string Description => string.Join(" / ", _mod.Contexts.Select(c => c.Info.Description).Where(d => d != ""));
+    public string Description => string.Join(" / ", _mod.Contexts.Select(c => RuskLang.T(c.Info.Id, c.Info.Description)).Where(d => d != ""));
     public bool Active => true;
     public bool Dim => false;
     public EntryKind Kind => EntryKind.Expand;

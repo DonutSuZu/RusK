@@ -60,7 +60,7 @@ internal sealed class ModManager
         catch (Exception e)
         {
             Rusk.Log.LogError($"Failed to load {fileName}: {e}");
-            Rusk.Notifications.Push($"{fileName} の読み込みに失敗", NotifyLevel.Error);
+            Rusk.Notifications.Push(L.T("{0} の読み込みに失敗", fileName), NotifyLevel.Error);
             Rusk.Doctor.RecordLoadError(report, "DLL を読み込めません", e);
             if (alc.IsCollectible) alc.Unload();
             return false;
@@ -90,6 +90,8 @@ internal sealed class ModManager
 
             var context = new ModContext(info, path);
             Rusk.Doctor.SetInfo(report, info);
+            // 言語ファイル (DLL に埋め込んだ lang/*.json と RusK\lang\<id>\*.json)
+            RuskLang.Register(info.Id, assembly, w => Rusk.Log.LogWarning($"[{info.Id}] {w}"));
             try
             {
                 context.Instance = (IRuskMod)Activator.CreateInstance(type);
@@ -100,7 +102,7 @@ internal sealed class ModManager
             catch (Exception e)
             {
                 Rusk.Log.LogError($"{info.Name}.OnLoad failed: {e}");
-                Rusk.Notifications.Push($"{info.Name} の初期化に失敗", NotifyLevel.Error);
+                Rusk.Notifications.Push(L.T("{0} の初期化に失敗", info.Name), NotifyLevel.Error);
                 Rusk.Doctor.RecordLoadError(report, "初期化 (OnLoad) に失敗", e);
                 Teardown(context, callOnUnload: false);
             }

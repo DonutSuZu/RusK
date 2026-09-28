@@ -174,7 +174,7 @@ internal sealed class MusicPlayer : IDisposable
         }
         else
         {
-            _ctx.Notify($"次の戦闘で「{track.Name}」から流します");
+            _ctx.Notify(L.T("次の戦闘で「{0}」から流します", track.Name));
         }
     }
 
@@ -328,7 +328,7 @@ internal sealed class MusicPlayer : IDisposable
         _failures++;
         _ctx.Log.Warning($"Music: '{track?.Name}' を再生できません: {reason}");
         if (_failures >= Math.Max(1, Tracks.Count))
-            _ctx.Notify("曲を再生できませんでした (ログを確認)", NotifyLevel.Error);
+            _ctx.Notify(L.T("曲を再生できませんでした (ログを確認)"), NotifyLevel.Error);
         Current = null; // 次の Tick で別の曲を試す
     }
 

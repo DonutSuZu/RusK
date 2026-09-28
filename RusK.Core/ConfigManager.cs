@@ -96,7 +96,7 @@ internal sealed class ConfigManager
             catch (Exception e)
             {
                 Rusk.Log.LogError($"Config '{profile}' の読み込みに失敗: {e.Message}");
-                Rusk.Notifications?.Push($"Config '{profile}' が壊れています", NotifyLevel.Error);
+                Rusk.Notifications?.Push(L.T("Config '{0}' が壊れています", profile), NotifyLevel.Error);
                 return;
             }
         }
@@ -134,7 +134,7 @@ internal sealed class ConfigManager
         catch (Exception e)
         {
             Rusk.Log.LogError($"Config '{profile}' の保存に失敗: {e}");
-            Rusk.Notifications.Push("Config の保存に失敗", NotifyLevel.Error);
+            Rusk.Notifications.Push(L.T("Config の保存に失敗"), NotifyLevel.Error);
         }
     }
 

@@ -41,6 +41,9 @@ internal static class Rusk
     /// <summary>Visual > Menu の設定 (GUI の種類・色・ライティングなど)</summary>
     public static MenuSettingsModule MenuSettings { get; private set; }
 
+    /// <summary>Visual > Language (表示の言語)</summary>
+    public static LanguageModule Language { get; private set; }
+
     public static ConfigEntry<bool> CollectibleMods { get; private set; }
     public static ConfigEntry<string> LastProfile { get; private set; }
     public static ConfigEntry<string> LastGameVersion { get; private set; }
@@ -55,6 +58,10 @@ internal static class Rusk
         DataDir = Path.Combine(RootDir, "data");
         foreach (var dir in new[] { RootDir, ModsDir, ConfigsDir, DataDir })
             Directory.CreateDirectory(dir);
+
+        // 言語: 本体の言語ファイル (DLL に埋め込み) と、上書き・追加用のフォルダ RusK\lang
+        RuskLang.OverrideDir = Path.Combine(RootDir, "lang");
+        RuskLang.Register(RuskLang.CoreId, typeof(Rusk).Assembly, w => plugin.Log.LogWarning(w));
 
         CollectibleMods = plugin.Config.Bind("Loader", "CollectibleMods", false,
             "true: アンロード時に Mod のアセンブリをメモリから解放する (実験的)。\n" +
@@ -78,7 +85,7 @@ internal static class Rusk
         Mods.LoadAll();
 
         Log.LogMessage($"{Name} {Version} ready ({Mods.Loaded.Count} mod(s), {Modules.All.Count} module(s))");
-        Notifications.Push($"{Name} {Version} loaded — {MenuSettings.EffectiveMenuKey.Display} でメニュー",
+        Notifications.Push(L.T("{0} {1} loaded — {2} でメニュー", Name, Version, MenuSettings.EffectiveMenuKey.Display),
             NotifyLevel.Success);
         Doctor.NotifyStartup();
     }
@@ -92,6 +99,9 @@ internal static class Rusk
         var context = new ModContext(new RuskModAttribute("rusk", Name, Version), sourcePath: null);
         MenuSettings = new MenuSettingsModule();
         context.RegisterModule(MenuSettings);
+        Language = new LanguageModule();
+        context.RegisterModule(Language);
+        Language.Apply();
 
         CheckWindow = new CheckWindow();
         context.RegisterWindow(CheckWindow);

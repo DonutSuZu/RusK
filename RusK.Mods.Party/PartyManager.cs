@@ -121,7 +121,7 @@ internal static class PartyManager
         _rescueTo = next;
         _rescueFrame = Time.frameCount + 1; // 被弾処理の途中で消さないよう、次のフレームで交代
         Log?.Info($"Party: {Name(dying)} が戦闘不能 → {Name(next)} に交代");
-        Ctx?.Notify($"{Name(dying)} が戦闘不能になりました", NotifyLevel.Warning);
+        Ctx?.Notify(L.T("{0} が戦闘不能になりました", Name(dying)), NotifyLevel.Warning);
         return true;
     }
 
@@ -247,7 +247,7 @@ internal static class PartyManager
         if (!Companions.Any(c => Same(c, id))) return;
         Companions.RemoveAll(c => Same(c, id));
         SaveCompanions();
-        Ctx?.Notify($"{Name(cur)} がリーダーなので、仲間から外しました", NotifyLevel.Info);
+        Ctx?.Notify(L.T("{0} がリーダーなので、仲間から外しました", Name(cur)), NotifyLevel.Info);
     }
 
     public static void SaveCompanions()
@@ -267,7 +267,7 @@ internal static class PartyManager
     {
         if (InFight)
         {
-            Ctx?.Notify("戦闘中は編成を変更できません", NotifyLevel.Warning);
+            Ctx?.Notify(L.T("戦闘中は編成を変更できません"), NotifyLevel.Warning);
             return;
         }
         if (Companions.Any(c => Same(c, id)))
@@ -282,7 +282,7 @@ internal static class PartyManager
         }
         else
         {
-            Ctx?.Notify($"仲間は {MaxCompanions} 人までです", NotifyLevel.Warning);
+            Ctx?.Notify(L.T("仲間は {0} 人までです", MaxCompanions), NotifyLevel.Warning);
             return;
         }
         SaveCompanions();
@@ -384,7 +384,7 @@ internal static class PartyManager
         var next = NextAlive(cur, dir);
         if (next == null)
         {
-            LastBlockReason = "交代できる仲間がいません";
+            LastBlockReason = L.T("交代できる仲間がいません");
             LastBlockTime = Time.unscaledTime;
             return false;
         }
@@ -395,15 +395,15 @@ internal static class PartyManager
     /// <summary>今切り替えてはいけない理由 (切り替えてよいなら null)</summary>
     public static string BlockReason(PlayerController cur, bool ignoreCooldown)
     {
-        if (!ignoreCooldown && CooldownRemaining > 0f) return $"クールタイム中 (あと {CooldownRemaining:0.0} 秒)";
+        if (!ignoreCooldown && CooldownRemaining > 0f) return L.T("クールタイム中 (あと {0:0.0} 秒)", CooldownRemaining);
         if (!SafeSwitch) return null;
         try
         {
-            if (Time.timeScale < 0.99f) return "スロー演出中";
-            if (cur.IsDashing()) return "回避中";
-            if (cur.IsInPerfectDash() || cur.IsPerfectDashTimeSlow()) return "ジャスト回避中";
-            if (cur.IsInPerfectDefence() || cur.GetPerfectDefenceTimeSlow()) return "パリィ中";
-            if (cur.GetCurHp() <= 0f) return "戦闘不能";
+            if (Time.timeScale < 0.99f) return L.T("スロー演出中");
+            if (cur.IsDashing()) return L.T("回避中");
+            if (cur.IsInPerfectDash() || cur.IsPerfectDashTimeSlow()) return L.T("ジャスト回避中");
+            if (cur.IsInPerfectDefence() || cur.GetPerfectDefenceTimeSlow()) return L.T("パリィ中");
+            if (cur.GetCurHp() <= 0f) return L.T("戦闘不能");
         }
         catch { }
         return null;
@@ -684,7 +684,7 @@ internal static class PartyManager
 
     public static string Name(PlayerController p)
     {
-        if (p == null) return "(なし)";
+        if (p == null) return L.T("(なし)");
         var mm = FindCharacter(Id(p));
         return mm != null ? DisplayName(mm) : $"#{Id(p):0}";
     }

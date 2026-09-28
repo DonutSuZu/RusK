@@ -1,0 +1,59 @@
+# 元の文	英語	中国語 (簡体字)
+敵の攻撃の瞬間にキラーンと光らせる	Flash a glint at the moment an enemy attacks	在敌人攻击的瞬间闪光提示
+AttackStart: 攻撃モーション開始時 / GameWarning: ゲームの攻撃予兆と同時	AttackStart: when the attack animation starts / GameWarning: together with the game's attack warning	AttackStart: 攻击动作开始时 / GameWarning: 与游戏的攻击预警同时
+光の色	Glint color	闪光颜色
+光の大きさ	Glint size	闪光大小
+光っている時間	How long the glint lasts	闪光持续时间
+光る位置の高さ補正	Height offset of the glint	闪光位置的高度修正
+連続攻撃は最初の 1 撃だけ光らせる	Only flash on the first hit of a combo	连续攻击只在第一击闪光
+キラーン音を鳴らす	Play the glint sound	播放闪光音效
+効果音の音量	Sound effect volume	音效音量
+ZZZ風のボタン表示 (回避・ガード・攻撃・追加攻撃・スキル。追加攻撃は撃てるときに光る)	Zenless Zone Zero–style button display (dodge, guard, attack, follow-up, skill; the follow-up button glows when it can be used)	绝区零风格的按键显示 (闪避、防御、攻击、追加攻击、技能。可发动追加攻击时发光)
+ZZZ: ゼンゼロと同じ並び / Arc: 攻撃ボタンのまわりに円弧 / Row: 横一列 / Column: 縦一列	ZZZ: same layout as Zenless Zone Zero / Arc: an arc around the attack button / Row: one horizontal row / Column: one vertical column	ZZZ: 与绝区零相同的排列 / Arc: 围绕攻击键的弧形 / Row: 横向一行 / Column: 纵向一列
+横位置 (ZZZ: 右下のボタン / それ以外: 攻撃ボタンの中心)	Horizontal position (ZZZ: the bottom-right button / others: the center of the attack button)	横向位置 (ZZZ: 右下角的按键 / 其他: 攻击键的中心)
+縦位置 (ZZZ: 右下のボタン / それ以外: 攻撃ボタンの中心)	Vertical position (ZZZ: the bottom-right button / others: the center of the attack button)	纵向位置 (ZZZ: 右下角的按键 / 其他: 攻击键的中心)
+全体の大きさ	Overall size	整体大小
+ボタン同士の間隔	Spacing between buttons	按键间距
+ボタンの不透明度	Button opacity	按键不透明度
+押したときの色	Color when pressed	按下时的颜色
+ボタン名 (回避・攻撃…) を表示	Show button names (Dodge, Attack...)	显示按键名称 (闪避、攻击…)
+アイコンを表示 (OFF にするとキー名を大きく表示)	Show icons (OFF shows the key name in large text)	显示图标 (关闭后放大显示按键名)
+回避	Dodge	闪避
+ガード	Guard	防御
+攻撃	Attack	攻击
+追加攻撃	Follow-up	追加攻击
+スキル	Skill	技能
+ゲームの操作 (既定: 回避) にキーを 1 つ追加する	Add one extra key to a game action (default: dodge)	为游戏操作 (默认: 闪避) 追加一个按键
+キーを追加する操作 (Dash = 回避)	The action to add a key to (Dash = dodge)	要追加按键的操作 (Dash = 闪避)
+追加するキー (Mouse4 / Mouse5 はマウスのサイドボタン)	The key to add (Mouse4 / Mouse5 are the mouse side buttons)	要追加的按键 (Mouse4 / Mouse5 为鼠标侧键)
+キーの追加に失敗しました (ログを確認)	Could not add the key (check the log)	添加按键失败 (请查看日志)
+GameHud: ゲームの HP バーが出ているときだけ / Field: 戦闘フィールドにいるとき / Always: 常に	GameHud: only while the game's HP bar is shown / Field: while on a battle field / Always: always	GameHud: 仅在显示游戏血条时 / Field: 在战斗场地时 / Always: 始终
+(未判定)	(not checked yet)	(未判定)
+バトル UI 未確認 (戦闘ステージ外)	Battle UI not seen yet (outside a battle stage)	尚未确认战斗 UI (不在战斗关卡)
+HP バーが非アクティブ	HP bar is inactive	血条未激活
+Canvas が無効	Canvas is disabled	Canvas 已禁用
+HP バーが縮んでいる	HP bar is shrunk	血条被缩小
+HP ゲージ画像が無効	HP gauge image is disabled	血条图像已禁用
+HP ゲージ画像が透明 (color)	HP gauge image is transparent (color)	血条图像透明 (color)
+HP ゲージ画像が透明 (CanvasRenderer)	HP gauge image is transparent (CanvasRenderer)	血条图像透明 (CanvasRenderer)
+ボタン HUD・攻撃予兆・キー追加 (ゲームバランスに影響しない補助)	Button HUD, attack warnings and extra keys (helpers that don't affect game balance)	按键 HUD、攻击预警、追加按键 (不影响游戏平衡的辅助功能)
+「Dodge」ボタンを表示する	Show the "Dodge" button	显示「Dodge」按键
+「Dodge」に表示する入力アクション	The input action shown on "Dodge"	「Dodge」显示的输入操作
+「Dodge」に表示するキー割り当ての番号 (同じアクションに複数のキーがあるとき)	Which key binding to show on "Dodge" (when the action has several keys)	「Dodge」显示第几个按键绑定 (同一操作有多个按键时)
+「Dodge」の周りに出すゲージ (None / Ultimate: エネルギー (スキルで使う) / Skill: キャラのスキルゲージ)	Gauge shown around "Dodge" (None / Ultimate: energy (used by skills) / Skill: the character's skill gauge)	「Dodge」周围显示的能量槽 (None / Ultimate: 能量 (技能消耗) / Skill: 角色的技能槽)
+「Guard」ボタンを表示する	Show the "Guard" button	显示「Guard」按键
+「Guard」に表示する入力アクション	The input action shown on "Guard"	「Guard」显示的输入操作
+「Guard」に表示するキー割り当ての番号 (同じアクションに複数のキーがあるとき)	Which key binding to show on "Guard" (when the action has several keys)	「Guard」显示第几个按键绑定 (同一操作有多个按键时)
+「Guard」の周りに出すゲージ (None / Ultimate: エネルギー (スキルで使う) / Skill: キャラのスキルゲージ)	Gauge shown around "Guard" (None / Ultimate: energy (used by skills) / Skill: the character's skill gauge)	「Guard」周围显示的能量槽 (None / Ultimate: 能量 (技能消耗) / Skill: 角色的技能槽)
+「Attack」ボタンを表示する	Show the "Attack" button	显示「Attack」按键
+「Attack」に表示する入力アクション	The input action shown on "Attack"	「Attack」显示的输入操作
+「Attack」に表示するキー割り当ての番号 (同じアクションに複数のキーがあるとき)	Which key binding to show on "Attack" (when the action has several keys)	「Attack」显示第几个按键绑定 (同一操作有多个按键时)
+「Attack」の周りに出すゲージ (None / Ultimate: エネルギー (スキルで使う) / Skill: キャラのスキルゲージ)	Gauge shown around "Attack" (None / Ultimate: energy (used by skills) / Skill: the character's skill gauge)	「Attack」周围显示的能量槽 (None / Ultimate: 能量 (技能消耗) / Skill: 角色的技能槽)
+「FollowUp」ボタンを表示する	Show the "FollowUp" button	显示「FollowUp」按键
+「FollowUp」に表示する入力アクション	The input action shown on "FollowUp"	「FollowUp」显示的输入操作
+「FollowUp」に表示するキー割り当ての番号 (同じアクションに複数のキーがあるとき)	Which key binding to show on "FollowUp" (when the action has several keys)	「FollowUp」显示第几个按键绑定 (同一操作有多个按键时)
+「FollowUp」の周りに出すゲージ (None / Ultimate: エネルギー (スキルで使う) / Skill: キャラのスキルゲージ)	Gauge shown around "FollowUp" (None / Ultimate: energy (used by skills) / Skill: the character's skill gauge)	「FollowUp」周围显示的能量槽 (None / Ultimate: 能量 (技能消耗) / Skill: 角色的技能槽)
+「Special」ボタンを表示する	Show the "Special" button	显示「Special」按键
+「Special」に表示する入力アクション	The input action shown on "Special"	「Special」显示的输入操作
+「Special」に表示するキー割り当ての番号 (同じアクションに複数のキーがあるとき)	Which key binding to show on "Special" (when the action has several keys)	「Special」显示第几个按键绑定 (同一操作有多个按键时)
+「Special」の周りに出すゲージ (None / Ultimate: エネルギー (スキルで使う) / Skill: キャラのスキルゲージ)	Gauge shown around "Special" (None / Ultimate: energy (used by skills) / Skill: the character's skill gauge)	「Special」周围显示的能量槽 (None / Ultimate: 能量 (技能消耗) / Skill: 角色的技能槽)

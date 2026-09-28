@@ -16,10 +16,10 @@ internal static class DifficultyUi
 {
     /// <summary>ゲームに表示名が無いときに使う翻訳キー (GameUtil.GetLocale で RusK が答える)</summary>
     public const string NameKey = "RUSK_DIFFICULTY_EXTREME";
-    public const string Name = "エクストリーム";
+    public static string Name => L.T("エクストリーム");
     public const string Title = "EXTREME";
-    public const string Description =
-        "HARD をさらに超える最高難度。敵の強さは<color=#FF6666>最高</color>で、HP・攻撃力・攻撃の頻度・シールドが大幅に強化されます。";
+    public static string Description =>
+        L.T("HARD をさらに超える最高難度。敵の強さは<color=#FF6666>最高</color>で、HP・攻撃力・攻撃の頻度・シールドが大幅に強化されます。");
 
     private static readonly Color ExtremeTint = new(1f, 0.45f, 0.45f, 1f);
     private static readonly Dictionary<IntPtr, Color> OriginalImageColor = new();

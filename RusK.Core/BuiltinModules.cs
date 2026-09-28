@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using RusK.API;
 using UnityEngine;
 
@@ -7,6 +10,53 @@ namespace RusK.Core;
 /// Visual カテゴリの「Menu」。RusK 本体の見た目と操作の設定をまとめた、ON/OFF を持たないモジュール。
 /// 設定は他のモジュールと同じく Config プロファイルに保存される。
 /// </summary>
+/// <summary>
+/// Visual カテゴリの「Language」。メニューと各 Mod の表示の言語。Auto はパソコンの言語に合わせる。
+/// 言語ファイルは各 Mod の DLL に同梱 (lang/ja.json など)、RusK\lang\&lt;Mod の ID&gt;\&lt;言語&gt;.json で上書き・追加できる
+/// </summary>
+internal sealed class LanguageModule : Module
+{
+    private readonly List<string> _codes;
+
+    public LanguageModule() : base("Language", Categories.Visual, "メニューと Mod の表示の言語")
+    {
+        // 選べる言語: 標準の 3 つ + 上書き用フォルダに言語ファイルがある言語
+        _codes = new List<string>(RuskLang.Codes);
+        try
+        {
+            if (!string.IsNullOrEmpty(RuskLang.OverrideDir) && Directory.Exists(RuskLang.OverrideDir))
+                foreach (var f in Directory.GetFiles(RuskLang.OverrideDir, "*.json", SearchOption.AllDirectories))
+                {
+                    var code = Path.GetFileNameWithoutExtension(f).ToLowerInvariant();
+                    if (!_codes.Contains(code)) _codes.Add(code);
+                }
+        }
+        catch { }
+        var options = new[] { "Auto" }.Concat(_codes.Select(RuskLang.NameOf)).ToArray();
+        Language = AddSetting(new ModeSetting("Language", options, 0, "表示の言語 (Auto: パソコンの言語に合わせる)"));
+        Language.Changed += Apply;
+    }
+
+    public override bool Toggleable => false;
+    public override bool VisibleInArrayList => false;
+
+    public ModeSetting Language { get; }
+
+    /// <summary>設定の言語を当てる (起動時と、設定を変えたとき)</summary>
+    public void Apply()
+    {
+        string code = Language.Value == 0 ? SystemCode() : _codes[Language.Value - 1];
+        RuskLang.SetLanguage(code);
+    }
+
+    private static string SystemCode() => Application.systemLanguage switch
+    {
+        SystemLanguage.Japanese => "ja",
+        SystemLanguage.Chinese or SystemLanguage.ChineseSimplified or SystemLanguage.ChineseTraditional => "zh",
+        _ => "en",
+    };
+}
+
 internal sealed class MenuSettingsModule : Module
 {
     public static readonly string[] GuiModes = { "Tab", "Click" };

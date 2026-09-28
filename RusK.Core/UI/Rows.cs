@@ -24,10 +24,27 @@ internal abstract class Row
 
     public virtual bool Capturing => false;
 
+    /// <summary>この行の言葉を訳す表 (設定を持つ Mod の ID。本体の行は rusk)</summary>
+    public string ModId { get; set; } = RuskLang.CoreId;
+
+    /// <summary>今の言語に訳した名前・値・説明 (メニューはこちらを描く)</summary>
+    public virtual string TLabel => RuskLang.T(ModId, Label);
+    public virtual string TValue => RuskLang.T(ModId, Value);
+    public virtual string TDescription => RuskLang.T(ModId, Description);
+
     public virtual void Adjust(int dir) { }
     public virtual void Activate() => Adjust(+1);
 
     /// <summary>Setting から GUI 用の Row を作る。色の設定は H/S/V の 3 行になる</summary>
+    public static IEnumerable<Row> For(Setting setting, string modId)
+    {
+        var rows = For(setting).ToList();
+        foreach (var r in rows) r.ModId = modId ?? RuskLang.CoreId;
+        return rows;
+    }
+
+    public static List<Row> For(IEnumerable<Setting> settings, string modId) => settings.SelectMany(s => For(s, modId)).ToList();
+
     public static IEnumerable<Row> For(Setting setting) => setting switch
     {
         BoolSetting b => new Row[] { new BoolRow(b) },
@@ -113,6 +130,8 @@ internal sealed class HotkeyRow : Row
     public override string Label => _s.Name;
     public override string Value => Capturing ? "[ press a key ]" : _s.DisplayValue;
     public override string Description => _s.Description + " (Esc: キャンセル / Del: 解除)";
+    public override string TDescription => RuskLang.T(ModId, _s.Description) + RuskLang.T(RuskLang.CoreId, " (Esc: キャンセル / Del: 解除)");
+    public override string TValue => Capturing ? RuskLang.T(RuskLang.CoreId, "[ press a key ]") : _s.DisplayValue;
     public override bool Capturing => HotkeyCapture.IsCapturing(this);
     public override void Adjust(int dir) { }
     public override void Activate() => HotkeyCapture.Begin(this, hk => _s.Value = hk);
@@ -153,6 +172,8 @@ internal sealed class ColorRow : Row
     }
 
     public override string Label => $"{_s.Name} {Names[_channel]}";
+    public override string TLabel => $"{RuskLang.T(ModId, _s.Name)} {RuskLang.T(RuskLang.CoreId, Names[_channel])}";
+    public override string TValue => Value;
     public override string Value => _channel == 0 ? _s.DisplayValue : $"{Mathf.RoundToInt(Get() * 100f)}%";
     public override string Description => _s.Description;
     public override Color? Swatch => _s.Value;

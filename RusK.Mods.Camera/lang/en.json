@@ -1,0 +1,18 @@
+{
+  "視点: {0}": "View: {0}",
+  "視点変更 (近い肩越し / 真後ろ / 一人称 / カスタム)": "Camera views (close over-the-shoulder / behind / first person / custom)",
+  "視点を順に切り替える": "Cycle through the camera views",
+  "視点を変える (近い肩越し / 真後ろ / 一人称 / カスタム)": "Change the camera view (close over-the-shoulder / behind / first person / custom)",
+  "Shoulder: 近い肩越し / Behind: 真後ろ / FirstPerson: 一人称 / Custom: 下の値を自由に": "Shoulder: close over-the-shoulder / Behind: from behind / FirstPerson: first person / Custom: use the values below",
+  "視点が切り替わるまでの時間": "Time to blend into the new view",
+  "通常のプレイ用カメラだけに効かせる (パリィ・QTE・ボス登場などの演出カメラはそのまま)": "Only affect the normal gameplay camera (cinematic cameras for parries, QTEs, boss entrances, etc. are left alone)",
+  "一人称: 目の高さ (カメラの追従点からの高さ)。キャラごとに覚える": "First person: eye height (above the camera's follow point). Remembered per character",
+  "一人称の目の高さをキャラごとに覚える (調整したらそのキャラ用に保存し、キャラが替わったら切り替える)": "Remember the first-person eye height per character (saved when you adjust it, switched when the character changes)",
+  "一人称: 自分の体を隠す (影は残す)": "First person: hide your own body (the shadow stays)",
+  "一人称: 視野角 (FOV)": "First person: field of view (FOV)",
+  "Custom: カメラの距離": "Custom: camera distance",
+  "Custom: 肩の左右 (+ で右)": "Custom: shoulder offset left/right (+ is right)",
+  "Custom: 肩の高さ": "Custom: shoulder height",
+  "Custom: 腕の長さ (上方向の持ち上げ)": "Custom: arm length (upward lift)",
+  "Custom: 視野角 (FOV)": "Custom: field of view (FOV)"
+}

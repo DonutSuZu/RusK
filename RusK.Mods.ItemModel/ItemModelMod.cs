@@ -79,20 +79,20 @@ public sealed class ItemModelWindow : RuskWindow
 
     public override void Draw(WindowGui gui)
     {
-        gui.Label("装備を選んでから、glb を選んでください。その装備を付けているとき (武器は持っているとき) に見た目が変わります。",
+        gui.Label(L.T("装備を選んでから、glb を選んでください。その装備を付けているとき (武器は持っているとき) に見た目が変わります。"),
             RuskStyle.TextDim, small: true);
 
         var inScene = ItemModels.InScene();
         var catalog = Catalog();
-        gui.Header("装備", _all ? "すべて" : "今シーンにある装備");
-        _all = gui.Toggle("すべての装備を表示する", _all);
+        gui.Header(L.T("装備"), L.T(_all ? "すべて" : "今シーンにある装備"));
+        _all = gui.Toggle(L.T("すべての装備を表示する"), _all);
         var shown = catalog.Where(c => _all || inScene.Contains(c.id) || ItemModels.Get(c.id) != null).ToList();
         if (shown.Count == 0)
-            gui.Label(_all ? "装備の一覧を取得できません" : "(戦闘フィールドで開くと、付けている装備が並びます)", RuskStyle.TextDim, small: true);
+            gui.Label(L.T(_all ? "装備の一覧を取得できません" : "(戦闘フィールドで開くと、付けている装備が並びます)"), RuskStyle.TextDim, small: true);
         foreach (var c in shown)
         {
             var a = ItemModels.Get(c.id);
-            string right = (a != null ? Path.GetFileNameWithoutExtension(a.File) : "元の見た目") + $"  {c.type}";
+            string right = (a != null ? Path.GetFileNameWithoutExtension(a.File) : L.T("元の見た目")) + "  " + L.T(c.type);
             if (gui.Selectable(c.name, _selected == c.id, right)) _selected = c.id;
         }
 
@@ -101,12 +101,12 @@ public sealed class ItemModelWindow : RuskWindow
         var assigned = ItemModels.Get(_selected);
 
         gui.Space(6f);
-        gui.Header($"{sel.name} の見た目");
+        gui.Header(L.T("{0} の見た目", sel.name));
         gui.BeginRow(1f, 1f);
-        if (gui.Button("元の見た目にする", enabled: assigned != null)) ItemModels.Assign(_selected, null);
-        if (gui.Button("フォルダを開く")) ItemModels.OpenFolder();
+        if (gui.Button(L.T("元の見た目にする"), enabled: assigned != null)) ItemModels.Assign(_selected, null);
+        if (gui.Button(L.T("フォルダを開く"))) ItemModels.OpenFolder();
         var files = ItemModels.Files().ToList();
-        if (files.Count == 0) gui.Label("RusK\\props に .glb ファイルを置いてください。", RuskStyle.TextDim, small: true);
+        if (files.Count == 0) gui.Label(L.T("RusK\\props に .glb ファイルを置いてください。"), RuskStyle.TextDim, small: true);
         foreach (var f in files)
         {
             bool mine = assigned != null && Path.GetFileName(assigned.File) == Path.GetFileName(f);
@@ -116,7 +116,7 @@ public sealed class ItemModelWindow : RuskWindow
 
         if (assigned == null) return;
         gui.Space(6f);
-        gui.Header("位置・回転・大きさ", "元の武器・装備品からのずれ");
+        gui.Header(L.T("位置・回転・大きさ"), L.T("元の武器・装備品からのずれ"));
         bool changed = false;
         changed |= Tune(gui, "位置 X", ref assigned.Position.x, 0.01f);
         changed |= Tune(gui, "位置 Y", ref assigned.Position.y, 0.01f);
@@ -125,7 +125,7 @@ public sealed class ItemModelWindow : RuskWindow
         changed |= Tune(gui, "回転 Y", ref assigned.Rotation.y, 5f);
         changed |= Tune(gui, "回転 Z", ref assigned.Rotation.z, 5f);
         changed |= Tune(gui, "大きさ", ref assigned.Scale, 0.05f, 0.01f);
-        if (gui.Button("ずれを戻す"))
+        if (gui.Button(L.T("ずれを戻す")))
         {
             assigned.Position = Vector3.zero;
             assigned.Rotation = Vector3.zero;
@@ -135,14 +135,14 @@ public sealed class ItemModelWindow : RuskWindow
 
         // 発光 (ON なら glb の発光より優先。OFF で glb 自身の発光に戻る)
         gui.Space(6f);
-        gui.Header("発光", "glb に発光が入っていれば OFF でもそれが光る");
-        bool glow = gui.Toggle("光らせる", assigned.Glow);
+        gui.Header(L.T("発光"), L.T("glb に発光が入っていれば OFF でもそれが光る"));
+        bool glow = gui.Toggle(L.T("光らせる"), assigned.Glow);
         if (glow != assigned.Glow) { assigned.Glow = glow; changed = true; }
         if (assigned.Glow)
         {
             var colors = Assignment.GlowColors;
             int c = Mathf.Clamp(assigned.GlowColor, 0, colors.Length - 1);
-            int step = gui.Stepper("色", colors[c].name, colors[c].color);
+            int step = gui.Stepper(L.T("色"), L.T(colors[c].name), colors[c].color);
             if (step != 0)
             {
                 assigned.GlowColor = (c + step + colors.Length) % colors.Length;
@@ -159,7 +159,7 @@ public sealed class ItemModelWindow : RuskWindow
 
     private static bool Tune(WindowGui gui, string label, ref float value, float step, float min = float.MinValue)
     {
-        int s = gui.Stepper(label, value.ToString(step >= 1f ? "0" : "0.00"));
+        int s = gui.Stepper(L.T(label), value.ToString(step >= 1f ? "0" : "0.00"));
         if (s == 0) return false;
         value = Mathf.Max(min, Mathf.Round((value + s * step) * 1000f) / 1000f);
         return true;

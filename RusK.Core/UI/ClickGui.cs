@@ -73,7 +73,7 @@ internal sealed class ClickGui
         Render.Rect(x + 2, y + 2, w, hh, _t.Shadow);
         Render.Rect(x, y, w, hh, _t.Header);
         Render.Rect(x, y + hh - 2f, w, 2f, _t.Accent());
-        Render.Text(x + 10, y, w - 20, hh, category, _t.Text, _t.FontSize, TextAnchor.MiddleLeft, bold: true);
+        Render.Text(x + 10, y, w - 20, hh, RuskLang.T(RuskLang.CoreId, category), _t.Text, _t.FontSize, TextAnchor.MiddleLeft, bold: true);
         Render.Text(x + 10, y, w - 20, hh, panel.Collapsed ? "+" : "–", _t.TextDim, _t.FontSize, TextAnchor.MiddleRight);
 
         if (Render.Contains(x, y, w, hh, _mouse.Position))
@@ -103,14 +103,14 @@ internal sealed class ClickGui
     {
         float h = _t.ModuleHeight;
         bool hover = Render.Contains(x, y, w, h, _mouse.Position);
-        if (hover) description = e.Description;
+        if (hover) description = L.T(e.Description);
 
         Render.Rect(x, y, w, h, hover ? _t.ModuleHover : _t.ModuleBg);
         var accent = _t.Accent(index * 0.05f);
         if (e.Active) Render.Rect(x, y, 2.5f, h, accent);
 
         var textColor = e.Active ? accent : e.Dim ? _t.TextDim : _t.Text;
-        Render.Text(x + 10, y, w - 20, h, e.Label, textColor, _t.FontSize);
+        Render.Text(x + 10, y, w - 20, h, L.T(e.Label), textColor, _t.FontSize);
 
         bool expanded = _expanded.Contains(e);
         var bindRow = (e as ModuleEntry)?.BindRow;
@@ -150,10 +150,10 @@ internal sealed class ClickGui
         float h = _t.SettingHeight;
         float pad = 12f;
         bool hover = Render.Contains(x, y, w, h, _mouse.Position);
-        if (hover) description = row.Description;
+        if (hover) description = row.TDescription;
 
         Render.Rect(x, y, w, h, hover ? _t.ModuleHover : _t.SettingBg);
-        Render.Text(x + pad, y, w - pad * 2, h, row.Label, _t.TextDim, _t.SmallFontSize);
+        Render.Text(x + pad, y, w - pad * 2, h, row.TLabel, _t.TextDim, _t.SmallFontSize);
 
         float valueRight = w - pad;
         if (row.Swatch.HasValue)
@@ -162,7 +162,7 @@ internal sealed class ClickGui
             Render.Rect(x + w - pad - sw, y + 3f, sw, sw, row.Swatch.Value, 2f);
             valueRight -= sw + 4f;
         }
-        Render.Text(x, y, valueRight, h, row.Value, row.Capturing ? _t.Accent() : _t.Text, _t.SmallFontSize,
+        Render.Text(x, y, valueRight, h, row.TValue, row.Capturing ? _t.Accent() : _t.Text, _t.SmallFontSize,
             TextAnchor.MiddleRight);
 
         if (row.Normalized is float n)

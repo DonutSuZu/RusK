@@ -68,9 +68,9 @@ internal sealed class Doctor
 
     /// <summary>メニューに出す短い状態表示</summary>
     public string Summary =>
-        ErrorCount > 0 ? $"✗ {ErrorCount} エラー" + (WarningCount > 0 ? $" / ▲ {WarningCount}" : "")
-        : WarningCount > 0 ? $"▲ {WarningCount} 注意"
-        : "✓ 問題なし";
+        ErrorCount > 0 ? L.T("✗ {0} エラー", ErrorCount) + (WarningCount > 0 ? $" / ▲ {WarningCount}" : "")
+        : WarningCount > 0 ? L.T("▲ {0} 注意", WarningCount)
+        : L.T("✓ 問題なし");
 
     /// <summary>ゲームの版が前回から変わったかを記録する (起動時に 1 回)</summary>
     public void CheckGameUpdate(BepInEx.Configuration.ConfigEntry<string> lastVersion)
@@ -289,9 +289,9 @@ internal sealed class Doctor
     public void NotifyStartup()
     {
         if (PreviousGameVersion != null)
-            Rusk.Notifications.Push($"ゲームが更新されました (v{PreviousGameVersion} → v{GameVersion})", NotifyLevel.Warning);
+            Rusk.Notifications.Push(L.T("ゲームが更新されました (v{0} → v{1})", PreviousGameVersion, GameVersion), NotifyLevel.Warning);
         if (ErrorCount > 0 || WarningCount > 0)
-            Rusk.Notifications.Push($"Check: {Summary} (Mods > Check で詳細)",
+            Rusk.Notifications.Push(L.T("Check: {0} (Mods > Check で詳細)", Summary),
                 ErrorCount > 0 ? NotifyLevel.Error : NotifyLevel.Warning);
         Rusk.Log.LogInfo($"[Check] {Summary} ({_reports.Count} mod(s), game v{GameVersion})");
     }

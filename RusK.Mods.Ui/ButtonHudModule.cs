@@ -409,7 +409,7 @@ public sealed class ButtonHudModule : Module
         {
             int fs = Mathf.RoundToInt(Mathf.Max(9f, r * 0.26f));
             float ly = cy + r + (icon != null ? (_layout.Value == 0 ? 8f + fs + 16f : 10f) : 4f) * s;
-            Render.Text(cx - r * 1.5f, ly, r * 3f, fs + 6f * s, slot.Label, new Color(0.85f, 0.9f, 0.95f, 0.95f * op),
+            Render.Text(cx - r * 1.5f, ly, r * 3f, fs + 6f * s, L.T(slot.Label), new Color(0.85f, 0.9f, 0.95f, 0.95f * op),
                 fs, TextAnchor.MiddleCenter, bold: true, shadow: true);
         }
 
