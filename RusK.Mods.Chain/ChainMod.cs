@@ -35,7 +35,8 @@ public sealed class ChainMod : RuskMod
 public sealed class ChainModule : Module
 {
     private readonly HotkeySetting _skipKey;
-    private readonly IntSetting _pointsNeeded;
+    private readonly ModeSetting _pointsNeeded;
+    private static readonly int[] PointChoices = { 300, 600, 900, 1500 };
     private readonly BoolSetting _devTools;
     private bool _warnedNoParty;
 
@@ -43,7 +44,7 @@ public sealed class ChainModule : Module
         : base("ChainAttack", "Party",
             "連携攻撃: ヒットをためて追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる (Party Mod が必要)")
     {
-        _pointsNeeded = AddSetting(new IntSetting("PointsNeeded", 300, 50, 3000,
+        _pointsNeeded = AddSetting(new ModeSetting("PointsNeeded", new[] { "300", "600", "900", "1500" }, 0,
             "連携に必要なポイント (敵への 1 ヒットで 1 ポイント)"));
         _skipKey = AddSetting(new HotkeySetting("SkipKey", new Hotkey(KeyCode.X),
             "連携回避のキー: 最初の選択中に押すと、連携せずに 1 回分をストックする"));
@@ -71,7 +72,7 @@ public sealed class ChainModule : Module
         }
         ChainAttack.Enabled = true; // OFF → ON に戻したとき
         ChainAttack.SkipKey = _skipKey.Value;
-        ChainAttack.PointsNeeded = _pointsNeeded.Value;
+        ChainAttack.PointsNeeded = PointChoices[Mathf.Clamp(_pointsNeeded.Value, 0, PointChoices.Length - 1)];
         ChainAttack.Tick();
     }
 
