@@ -136,9 +136,12 @@ internal static class Strings
         ["視点の切り替え (近い肩越し / 真後ろ / 一人称 / カスタム)"] = (
             "Camera views (close over-the-shoulder / behind / first person / custom)",
             "切换视角 (近距离越肩 / 正后方 / 第一人称 / 自定义)"),
-        ["アクティブ3人。仲間 2 人と戦闘中にキーで交代。切り替えパリィ・戦闘不能時の自動交代"] = (
-            "Three active characters. Switch between you and two companions in battle; switch parries; auto-switch when knocked out",
-            "三人同时上场。战斗中用按键与两名队友切换。切换招架、无法战斗时自动切换"),
+        ["アクティブ3人。仲間 2 人と戦闘中にキーで交代。切り替えパリィ・戦闘不能時の自動交代・パッシブバフの共有"] = (
+            "Three active characters. Switch between you and two companions in battle; switch parries; auto-switch when knocked out; shared passive buffs",
+            "三人同时上场。战斗中用按键与两名队友切换。切换招架、无法战斗时自动切换、共享被动增益"),
+        ["連携攻撃。1500 ヒットためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party が必要)"] = (
+            "Chain attack. After 1500 hits, landing a follow-up attack stops time and chains your companions' follow-up attacks (requires Party)",
+            "连携攻击。累计 1500 次命中后用追加攻击命中, 时间会停止, 可接上队友的追加攻击 (需要 Party)"),
         ["キャラの見た目を VRM にする (RusK\\models に .vrm を置く)。口パク・表情・揺れ物に対応"] = (
             "Turns characters into VRM models (put .vrm files in RusK\\models). Lip sync, expressions and physics",
             "将角色外观替换为 VRM (把 .vrm 放入 RusK\\models)。支持口型、表情和物理摆动"),
@@ -188,6 +191,7 @@ internal static class Strings
         ["{0}: {1} / {2}"] = ("{0}: {1} / {2}", "{0}: {1} / {2}"),
         ["  {0} ({1}) を配置しました"] = ("  Installed {0} ({1})", "  已放置 {0} ({1})"),
         ["{0} がリリースに見つかりません"] = ("{0} was not found in the releases", "在发布中找不到 {0}"),
+        ["  {0} には {1} が必要なので、一緒に入れます"] = ("  {0} requires {1}, so it will be installed too", "  {0} 需要 {1}, 将一并安装"),
         ["{0} をダウンロードできませんでした: {1}"] = ("Could not download {0}: {1}", "无法下载 {0}: {1}"),
         ["  - {0} (選択されていないので削除)"] = ("  - {0} (removed because it wasn't selected)", "  - {0} (未选择, 已删除)"),
         ["  music フォルダを作成しました"] = ("  Created the music folder", "  已创建 music 文件夹"),

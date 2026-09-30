@@ -17,6 +17,7 @@ internal sealed class Component
     public bool Required;
     public bool DefaultOn = true;
     public string Asset;         // リリースに添付する DLL の名前 (本体は null)
+    public string Requires;      // 一緒に入れる必要がある Mod の Id (選ばれていれば自動で足す)
 }
 
 internal sealed class InstallOptions
@@ -68,7 +69,12 @@ internal static class InstallEngine
         new Component
         {
             Id = "party", Name = "Party", Asset = "RuskParty.dll",
-            Description = "アクティブ3人。仲間 2 人と戦闘中にキーで交代。切り替えパリィ・戦闘不能時の自動交代",
+            Description = "アクティブ3人。仲間 2 人と戦闘中にキーで交代。切り替えパリィ・戦闘不能時の自動交代・パッシブバフの共有",
+        },
+        new Component
+        {
+            Id = "chain", Name = "Chain Attack", Asset = "RuskChain.dll", Requires = "party",
+            Description = "連携攻撃。1500 ヒットためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party が必要)",
         },
         new Component
         {
@@ -161,6 +167,12 @@ internal static class InstallEngine
         // 3. Mod (選ばれたものは GitHub のリリースから最新の DLL をダウンロード、選ばれていないものは削除)
         var modsDir = Path.Combine(o.GameDir, "RusK", "mods");
         Directory.CreateDirectory(modsDir);
+        // 前提の Mod (Chain Attack → Party) は自動で足す
+        foreach (var c in Components.Where(c => c.Requires != null && o.Components.Contains(c.Id)).ToList())
+        {
+            if (o.Components.Add(c.Requires))
+                log(Strings.T("  {0} には {1} が必要なので、一緒に入れます", c.Name, c.Requires));
+        }
         var wanted = Components.Where(c => c.Asset != null && o.Components.Contains(c.Id)).ToList();
         foreach (var c in Components.Where(c => c.Asset != null && !o.Components.Contains(c.Id)))
         {

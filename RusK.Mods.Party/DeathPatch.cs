@@ -13,7 +13,7 @@ internal static class PartyHpChangePatch
         try
         {
             if (change >= 0f) return true;
-            if (ChainAttack.Active) return false; // 連携攻撃の間はダメージを受けない
+            if (PartyBridge.BlockHits) return false; // ほかの Mod (連携攻撃など) が止めている間はダメージを受けない
             if (PartyManager.IsDown(__instance)) return false; // 交代待ちの間はダメージを受けない
             if (__instance.GetCurHp() + change > 0f) return true;
             if (!PartyManager.TryRescue(__instance)) return true; // 仲間がいない → ゲーム本来の処理 (ゲームオーバー)

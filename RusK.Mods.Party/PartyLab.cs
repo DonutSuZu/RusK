@@ -54,12 +54,6 @@ internal sealed class PartyLabWindow : RuskWindow
         if (gui.Button("今すぐ付け替える")) EnemyAiRetarget.Retarget(PartyManager.Current, "手動");
 
         gui.Space(6f);
-        gui.Header("連携攻撃", $"ポイント {ChainAttack.Points}  ストック {ChainAttack.Stock}");
-        gui.BeginRow(1f, 1f);
-        if (gui.Button("ポイントを 1500 にする", accent: true)) ChainAttack.Points = ChainAttack.PointsNeeded;
-        if (gui.Button("ポイントを 0 にする")) { ChainAttack.Points = 0; ChainAttack.Stock = 0; }
-
-        gui.Space(6f);
         gui.Header("追加攻撃の試し撃ち (連携攻撃の調査)");
         gui.Label("F6: 今のキャラで撃つ   F7: 次のキャラに切り替えて撃つ (キー割り当ての PartyLabQte / PartyLabQteSwitch でも可)。結果はログにも出ます",
             RuskStyle.TextDim, small: true);

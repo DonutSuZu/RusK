@@ -8,7 +8,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 - TabGUI / ClickGUI (Horion 風)、ArrayList・通知・ウォーターマーク
 - Mod の着脱 (AssemblyLoadContext)、アクショントリガー、Config プロファイル
 - Flex Window (Mod 用のドラッグ・リサイズできるウィンドウ)
-- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Camera View** (視点の切り替え) / **Party** (アクティブ3人・切り替えパリィ) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
+- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Camera View** (視点の切り替え) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
 - **RusK Check**: ゲームの更新で壊れた Mod を教える診断機能
 
 **ゲーム**: [VED:Recure (Steam)](https://store.steampowered.com/app/3255500/Ved/)
@@ -49,7 +49,8 @@ RusK/
 ├─ RusK.Mods.Extreme/   同梱Mod: 難易度 EXTREME
 ├─ RusK.Mods.Music/     同梱Mod: 戦闘 BGM の置き換え
 ├─ RusK.Mods.Camera/    同梱Mod: 視点の切り替え
-├─ RusK.Mods.Party/     同梱Mod: アクティブ3人
+├─ RusK.Mods.Party/     同梱Mod: アクティブ3人 (ほかの Mod 用の入口 PartyBridge)
+├─ RusK.Mods.Chain/     同梱Mod: 連携攻撃 (Party の PartyBridge をリフレクションで使う)
 ├─ RusK.Mods.Model/     同梱Mod: キャラの見た目を VRM に (glb の読み込み・動きの写し・揺れ物・表情)
 ├─ RusK.Mods.ItemModel/ 同梱Mod: 武器・装飾品の見た目を glb に (glb の読み込みは RusK.Mods.Model/Vrm をソースごとリンク)
 ├─ RusK.Mods.Shared/    ゲーム用 Mod で共有するソース (キャラの表示名など。各 csproj に Compile Include でリンク)
@@ -139,6 +140,19 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 - **切り替えパリィ**: 切り替えた瞬間を「ガードを押した」扱いにする。攻撃の直前に切り替えると、出てきたキャラがゲーム本来のガードでパリィする
 - 操作中のキャラが倒れたら、生きている仲間に自動で交代（全員倒れたらゲームオーバー）
 - 画面左にパーティ HUD（顔・HP・必殺技ゲージ・交代キー）。位置と大きさは設定で変更できる
+- **パッシブバフの共有** (ShareBuffs): 操作中のキャラが得た / 失ったパッシブバフを控えにも付ける / 外す (キャラ専用・装備のバフは除く)
+- 切り替えの後、敵の AI (Behavior Designer の BehaviorTree の変数) が前のキャラを指していたら今のキャラに付け替える (立ち尽くす敵の対策)
+- **DevTools** (開発者向け、既定 OFF): ON にしてゲームを再起動すると Party Lab (調査用ウィンドウ・追加攻撃の試し撃ち・敵の AI の変数のログ) が出る
+- ほかの Mod 用の入口 `PartyBridge` (public static): メンバー・切り替え・顔アイコン・切り替えキー・無敵 (BlockHits)・キーの横取り (SuppressSwitchKeys)・HUD の描き足し (HudExtras)。
+  Mod は別々の AssemblyLoadContext で読み込まれて互いの DLL を参照できないので、使う側はリフレクションで探す (Chain の `PartyLink.cs`)
+
+### Chain Attack（連携攻撃、Party が必要）
+- 敵に 1 ヒットで 1P (パーティ HUD の下に CHAIN ゲージ、3000 で頭打ち)。ステージ移動・連携の発動・30 秒攻撃なしで 0 に戻る
+- **1500P たまった状態で追加攻撃を当てる**と時間がほぼ止まり、画面下に選択ゲージ (5 秒)。**C / Z** で次のキャラを選ぶと、敵の目の前に出て追加攻撃を撃つ
+- 編成の人数だけ最後まで繋がる (狙った敵が倒れたら近くの別の敵へ、外れても次へ、途中の時間切れは左のキャラを自動で選ぶ)。連携中は攻撃を受けない
+- 最初の選択で **X** (SkipKey) を押すか時間切れにすると、連携せずに 1 回分をストックする (最大 1。次に追加攻撃を当てると使う)
+- 追加攻撃は、キャラの動作の一覧から `NormalAttack_QTE_*` を名前で探して直接出す (`PlayerController.QTEAttack()` は今のコンボの続きしか出せない)
+- 追加攻撃のヒットは、操作キャラの動作を毎フレーム見張り「QTE の動作中か、終わって 0.4 秒以内」のヒットで判定する (`EnemyController.GetHit` の戻り値は当てにならない)
 
 ### Custom Model（VRM）
 - `RusK\models` に `.vrm` (VRM 0.x / 1.0) を置き、**Visual > CustomModel** でキャラごとに選ぶ

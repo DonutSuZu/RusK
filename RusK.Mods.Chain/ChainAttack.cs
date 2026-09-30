@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
 using RusK.API;
 using UnityEngine;
 
-namespace RusK.Mods.Party;
+namespace RusK.Mods.Chain;
 
 /// <summary>
 /// 連携攻撃 (ゼンゼロのチェーン攻撃風)。
@@ -32,8 +31,8 @@ internal static class ChainAttack
     public static float ChooseTime = 5f;
     public static float SlowScale = 0.03f;
     public static float Distance = 1.6f;
-    public static Hotkey NextKey = new(KeyCode.C);
-    public static Hotkey PrevKey = new(KeyCode.Z);
+    public static Hotkey NextKey => PartyLink.NextKey;
+    public static Hotkey PrevKey => PartyLink.PrevKey;
     public static Hotkey SkipKey = new(KeyCode.X);
 
     public static int Points;
@@ -79,12 +78,12 @@ internal static class ChainAttack
         if (!_loggedFirstHit)
         {
             _loggedFirstHit = true;
-            PartyManager.Log?.Info("Party: 連携攻撃 敵へのヒットの検知 OK");
+            ChainMod.Log?.Info("Chain: 敵へのヒットの検知 OK");
         }
-        if (LoggedTypes.Add(boxType)) PartyManager.Log?.Info($"Party: 連携攻撃 ヒットの種類 {boxType} を検知");
+        if (LoggedTypes.Add(boxType)) ChainMod.Log?.Info($"Chain: ヒットの種類 {boxType} を検知");
         if (!Enabled || enemy == null) return;
         if (boxType != AttackBoxType.Player && boxType != AttackBoxType.PlayerCopy) return;
-        var cur = PartyManager.Current;
+        var cur = Current;
         if (cur == null) return;
         _lastHit = Time.unscaledTime;
 
@@ -110,13 +109,13 @@ internal static class ChainAttack
         bool byPoints = Points >= PointsNeeded;
         bool byStock = !byPoints && Stock > 0;
         int remaining = Remaining(cur).Count;
-        bool field = PartyHud.OnField();
+        bool field = PartyLink.OnField();
         string why = !alive ? "敵が倒れている" : !field ? "戦闘画面ではない" : remaining == 0 ? "交代できる仲間がいない"
             : !byPoints && !byStock ? "ポイントが足りない" : null;
         if (why != null || Time.unscaledTime - _lastQteLog > 1f)
         {
             _lastQteLog = Time.unscaledTime;
-            PartyManager.Log?.Info($"Party: 連携攻撃 追加攻撃が命中 '{motion}' ポイント {Points} ストック {Stock} " +
+            ChainMod.Log?.Info($"Chain: 追加攻撃が命中 '{motion}' ポイント {Points} ストック {Stock} " +
                                    $"仲間 {remaining} 人 → {(why ?? "発動")}");
         }
         if (why != null) return;
@@ -129,7 +128,7 @@ internal static class ChainAttack
         Used.Clear();
         Used.Add(cur.Pointer);
         _anyFollowUp = false;
-        PartyManager.Log?.Info($"Party: 連携攻撃 開始 ({(byPoints ? "ポイント" : "ストック")}) {PartyManager.Name(cur)} → 選択へ");
+        ChainMod.Log?.Info($"Chain: 開始 ({(byPoints ? "ポイント" : "ストック")}) {PartyLink.Name(cur)} → 選択へ");
         BeginChoose();
     }
 
@@ -154,7 +153,7 @@ internal static class ChainAttack
 
     private static void WatchQte()
     {
-        var cur = PartyManager.Current;
+        var cur = Current;
         bool now = cur != null && InQte(cur);
         if (now)
         {
@@ -162,7 +161,7 @@ internal static class ChainAttack
             {
                 _qteSession++;
                 try { _qteMotion = cur.GetCurMotion()?.name ?? ""; } catch { _qteMotion = ""; }
-                PartyManager.Log?.Info($"Party: 連携攻撃 {PartyManager.Name(cur)} が追加攻撃の動作に入った '{_qteMotion}' (ポイント {Points} ストック {Stock})");
+                ChainMod.Log?.Info($"Chain: {PartyLink.Name(cur)} が追加攻撃の動作に入った '{_qteMotion}' (ポイント {Points} ストック {Stock})");
             }
             _qteUntil = Time.unscaledTime + 0.4f;
         }
@@ -180,7 +179,7 @@ internal static class ChainAttack
             loading = (GameUtil.Instance?.GetInLoading() ?? false) || (SceneLoader.Instance?.InSceneLoading() ?? false);
         }
         catch { }
-        if (loading || !PartyManager.InFight)
+        if (loading || !InFight)
         {
             if (Active) End("ステージ移動");
             Points = 0;
@@ -193,6 +192,15 @@ internal static class ChainAttack
             return;
         }
         WatchQte();
+
+        // Party に伝える: 連携中は攻撃を受けない・切り替えキーを連携の選択に使う。ポイントはパーティ HUD の下に出す
+        PartyLink.SetBlockHits(Active);
+        PartyLink.SetSuppressSwitchKeys(Active);
+        if (!_hudSet)
+        {
+            PartyLink.SetHudExtras(DrawPointsOnHud);
+            _hudSet = true;
+        }
 
         switch (_state)
         {
@@ -208,18 +216,75 @@ internal static class ChainAttack
         }
     }
 
+    private static bool _hudSet;
+
+    /// <summary>止める (モジュールを OFF にした / Mod を外した)。時間・無敵・キー・HUD を Party に返す</summary>
+    public static void Shutdown()
+    {
+        Enabled = false;
+        if (Active) End("無効にした");
+        PartyLink.SetBlockHits(false);
+        PartyLink.SetSuppressSwitchKeys(false);
+        PartyLink.SetHudExtras(null);
+        _hudSet = false;
+    }
+
+    private static PlayerController Current
+    {
+        get
+        {
+            try { return GameUtil.Instance?.GetPlayer(); }
+            catch { return null; }
+        }
+    }
+
+    /// <summary>今が戦闘ステージか</summary>
+    private static bool InFight
+    {
+        get
+        {
+            try
+            {
+                var util = GameUtil.Instance;
+                return util != null && (util.InFightScene() || util.IsInBossFight());
+            }
+            catch { return false; }
+        }
+    }
+
+    private static readonly HashSet<IntPtr> ListedMotions = new();
+
+    /// <summary>そのキャラの追加攻撃の動作名。"NormalAttack_QTE_" を優先し、無ければ "QTE" を含む動作</summary>
+    private static string FindQteMotion(PlayerController p)
+    {
+        var all = new List<string>();
+        try
+        {
+            var list = p.GetMotionList();
+            for (int i = 0; list != null && i < list.Count; i++)
+            {
+                var n = list[i]?.name;
+                if (!string.IsNullOrEmpty(n) && n.IndexOf("QTE", StringComparison.OrdinalIgnoreCase) >= 0) all.Add(n);
+            }
+        }
+        catch { }
+        if (ListedMotions.Add(p.Pointer))
+            ChainMod.Log?.Info($"Chain: {PartyLink.Name(p)} の追加攻撃の動作: {string.Join(", ", all)}");
+        foreach (var n in all) if (n.StartsWith("NormalAttack_QTE")) return n;
+        return all.Count > 0 ? all[0] : null;
+    }
+
     // ---- 選択 (時間をほぼ止めてゲージを出す)
 
     private static List<PlayerController> Remaining(PlayerController cur)
     {
-        PartyManager.Refresh();
-        return PartyManager.Members.Where(m => m != null && m.Pointer != cur.Pointer && !Used.Contains(m.Pointer) &&
-                                               !PartyManager.IsDown(m)).ToList();
+        return PartyLink.Members().Where(m => m != null && m.Pointer != cur.Pointer && !Used.Contains(m.Pointer) &&
+                                              !PartyLink.IsDown(m)).ToList();
     }
 
     private static void BeginChoose()
     {
-        var cur = PartyManager.Current;
+        var cur = Current;
         if (cur == null || !EnsureTarget(cur))
         {
             NoEnemyLeft();
@@ -243,7 +308,7 @@ internal static class ChainAttack
 
     private static PlayerController Walk(PlayerController from, int dir, List<PlayerController> candidates)
     {
-        var members = PartyManager.Members.Where(m => m != null).ToList();
+        var members = PartyLink.Members();
         int i = members.FindIndex(m => m.Pointer == from.Pointer);
         int n = members.Count;
         for (int k = 1; k < n; k++)
@@ -256,7 +321,7 @@ internal static class ChainAttack
 
     private static void TickChoose()
     {
-        if (!EnsureTarget(PartyManager.Current))
+        if (!EnsureTarget(Current))
         {
             NoEnemyLeft();
             return;
@@ -280,20 +345,20 @@ internal static class ChainAttack
         if (!_anyFollowUp)
         {
             Stock = 1;
-            PartyManager.Log?.Info($"Party: 連携攻撃 キャンセル ({reason}) → 1 回分ストック");
+            ChainMod.Log?.Info($"Chain: キャンセル ({reason}) → 1 回分ストック");
             Ctx?.Notify(L.T("連携攻撃をストックしました"), NotifyLevel.Info);
         }
         End(reason);
     }
 
-    private static IModContext Ctx => PartyManager.Ctx;
+    private static IModContext Ctx => ChainMod.Ctx;
 
     private static void Choose(PlayerController next)
     {
         if (next == null) return;
-        var prev = PartyManager.Current;
+        var prev = Current;
         RestoreTime();
-        if (!PartyManager.Switch(next, ignoreCooldown: true, force: true))
+        if (!PartyLink.Switch(next))
         {
             End("切り替えに失敗");
             return;
@@ -337,7 +402,7 @@ internal static class ChainAttack
         }
         catch (Exception e)
         {
-            PartyManager.Log?.Warning($"Party: 連携攻撃 敵の前に移動できません: {e.Message}");
+            ChainMod.Log?.Warning($"Chain: 敵の前に移動できません: {e.Message}");
         }
     }
 
@@ -346,7 +411,7 @@ internal static class ChainAttack
     private static void TickAttack()
     {
         var p = _attacker;
-        if (p == null || PartyManager.Current?.Pointer != p.Pointer)
+        if (p == null || Current?.Pointer != p.Pointer)
         {
             End("攻撃するキャラがいない");
             return;
@@ -357,7 +422,7 @@ internal static class ChainAttack
             if (Time.frameCount < _fireFrame) return;
             _fired = true;
             _attackStart = Time.unscaledTime;
-            var name = QteProbe.FindQteMotion(p);
+            var name = FindQteMotion(p);
             if (name == null)
             {
                 End("追加攻撃の動作がない");
@@ -367,11 +432,11 @@ internal static class ChainAttack
             {
                 try { p.SetQTEListen(false); } catch { }
                 p.ChangeMotion(name, true, 0.05f, default);
-                PartyManager.Log?.Info($"Party: 連携攻撃 {PartyManager.Name(p)} の追加攻撃 '{name}'");
+                ChainMod.Log?.Info($"Chain: {PartyLink.Name(p)} の追加攻撃 '{name}'");
             }
             catch (Exception e)
             {
-                PartyManager.Log?.Warning($"Party: 連携攻撃 追加攻撃を出せません: {e.Message}");
+                ChainMod.Log?.Warning($"Chain: 追加攻撃を出せません: {e.Message}");
                 End("追加攻撃を出せない");
             }
             return;
@@ -389,7 +454,7 @@ internal static class ChainAttack
         try { inQte = p.IsCurMotionQTE(); } catch { }
         if ((t > 0.3f && !inQte) || t > 3f)
         {
-            PartyManager.Log?.Info("Party: 連携攻撃 追加攻撃が当たらなかったが、次へ進む");
+            ChainMod.Log?.Info("Chain: 追加攻撃が当たらなかったが、次へ進む");
             BeginChoose();
         }
     }
@@ -398,7 +463,7 @@ internal static class ChainAttack
 
     private static void End(string reason)
     {
-        if (_state != State.Idle) PartyManager.Log?.Info($"Party: 連携攻撃 終了 ({reason})");
+        if (_state != State.Idle) ChainMod.Log?.Info($"Chain: 終了 ({reason})");
         RestoreTime();
         _usedSession = _qteSession; // 連携の最後の追加攻撃の続きのヒットで、すぐ始め直さない
         _state = State.Idle;
@@ -435,7 +500,7 @@ internal static class ChainAttack
         }
         catch { }
         if (best == null) return false;
-        PartyManager.Log?.Info($"Party: 連携攻撃 狙っていた敵が倒れたので、近くの敵 '{best.name}' ({bestDist:0.0}m) に移る");
+        ChainMod.Log?.Info($"Chain: 狙っていた敵が倒れたので、近くの敵 '{best.name}' ({bestDist:0.0}m) に移る");
         _target = best;
         return true;
     }
@@ -446,7 +511,7 @@ internal static class ChainAttack
         if (!_anyFollowUp)
         {
             Stock = 1;
-            PartyManager.Log?.Info("Party: 連携攻撃 敵がいなくなったので 1 回分をストックに戻した");
+            ChainMod.Log?.Info("Chain: 敵がいなくなったので 1 回分をストックに戻した");
         }
         End("敵がいなくなった");
     }
@@ -464,6 +529,8 @@ internal static class ChainAttack
     private static readonly Color GaugeCol = new(1f, 0.78f, 0.25f, 1f);
 
     /// <summary>ポイントのゲージ (パーティ HUD の下)</summary>
+    private static void DrawPointsOnHud(float x, float y, float s) => DrawPoints(x, y, s, 1f);
+
     public static void DrawPoints(float x, float y, float s, float alpha)
     {
         if (!Enabled || alpha <= 0.001f) return;
@@ -547,12 +614,11 @@ internal static class ChainAttack
     private static void DrawPick(PlayerController p, float cx, float cy, float size, float ring, string key, float s)
     {
         if (p == null) return;
-        var mm = PartyManager.FindCharacter(PartyManager.Id(p));
         float r = size * 0.5f;
         // オレンジの縁 → 暗い下地 → 丸く切り抜いた顔
         Render.Rect(cx - r - ring, cy - r - ring, size + ring * 2f, size + ring * 2f, new Color(1f, 0.55f, 0.12f, 1f), r + ring);
         Render.Rect(cx - r, cy - r, size, size, new Color(0.08f, 0.08f, 0.1f, 1f), r);
-        var tex = PartyHud.Portrait(mm);
+        var tex = PartyLink.Portrait(p);
         if (tex != null)
             GUI.DrawTexture(new Rect(cx - r, cy - r, size, size), tex, ScaleMode.StretchToFill, true, 0f, Color.white, 0f, r);
 
@@ -562,18 +628,5 @@ internal static class ChainAttack
         float kx = cx - kw * 0.5f, ky = cy + r + ring + 5f * s;
         Render.Rect(kx, ky, kw, kh, new Color(0.02f, 0.02f, 0.03f, 0.9f), kh * 0.5f);
         Render.Text(kx, ky, kw, kh, key, Color.white, fs, TextAnchor.MiddleCenter, true);
-    }
-}
-
-// bool EnemyController.GetHit(Transform atker, AttackBox atkBox, int damage, string hitEffOverride, AttackBoxType boxType, AttackBoxController atkBoxCon)
-// (呼び出し元は PlayerController.MakeDamageCallBack だけ。戻り値 true = 当たった)
-[HarmonyPatch(typeof(EnemyController), nameof(EnemyController.GetHit))]
-internal static class ChainEnemyHitPatch
-{
-    private static void Postfix(EnemyController __instance, bool __result, AttackBoxType boxType)
-    {
-        // 戻り値は「当たったか」ではないらしい (追加攻撃のヒットが数えられなかった) ので見ない
-        try { ChainAttack.OnEnemyHit(__instance, boxType); }
-        catch (Exception e) { PartyManager.Log?.Warning($"Party: 連携攻撃のヒット処理でエラー: {e.Message}"); }
     }
 }

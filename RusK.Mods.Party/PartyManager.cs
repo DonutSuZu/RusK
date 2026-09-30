@@ -92,7 +92,6 @@ internal static class PartyManager
         _rescueTo = null;
         JustSwitch.Reset();
         BuffShare.Reset();
-        ChainAttack.Reset();
     }
 
     // ------------------------------------------------------------------ 戦闘不能と自動交代
