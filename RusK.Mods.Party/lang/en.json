@@ -1,6 +1,5 @@
 {
   "連携攻撃をストックしました": "Chain attack stocked",
-  "{0}: 連携をやめる": "{0}: Stop the chain",
   "{0}: 連携回避 (ストックする)": "{0}: Skip chain (stock it)",
   "敵が倒れている": "the enemy is down",
   "戦闘画面ではない": "not on the battle screen",
@@ -76,5 +75,6 @@
   "ガード": "guard",
   "連携攻撃: 1500 ヒットためるか敵のシールドを割って追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる": "Chain attack: land a follow-up attack after 1500 hits or on an enemy whose shield is broken; time stops and you pick the next character to continue the follow-up attacks",
   "この敵のシールド割れでは一度発動済み": "already triggered by this shield break",
-  "ポイントが足りず、シールドも割れていない": "not enough points and the shield is not broken"
+  "ポイントが足りず、シールドも割れていない": "not enough points and the shield is not broken",
+  "{0}: 連携をやめる": "{0}: Stop the chain"
 }

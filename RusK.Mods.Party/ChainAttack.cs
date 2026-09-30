@@ -16,7 +16,8 @@ namespace RusK.Mods.Party;
 /// 流れ: 時間をほぼ止めて 5 秒のゲージ → C / Z で次のキャラを選ぶ → 敵の前に出して追加攻撃 → 当たったら次の選択へ。
 ///       編成の人数だけ、最後まで繋がる (最初の追加攻撃を含む)。狙った敵が倒れたら近くの別の敵に移り、外れても次へ進む。
 ///       途中の選択の時間切れは左のキャラを自動で選ぶ。フィールドに敵がいなくなったときだけ途中で終わる。
-///       最初の選択で連携回避のキーを押すか時間切れにしたら、1 回分をストックする (最大 1)。連携中は攻撃を受けない。
+///       最初の選択で連携回避のキーを押すか時間切れにしたら、1 回分をストックする (最大 1)。連携回避のキーは最初の選択でだけ効く。
+///       連携中は攻撃を受けない。
 ///
 /// 追加攻撃は、キャラの動作の一覧から "NormalAttack_QTE_*" を名前で探して直接その動作にする
 /// (PlayerController.QTEAttack は今のコンボの続きの追加攻撃しか出せず、待機中や切り替え直後は何も出ない)
@@ -264,7 +265,7 @@ internal static class ChainAttack
 
         if (RuskInput.WasPressed(NextKey)) Choose(LeftPick);
         else if (RuskInput.WasPressed(PrevKey)) Choose(RightPick);
-        else if (RuskInput.WasPressed(SkipKey)) Cancel("連携回避");
+        else if (!_anyFollowUp && RuskInput.WasPressed(SkipKey)) Cancel("連携回避"); // 連携回避は最初の選択のときだけ
         else if (Time.unscaledTime - _chooseStart >= ChooseTime)
         {
             // 最初の選択の時間切れはストック。途中 (もう誰かが繋いだ後) は、最後まで繋がるように左のキャラを自動で選ぶ
@@ -535,9 +536,9 @@ internal static class ChainAttack
         int sec = Mathf.FloorToInt(left), cs = Mathf.FloorToInt((left - sec) * 100f);
         Render.Text(bx, cy + bh * 0.5f + 4f * s, bw, 40f * s, $"00:{sec:00}:{cs:00}", new Color(1f, 1f, 1f, 0.85f),
             Mathf.RoundToInt(30f * s), TextAnchor.MiddleCenter, true, true);
-        if (!SkipKey.IsNone)
+        if (!SkipKey.IsNone && !_anyFollowUp)
         {
-            string hint = _anyFollowUp ? L.T("{0}: 連携をやめる", SkipKey.Display) : L.T("{0}: 連携回避 (ストックする)", SkipKey.Display);
+            string hint = L.T("{0}: 連携回避 (ストックする)", SkipKey.Display);
             Render.Text(bx, cy + bh * 0.5f + 44f * s, bw, 18f * s, hint, new Color(1f, 1f, 1f, 0.7f),
                 Mathf.RoundToInt(12f * s), TextAnchor.MiddleCenter, true, true);
         }
