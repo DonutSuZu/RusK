@@ -84,3 +84,10 @@ Hue	Hue	色相
 Sat	Sat	饱和度
 Bright	Bright	亮度
 World	World	世界
+動かない Mod があります	Some mods no longer work	有 Mod 无法运行
+Mod の検査で問題は見つかりませんでした	the mod check found no problems	Mod 检查未发现问题
+ (今のゲームとは違う版。検査の結果は上のとおり)	 (a different version from the current game; see the check results above)	 (与当前游戏版本不同, 检查结果见上)
+ゲームの変更で動かない Mod があります (下の ✗)	Some mods no longer work because of game changes (✗ below)	有 Mod 因游戏变更而无法运行 (见下方 ✗)
+全 Mod を検査して、ゲームの変更による問題は見つかりませんでした	All mods were checked and no problems from the game changes were found	已检查所有 Mod, 未发现游戏变更导致的问题
+今のゲーム (v{0}) では、ゲームの変更で動かない部分があります	On the current game (v{0}), some parts no longer work because of game changes	在当前游戏 (v{0}) 中, 有部分功能因游戏变更而无法运行
+今のゲーム (v{0}) でも、使っているゲームの関数・パッチ先はすべてそろっています	On the current game (v{0}) too, every game function and patch target it uses is present	在当前游戏 (v{0}) 中, 所使用的游戏函数和补丁目标也全部存在

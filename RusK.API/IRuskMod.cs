@@ -38,7 +38,7 @@ public sealed class RuskModAttribute : Attribute
 
     /// <summary>
     /// 動作確認したゲームのバージョン (build_info.txt の buildVersion、例: "0.0.1873")。
-    /// 書いておくと、ゲームが更新されたときに RusK の Check が「未確認のバージョン」と知らせる
+    /// 書いておくと RusK の Check の詳細に表示される (版が違うだけでは注意にしない。関数が消えた・パッチ先が無いなど、本当に壊れているときだけ ✗ になる)
     /// </summary>
     public string GameVersion { get; set; } = "";
 }

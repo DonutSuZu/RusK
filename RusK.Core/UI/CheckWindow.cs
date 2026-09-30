@@ -21,7 +21,13 @@ internal sealed class CheckWindow : RuskWindow
 
         gui.Header(L.T("ゲーム"), string.IsNullOrEmpty(doctor.GameVersion) ? L.T("バージョン不明") : $"v{doctor.GameVersion}");
         if (doctor.PreviousGameVersion != null)
-            gui.Label("▲ " + L.T("ゲームが更新されました (v{0} → v{1})", doctor.PreviousGameVersion, doctor.GameVersion), Warn, bold: true);
+        {
+            bool broken = doctor.ErrorCount > 0;
+            gui.Label((broken ? "▲ " : "✓ ") + L.T("ゲームが更新されました (v{0} → v{1})", doctor.PreviousGameVersion, doctor.GameVersion),
+                broken ? Warn : Color(Severity.Ok), bold: true);
+            gui.Label("   " + (broken ? L.T("ゲームの変更で動かない Mod があります (下の ✗)") : L.T("全 Mod を検査して、ゲームの変更による問題は見つかりませんでした")),
+                RuskStyle.TextDim, small: true);
+        }
         gui.Label(L.T("結果: {0}", doctor.Summary), Color(doctor.ErrorCount > 0 ? Severity.Error
             : doctor.WarningCount > 0 ? Severity.Warning : Severity.Ok), bold: true);
 
@@ -57,6 +63,11 @@ internal sealed class CheckWindow : RuskWindow
             gui.Label($"   {System.IO.Path.GetFileName(r.Path)}   " + L.T("メソッド {0} 個 / パッチ {1} 個を検査", r.CheckedMethods, r.CheckedPatches) +
                       "   " + (r.TestedGameVersion != "" ? L.T("確認済みゲーム v{0}", r.TestedGameVersion) : L.T("(確認済みゲームの版の記載なし)")),
                 RuskStyle.TextDim, small: true);
+            if (r.Untested)
+                gui.Label("   " + (r.Worst == Severity.Error
+                        ? L.T("今のゲーム (v{0}) では、ゲームの変更で動かない部分があります", doctor.GameVersion)
+                        : L.T("今のゲーム (v{0}) でも、使っているゲームの関数・パッチ先はすべてそろっています", doctor.GameVersion)),
+                    RuskStyle.TextDim, small: true);
 
             if (r.Issues.Count == 0)
             {

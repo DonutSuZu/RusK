@@ -38,6 +38,9 @@ internal sealed class ModReport
     public int CheckedMethods;
     public int CheckedPatches;
 
+    /// <summary>動作確認した版と今のゲームの版が違う (それだけでは注意にしない。検査で問題が出たときの手がかり)</summary>
+    public bool Untested;
+
     public Severity Worst => Issues.Count == 0 ? Severity.Ok : Issues.Max(i => i.Severity);
 }
 
@@ -94,18 +97,18 @@ internal sealed class Doctor
 
     public ModReport Find(string path) => path != null && _reports.TryGetValue(path, out var r) ? r : null;
 
-    /// <summary>Mod の名前・版を記録し、動作確認したゲームの版と比べる</summary>
+    /// <summary>
+    /// Mod の名前・版を記録し、動作確認したゲームの版と比べる。
+    /// 版が違うだけでは注意にしない (ゲームの更新のたびに全 Mod を出し直さなくて済むように)。
+    /// 本当に壊れているか (消えた関数・型、無くなったパッチ先) は CheckAssembly が調べる
+    /// </summary>
     public void SetInfo(ModReport report, RuskModAttribute info)
     {
         report.Name = info.Name;
         report.Version = info.Version;
         report.TestedGameVersion = info.GameVersion ?? "";
-        if (!string.IsNullOrEmpty(report.TestedGameVersion) && !string.IsNullOrEmpty(GameVersion) &&
-            report.TestedGameVersion != GameVersion)
-        {
-            Add(report, Severity.Warning, "動作確認していないゲームのバージョン",
-                $"この Mod は v{report.TestedGameVersion} で確認済み。今のゲームは v{GameVersion}");
-        }
+        report.Untested = !string.IsNullOrEmpty(report.TestedGameVersion) && !string.IsNullOrEmpty(GameVersion) &&
+                          report.TestedGameVersion != GameVersion;
     }
 
     public void Add(ModReport report, Severity severity, string title, string detail, bool runtime = false)
@@ -265,7 +268,8 @@ internal sealed class Doctor
         {
             sb.AppendLine($"[{Mark(r.Worst)}] {r.Name} v{r.Version}  ({System.IO.Path.GetFileName(r.Path)})" +
                           $"  メソッド {r.CheckedMethods} / パッチ {r.CheckedPatches}" +
-                          (r.TestedGameVersion != "" ? $"  確認済みゲーム v{r.TestedGameVersion}" : ""));
+                          (r.TestedGameVersion != "" ? $"  確認済みゲーム v{r.TestedGameVersion}" : "") +
+                          (r.Untested ? " (今のゲームとは違う版。検査の結果は上のとおり)" : ""));
             foreach (var i in r.Issues)
                 sb.AppendLine($"    {Mark(i.Severity)} {i.Title}{(i.Count > 1 ? $" ×{i.Count}" : "")}: {i.Detail}");
         }
@@ -289,7 +293,12 @@ internal sealed class Doctor
     public void NotifyStartup()
     {
         if (PreviousGameVersion != null)
-            Rusk.Notifications.Push(L.T("ゲームが更新されました (v{0} → v{1})", PreviousGameVersion, GameVersion), NotifyLevel.Warning);
+        {
+            bool broken = ErrorCount > 0;
+            Rusk.Notifications.Push(L.T("ゲームが更新されました (v{0} → v{1})", PreviousGameVersion, GameVersion) + " — " +
+                                    (broken ? L.T("動かない Mod があります") : L.T("Mod の検査で問題は見つかりませんでした")),
+                broken ? NotifyLevel.Warning : NotifyLevel.Info);
+        }
         if (ErrorCount > 0 || WarningCount > 0)
             Rusk.Notifications.Push(L.T("Check: {0} (Mods > Check で詳細)", Summary),
                 ErrorCount > 0 ? NotifyLevel.Error : NotifyLevel.Warning);

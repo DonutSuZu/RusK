@@ -20,7 +20,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143135" src="https://github.com/user-attachments/assets/558d6ad4-841f-498c-a79c-dd3b4c886368" />
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143139" src="https://github.com/user-attachments/assets/7828f779-6900-49a0-81b5-01cdc945e14e" />
 
-**対応ゲームバージョン: 0.0.1873 (45c7c82)** — ゲーム画面の左下に出る `Version 0.0.1873_45c7c82` と同じか確認してください。
+**対応ゲームバージョン: 0.0.1876 (a46bc78)** — ゲーム画面の左下に出る `Version 0.0.1876_a46bc78` と同じか確認してください。
 ゲームが更新されたときは、メニューの Mods > Check で動かなくなった Mod を確認できます。
 
 ## インストール (利用者向け)
@@ -74,7 +74,7 @@ RusK/
 バージョンを上げるときに変える場所:
 `RusK.Core\Rusk.cs` の `Version` / 各 `.csproj` の `<Version>` / `RusK.Installer\app.manifest` / `Docs\README.txt`
 
-対応ゲームバージョンが変わったら: `RusK.Installer\InstallEngine.cs` の `SupportedGameVersion` / 各 Mod の `GameVersion` / このファイルと `Docs\README.txt`
+対応ゲームバージョンが変わったら: `RusK.Installer\InstallEngine.cs` の `SupportedGameVersion` / このファイルと `Docs\README.txt`（各 Mod の `GameVersion` は、その Mod を直したときだけ上げればよい。Check は版の違いだけでは注意を出さない）
 
 Mod を増やしたら: `RusK.Installer\InstallEngine.cs` の `Components` (DLL の名前) と `RusK.Installer\Strings.cs` (説明の訳)
 
@@ -174,9 +174,11 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 - 読み込み時に Mod の全メソッドを JIT コンパイルさせ、**消えた / 形が変わったゲームの関数・型**を検出する
 - `[HarmonyPatch]` のパッチ先が今のゲームに実在するかを確かめる
 - モジュールの実行中のエラーや、OnLoad の失敗を Mod ごとに記録する
-- ゲームの版 (`build_info.txt`) が前回から変わったら起動時に知らせる
+- ゲームの版 (`build_info.txt`) が前回から変わったら起動時に知らせる (上の検査で問題が無ければ「問題なし」として知らせる)
+- Mod が動作確認した版と今のゲームの版が違うだけでは注意にしない。**上の検査で本当に壊れているものが見つかった Mod だけ**が ✗ になる
+  (ゲームの更新のたびに全部の Mod を出し直さなくて済む。ただし、関数の形は同じで中身の動きだけが変わった場合は検出できない)
 
-Mod 作者は、動作確認したゲームの版を書いておくと、更新時に「未確認のバージョン」と表示される:
+Mod 作者は、動作確認したゲームの版を書いておくと、Check の詳細に「確認済みゲーム」として表示される:
 ```csharp
 [RuskMod("mymod", "My Mod", "1.0.0", GameVersion = "0.0.1873")]
 ```
