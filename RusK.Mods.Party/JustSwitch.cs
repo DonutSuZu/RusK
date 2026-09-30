@@ -72,6 +72,9 @@ internal static class JustSwitch
         // 戦闘不能で交代を待っているキャラは、これ以上攻撃を受けない
         if (PartyManager.IsDown(p)) return false;
 
+        // 連携攻撃の間は攻撃を受けない (切り替えガードも働かせない)
+        if (ChainAttack.Active) return false;
+
         float elapsed = Time.time - PartyManager.LastSwitchGameTime;
         if (Enabled && p.Pointer == PartyManager.LastSwitchedIn && elapsed >= 0f && elapsed <= GuardTime)
         {

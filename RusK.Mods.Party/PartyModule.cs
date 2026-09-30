@@ -30,11 +30,14 @@ public sealed class PartyMod : RuskMod
         Context.Harmony.PatchAll(typeof(JustDefencePatch));
         Context.Harmony.PatchAll(typeof(PartyHpChangePatch));
         Context.Harmony.PatchAll(typeof(PartyDiePatch));
+        Context.Harmony.PatchAll(typeof(ChainEnemyHitPatch));
         Context.RegisterModule(new PartyModule(select));
         Context.RegisterModule(new PartyLabModule(Context));
 
         Context.RegisterAction("PartyNext", () => PartyManager.Cycle(+1), "パーティの次のキャラに切り替える");
         Context.RegisterAction("PartyPrev", () => PartyManager.Cycle(-1), "パーティの前のキャラに切り替える");
+        Context.RegisterAction("PartyLabQte", () => QteProbe.Fire(PartyManager.Current, "キー割り当て"), "(調査用) 今のキャラで追加攻撃を撃つ");
+        Context.RegisterAction("PartyLabQteSwitch", QteProbe.SwitchAndFire, "(調査用) 次のキャラに切り替えて追加攻撃を撃つ");
         Context.RegisterAction("PartySelect", () => select.Toggle(), "仲間の選択画面を開く / 閉じる");
     }
 
@@ -54,6 +57,7 @@ public sealed class PartyModule : Module
     private readonly FloatSetting _guardTime;
     private readonly BoolSetting _justIgnoreCooldown;
     private readonly BoolSetting _shareBuffs;
+    private readonly BoolSetting _chain;
     private readonly BoolSetting _showHud;
     private readonly FloatSetting _hudX;
     private readonly FloatSetting _hudY;
@@ -80,6 +84,8 @@ public sealed class PartyModule : Module
             "予兆の直後はクールタイム中でも切り替えられる"));
         _shareBuffs = AddSetting(new BoolSetting("ShareBuffs", true,
             "戦闘中に獲得したパッシブバフをパーティ全員で共有する (操作中のキャラが得たバフを控えにも付ける)"));
+        _chain = AddSetting(new BoolSetting("ChainAttack", true,
+            "連携攻撃: 1500 ヒットためるか敵のシールドを割って追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる"));
         _showHud = AddSetting(new BoolSetting("ShowHud", true, "パーティ HUD (顔・HP・必殺技ゲージ) を出す"));
         _hudX = AddSetting(new FloatSetting("HudX", 0.015f, 0f, 1f, 0.005f, "0.000", "パーティ HUD の横位置 (画面比)"));
         _hudY = AddSetting(new FloatSetting("HudY", 0.34f, 0f, 1f, 0.005f, "0.000", "パーティ HUD の縦位置 (画面比)"));
@@ -99,6 +105,10 @@ public sealed class PartyModule : Module
         JustSwitch.GuardTime = _guardTime.Value;
         JustSwitch.IgnoreCooldown = _justIgnoreCooldown.Value;
         BuffShare.Enabled = _shareBuffs.Value;
+        ChainAttack.Enabled = _chain.Value;
+        ChainAttack.NextKey = _nextKey.Value;
+        ChainAttack.PrevKey = _prevKey.Value;
+        ChainAttack.Tick();
         PartyManager.Tick();
         PartyManager.SyncLeader();
         BuffShare.Tick();
@@ -106,7 +116,7 @@ public sealed class PartyModule : Module
         if (_autoSpawn.Value) PartyManager.AutoSpawn();
 
         bool field = PartyHud.OnField();
-        if (field)
+        if (field && !ChainAttack.Active) // 連携の選択中は、切り替えキーを連携の選択に使う
         {
             if (RuskInput.WasPressed(_nextKey.Value)) PartyManager.Cycle(+1);
             else if (RuskInput.WasPressed(_prevKey.Value)) PartyManager.Cycle(-1);
@@ -122,6 +132,7 @@ public sealed class PartyModule : Module
 
     public override void OnGUI()
     {
+        ChainAttack.DrawChoose();
         if (_alpha <= 0.001f || !Render.IsRepaint) return;
         var prev = GUI.color;
         GUI.color = new Color(prev.r, prev.g, prev.b, prev.a * _alpha);
@@ -211,6 +222,7 @@ internal static class PartyHud
             DrawReserve(m, x + (10f + 8f * (k - 1)) * s, yy, s, key, cd);
             yy += 56f * s;
         }
+        ChainAttack.DrawPoints(x + (10f + 8f * (n - 1)) * s, yy + 2f * s, s, 1f);
     }
 
     private static void DrawActive(PlayerController p, float x, float y, float s)

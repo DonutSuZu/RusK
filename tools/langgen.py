@@ -18,7 +18,7 @@ LIT = re.compile(r'(\$?@?)"((?:[^"\\\n]|\\.)*)"')
 JP = re.compile(r'[぀-ヿ一-鿿]')
 # 開発者向け (訳さない): ログ・例外・デバッグ用の書き出し
 SKIP_LINE = re.compile(r'TryDo\(|Log\.(Info|Warning|Error|LogInfo|LogWarning|LogError|LogMessage|LogDebug)|Log\?\.|log\?\.|'
-                       r'sb\.Append|Section\(|throw new|Debug\.Log|\.Log\.|Rusk\.Log|Doctor\.|Warn\(|warn\?\.')
+                       r'sb\.Append|Section\(|\bEnd\("|throw new|Debug\.Log|\.Log\.|Rusk\.Log|Doctor\.|Warn\(|warn\?\.')
 SKIP_FILES = ('ModelLab', 'ModelSwap.cs', 'SpecialAttackProbe', 'PartyLab', 'Probe')
 
 

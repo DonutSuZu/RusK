@@ -57,3 +57,8 @@
 パリィ	parry	招架
 ガード	guard	防御
 戦闘中に獲得したパッシブバフをパーティ全員で共有する (操作中のキャラが得たバフを控えにも付ける)	Share passive buffs gained during battle with the whole party (buffs the active character gains are also given to the reserves)	在战斗中获得的被动增益由全队共享 (当前操作角色获得的增益也会给后备角色)
+キー割り当て	keybind	按键绑定
+(調査用) 今のキャラで追加攻撃を撃つ	(research) Fire a follow-up attack with the current character	(调查用) 用当前角色发动追加攻击
+(調査用) 次のキャラに切り替えて追加攻撃を撃つ	(research) Switch to the next character and fire a follow-up attack	(调查用) 切换到下一个角色并发动追加攻击
+連携攻撃をストックしました	Chain attack stocked	已储存连携攻击
+連携攻撃: 1500 ヒットためるか敵のシールドを割って追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる	Chain attack: land a follow-up attack after 1500 hits or on an enemy whose shield is broken; time stops and you pick the next character to continue the follow-up attacks	连携攻击: 累计 1500 次命中或击破敌人护盾后用追加攻击命中, 时间会停止, 可选择下一个角色继续追加攻击

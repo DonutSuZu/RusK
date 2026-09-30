@@ -1,4 +1,5 @@
 {
+  "連携攻撃をストックしました": "Chain attack stocked",
   ")} 動作='{motion}'": ")} 動作='{motion}'",
   "{0} が戦闘不能になりました": "{0} has been knocked out",
   "{0} がリーダーなので、仲間から外しました": "{0} is the leader, so they were removed from the companions",
@@ -18,6 +19,9 @@
   "アクティブ3人。仲間を選んで、戦闘中にキーでキャラを切り替える": "Three active characters. Pick companions and switch characters with keys during battle",
   "パーティの次のキャラに切り替える": "Switch to the next character in the party",
   "パーティの前のキャラに切り替える": "Switch to the previous character in the party",
+  "キー割り当て": "keybind",
+  "(調査用) 今のキャラで追加攻撃を撃つ": "(research) Fire a follow-up attack with the current character",
+  "(調査用) 次のキャラに切り替えて追加攻撃を撃つ": "(research) Switch to the next character and fire a follow-up attack",
   "仲間の選択画面を開く / 閉じる": "Open / close the companion selection window",
   "アクティブ3人。戦闘中に「次へ」「前へ」のキーでキャラを切り替える": "Three active characters. Switch characters in battle with the Next / Previous keys",
   "次のキャラに切り替えるキー": "Key to switch to the next character",
@@ -30,6 +34,7 @@
   "攻撃の予兆 (キラーン) からこの秒数以内なら、クールタイム中でも切り替えられる": "Within this many seconds of an attack warning (glint), you can switch even on cooldown",
   "予兆の直後はクールタイム中でも切り替えられる": "Allow switching on cooldown right after an attack warning",
   "戦闘中に獲得したパッシブバフをパーティ全員で共有する (操作中のキャラが得たバフを控えにも付ける)": "Share passive buffs gained during battle with the whole party (buffs the active character gains are also given to the reserves)",
+  "連携攻撃: 1500 ヒットためるか敵のシールドを割って追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる": "Chain attack: land a follow-up attack after 1500 hits or on an enemy whose shield is broken; time stops and you pick the next character to continue the follow-up attacks",
   "パーティ HUD (顔・HP・必殺技ゲージ) を出す": "Show the party HUD (portraits, HP, ultimate gauge)",
   "パーティ HUD の横位置 (画面比)": "Party HUD horizontal position (fraction of the screen)",
   "パーティ HUD の縦位置 (画面比)": "Party HUD vertical position (fraction of the screen)",

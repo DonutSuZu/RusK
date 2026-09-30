@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+    <!-- 連携攻撃で出てくるキャラを敵の前に置く (CharacterController) -->
+    <Reference Include="$(InteropDir)\UnityEngine.PhysicsModule.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>
