@@ -48,6 +48,12 @@ internal sealed class PartyLabWindow : RuskWindow
         if (gui.Button("状態をログに出す", accent: true)) PartyManager.LogState("手動");
 
         gui.Space(6f);
+        gui.Header("敵の AI (立ち尽くす問題の調査)");
+        gui.BeginRow(1f, 1f);
+        if (gui.Button("近くの敵の AI の変数をログに出す", accent: true)) EnemyAiRetarget.Dump();
+        if (gui.Button("今すぐ付け替える")) EnemyAiRetarget.Retarget(PartyManager.Current, "手動");
+
+        gui.Space(6f);
         gui.Header("連携攻撃", $"ポイント {ChainAttack.Points}  ストック {ChainAttack.Stock}");
         gui.BeginRow(1f, 1f);
         if (gui.Button("ポイントを 1500 にする", accent: true)) ChainAttack.Points = ChainAttack.PointsNeeded;

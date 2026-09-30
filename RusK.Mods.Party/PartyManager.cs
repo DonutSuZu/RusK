@@ -439,6 +439,7 @@ internal static class PartyManager
 
             RebindCamera(next);
             RestoreObservingEnemies();
+            EnemyAiRetarget.Retarget(next, "切り替えの直後");
 
             _pending = next;
             _pendingFrame = Time.frameCount + 1;
@@ -476,6 +477,7 @@ internal static class PartyManager
             RebindCamera(p);
             RefreshHud(p);
             RestoreObservingEnemies();
+            EnemyAiRetarget.Retarget(p, "切り替えの 1 フレーム後");
             if (Verbose) Log?.Info($"Party: 後処理 OK {Name(p)} HP {p.GetCurHp():0}/{p.GetMaxHp():0}");
         }
         catch (Exception e)
