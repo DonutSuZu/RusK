@@ -465,6 +465,7 @@ internal static class PartyManager
     public static void Tick()
     {
         TickRescue();
+        TickKeepObserving();
         if (_pending == null || Time.frameCount < _pendingFrame) return;
         var p = _pending;
         _pending = null;
@@ -475,7 +476,6 @@ internal static class PartyManager
             RebindCamera(p);
             RefreshHud(p);
             RestoreObservingEnemies();
-            Observing.Clear();
             if (Verbose) Log?.Info($"Party: 後処理 OK {Name(p)} HP {p.GetCurHp():0}/{p.GetMaxHp():0}");
         }
         catch (Exception e)
@@ -562,8 +562,37 @@ internal static class PartyManager
 
     private static readonly List<EnemyController> Observing = new();
 
+    /// <summary>切り替えの後、この時刻まで敵の「気付き」を付け直し続ける (Time.unscaledTime)</summary>
+    private static float _keepObservingUntil = -999f;
+    private static float _nextKeepCheck;
+    private static int _restoredCount;
+    private const float KeepObservingTime = 2f;
+
+    /// <summary>
+    /// 切り替えの後 2 秒間、覚えておいた敵が見失っていたら付け直す (0.1 秒ごと)。
+    /// 敵は自分の Update で「気付き」を付け外しするので、直後と 1 フレーム後に付け直すだけでは、
+    /// その後で外されて、攻撃されるまで立ち尽くすことがあった
+    /// </summary>
+    private static void TickKeepObserving()
+    {
+        if (Observing.Count == 0) return;
+        if (Time.unscaledTime > _keepObservingUntil)
+        {
+            if (_restoredCount > 0)
+                Log?.Info($"Party: 切り替えの後、敵が見失っていたので付け直した ({_restoredCount} 回)");
+            _restoredCount = 0;
+            Observing.Clear();
+            return;
+        }
+        if (Time.unscaledTime < _nextKeepCheck) return;
+        _nextKeepCheck = Time.unscaledTime + 0.1f;
+        _restoredCount += RestoreObservingEnemies();
+    }
+
     private static void RememberObservingEnemies()
     {
+        _keepObservingUntil = Time.unscaledTime + KeepObservingTime;
+        _restoredCount = 0;
         Observing.Clear();
         try
         {
@@ -573,16 +602,23 @@ internal static class PartyManager
         catch { }
     }
 
-    private static void RestoreObservingEnemies()
+    /// <summary>覚えておいた敵のうち、見失っているものに「気付き」を付け直す。付け直した数を返す</summary>
+    private static int RestoreObservingEnemies()
     {
+        int n = 0;
         foreach (var e in Observing)
         {
             try
             {
-                if (e != null && e.gameObject.activeInHierarchy && !e.GetObservePlayer()) e.SetObservePlayer(true);
+                if (e != null && e.gameObject.activeInHierarchy && e.IsAlive() && !e.GetObservePlayer())
+                {
+                    e.SetObservePlayer(true);
+                    n++;
+                }
             }
             catch { }
         }
+        return n;
     }
 
     // ------------------------------------------------------------------ ユーティリティ
