@@ -74,7 +74,7 @@ internal static class InstallEngine
         new Component
         {
             Id = "chain", Name = "Chain Attack", Asset = "RuskChain.dll", Requires = "party",
-            Description = "連携攻撃。1500 ヒットためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party が必要)",
+            Description = "連携攻撃。300 ヒットためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party が必要)",
         },
         new Component
         {

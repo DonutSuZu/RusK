@@ -25,7 +25,7 @@ public sealed class ChainMod : RuskMod
         Context.RegisterModule(module);
         if (module.DevTools)
             Context.RegisterAction("ChainDevFillPoints", () => ChainAttack.Points = ChainAttack.PointsNeeded,
-                "(開発者向け) 連携のポイントを 1500 にする");
+                "(開発者向け) 連携のポイントを必要な数までためる");
     }
 
     protected override void OnUnload() => ChainAttack.Shutdown();
@@ -35,17 +35,20 @@ public sealed class ChainMod : RuskMod
 public sealed class ChainModule : Module
 {
     private readonly HotkeySetting _skipKey;
+    private readonly IntSetting _pointsNeeded;
     private readonly BoolSetting _devTools;
     private bool _warnedNoParty;
 
     public ChainModule()
         : base("ChainAttack", "Party",
-            "連携攻撃: 1500 ヒットためて追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる (Party Mod が必要)")
+            "連携攻撃: ヒットをためて追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる (Party Mod が必要)")
     {
+        _pointsNeeded = AddSetting(new IntSetting("PointsNeeded", 300, 50, 3000,
+            "連携に必要なポイント (敵への 1 ヒットで 1 ポイント)"));
         _skipKey = AddSetting(new HotkeySetting("SkipKey", new Hotkey(KeyCode.X),
             "連携回避のキー: 最初の選択中に押すと、連携せずに 1 回分をストックする"));
         _devTools = AddSetting(new BoolSetting("DevTools", false,
-            "開発者向け: 連携のポイントを 1500 にするアクション (ChainDevFillPoints) を登録する。ゲームの再起動で反映"));
+            "開発者向け: 連携のポイントを必要な数までためるアクション (ChainDevFillPoints) を登録する。ゲームの再起動で反映"));
         Enabled = true;
     }
 
@@ -68,6 +71,7 @@ public sealed class ChainModule : Module
         }
         ChainAttack.Enabled = true; // OFF → ON に戻したとき
         ChainAttack.SkipKey = _skipKey.Value;
+        ChainAttack.PointsNeeded = _pointsNeeded.Value;
         ChainAttack.Tick();
     }
 

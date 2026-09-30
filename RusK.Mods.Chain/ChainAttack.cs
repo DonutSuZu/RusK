@@ -10,7 +10,7 @@ namespace RusK.Mods.Chain;
 /// 連携攻撃 (ゼンゼロのチェーン攻撃風)。
 ///
 /// ポイント: 敵への 1 ヒット (プレイヤーの攻撃判定) で 1P。ステージ移動・連携の発動・30 秒攻撃なしでリセット。
-/// きっかけ: 1500P たまっている (またはストックがある) 状態で、操作キャラの追加攻撃が敵に当たる
+/// きっかけ: 必要なポイント (設定 PointsNeeded、既定 300) がたまっている (またはストックがある) 状態で、操作キャラの追加攻撃が敵に当たる
 ///           (敵のシールド割れでも発動させていたが、雑魚のシールドが柔らかすぎるのでやめた)。
 /// 流れ: 時間をほぼ止めて 5 秒のゲージ → C / Z で次のキャラを選ぶ → 敵の前に出して追加攻撃 → 当たったら次の選択へ。
 ///       編成の人数だけ、最後まで繋がる (最初の追加攻撃を含む)。狙った敵が倒れたら近くの別の敵に移り、外れても次へ進む。
@@ -23,8 +23,10 @@ namespace RusK.Mods.Chain;
 /// </summary>
 internal static class ChainAttack
 {
-    public const int PointsNeeded = 1500;
-    public const int PointsShown = 3000;
+    /// <summary>発動に必要なポイント (設定で変えられる。はじめは 1500 だったが、たまりにくいので 300 に)</summary>
+    public static int PointsNeeded = 300;
+    /// <summary>表示の上限 (必要な数の 2 倍)</summary>
+    public static int PointsShown => PointsNeeded * 2;
     private const float ResetAfter = 30f;
 
     public static bool Enabled = true;
@@ -546,7 +548,7 @@ internal static class ChainAttack
                 TextAnchor.MiddleLeft, true, true);
             float by = y + 19f * s;
             Render.Rect(x, by, w, h, new Color(0f, 0f, 0f, 0.7f));
-            // 0〜1500 を 1 本目、1500〜3000 を上に重ねて明るく
+            // 0〜必要な数を 1 本目、その先 (2 倍まで) を上に重ねて明るく
             float a = Mathf.Clamp01(shown / (float)PointsNeeded);
             float b = Mathf.Clamp01((shown - PointsNeeded) / (float)PointsNeeded);
             Render.Rect(x, by, w * a, h, ready ? GaugeCol : new Color(0.75f, 0.78f, 0.85f, 1f));

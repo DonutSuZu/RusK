@@ -9,7 +9,8 @@
 時間切れ	time up	时间到
 Chain Attack には Party Mod が必要です	Chain Attack requires the Party mod	Chain Attack 需要 Party Mod
 連携攻撃。ヒットをためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party Mod が必要)	Chain attack. Build up hits and land a follow-up attack to stop time and chain your companions' follow-up attacks (requires the Party mod)	连携攻击。累计命中后用追加攻击命中, 时间会停止, 可接上队友的追加攻击 (需要 Party Mod)
-(開発者向け) 連携のポイントを 1500 にする	(developer) Set chain points to 1500	(开发者用) 将连携点数设为 1500
-連携攻撃: 1500 ヒットためて追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる (Party Mod が必要)	Chain attack: after 1500 hits, landing a follow-up attack stops time; pick the next character to continue the follow-up attacks (requires the Party mod)	连携攻击: 累计 1500 次命中后用追加攻击命中, 时间会停止, 可选择下一个角色继续追加攻击 (需要 Party Mod)
 連携回避のキー: 最初の選択中に押すと、連携せずに 1 回分をストックする	Chain skip key: press it during the first choice to skip the chain and stock one use	回避连携按键: 在第一次选择时按下, 不连携并储存 1 次
-開発者向け: 連携のポイントを 1500 にするアクション (ChainDevFillPoints) を登録する。ゲームの再起動で反映	Developer: register the action (ChainDevFillPoints) that sets chain points to 1500. Takes effect after restarting the game	开发者用: 注册将连携点数设为 1500 的动作 (ChainDevFillPoints)。重启游戏后生效
+(開発者向け) 連携のポイントを必要な数までためる	(developer) Fill chain points up to the required amount	(开发者用) 将连携点数加满到所需数量
+連携攻撃: ヒットをためて追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる (Party Mod が必要)	Chain attack: build up hits and land a follow-up attack; time stops and you pick the next character to continue the follow-up attacks (requires the Party mod)	连携攻击: 累计命中后用追加攻击命中, 时间会停止, 可选择下一个角色继续追加攻击 (需要 Party Mod)
+開発者向け: 連携のポイントを必要な数までためるアクション (ChainDevFillPoints) を登録する。ゲームの再起動で反映	Developer: register the action (ChainDevFillPoints) that fills chain points to the required amount. Takes effect after restarting the game	开发者用: 注册将连携点数加满的动作 (ChainDevFillPoints)。重启游戏后生效
+連携に必要なポイント (敵への 1 ヒットで 1 ポイント)	Points needed for a chain (1 point per hit on an enemy)	连携所需点数 (每命中敌人 1 次得 1 点)

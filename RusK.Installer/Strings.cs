@@ -139,9 +139,9 @@ internal static class Strings
         ["アクティブ3人。仲間 2 人と戦闘中にキーで交代。切り替えパリィ・戦闘不能時の自動交代・パッシブバフの共有"] = (
             "Three active characters. Switch between you and two companions in battle; switch parries; auto-switch when knocked out; shared passive buffs",
             "三人同时上场。战斗中用按键与两名队友切换。切换招架、无法战斗时自动切换、共享被动增益"),
-        ["連携攻撃。1500 ヒットためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party が必要)"] = (
-            "Chain attack. After 1500 hits, landing a follow-up attack stops time and chains your companions' follow-up attacks (requires Party)",
-            "连携攻击。累计 1500 次命中后用追加攻击命中, 时间会停止, 可接上队友的追加攻击 (需要 Party)"),
+        ["連携攻撃。300 ヒットためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party が必要)"] = (
+            "Chain attack. After 300 hits, landing a follow-up attack stops time and chains your companions' follow-up attacks (requires Party)",
+            "连携攻击。累计 300 次命中后用追加攻击命中, 时间会停止, 可接上队友的追加攻击 (需要 Party)"),
         ["キャラの見た目を VRM にする (RusK\\models に .vrm を置く)。口パク・表情・揺れ物に対応"] = (
             "Turns characters into VRM models (put .vrm files in RusK\\models). Lip sync, expressions and physics",
             "将角色外观替换为 VRM (把 .vrm 放入 RusK\\models)。支持口型、表情和物理摆动"),
