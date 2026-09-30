@@ -14,7 +14,8 @@ namespace RusK.Mods.Party;
 /// きっかけ: 1500P たまっている (またはストックがある) 状態で、操作キャラの追加攻撃が敵に当たる
 ///           (敵のシールド割れでも発動させていたが、雑魚のシールドが柔らかすぎるのでやめた)。
 /// 流れ: 時間をほぼ止めて 5 秒のゲージ → C / Z で次のキャラを選ぶ → 敵の前に出して追加攻撃 → 当たったら次の選択へ。
-///       編成の人数だけ繋がる (最初の追加攻撃を含む)。敵が倒れる・追加攻撃が外れる・時間切れで終わる。
+///       編成の人数だけ、最後まで繋がる (最初の追加攻撃を含む)。狙った敵が倒れたら近くの別の敵に移り、外れても次へ進む。
+///       途中の選択の時間切れは左のキャラを自動で選ぶ。フィールドに敵がいなくなったときだけ途中で終わる。
 ///       最初の選択で連携回避のキーを押すか時間切れにしたら、1 回分をストックする (最大 1)。連携中は攻撃を受けない。
 ///
 /// 追加攻撃は、キャラの動作の一覧から "NormalAttack_QTE_*" を名前で探して直接その動作にする
@@ -218,9 +219,9 @@ internal static class ChainAttack
     private static void BeginChoose()
     {
         var cur = PartyManager.Current;
-        if (cur == null || !Alive(_target))
+        if (cur == null || !EnsureTarget(cur))
         {
-            End("敵が倒れた");
+            NoEnemyLeft();
             return;
         }
         var left = Remaining(cur);
@@ -254,9 +255,9 @@ internal static class ChainAttack
 
     private static void TickChoose()
     {
-        if (!Alive(_target))
+        if (!EnsureTarget(PartyManager.Current))
         {
-            End("敵が倒れた");
+            NoEnemyLeft();
             return;
         }
         if (Time.timeScale != SlowScale) Time.timeScale = SlowScale; // ゲームの演出で戻されても止めておく
@@ -264,7 +265,12 @@ internal static class ChainAttack
         if (RuskInput.WasPressed(NextKey)) Choose(LeftPick);
         else if (RuskInput.WasPressed(PrevKey)) Choose(RightPick);
         else if (RuskInput.WasPressed(SkipKey)) Cancel("連携回避");
-        else if (Time.unscaledTime - _chooseStart >= ChooseTime) Cancel("時間切れ");
+        else if (Time.unscaledTime - _chooseStart >= ChooseTime)
+        {
+            // 最初の選択の時間切れはストック。途中 (もう誰かが繋いだ後) は、最後まで繋がるように左のキャラを自動で選ぶ
+            if (_anyFollowUp) Choose(LeftPick);
+            else Cancel("時間切れ");
+        }
     }
 
     /// <summary>選ばずに終える。まだ誰も繋いでいなければ 1 回分をストックする (最大 1)</summary>
@@ -370,21 +376,21 @@ internal static class ChainAttack
             return;
         }
 
-        if (!Alive(_target))
-        {
-            End("敵が倒れた");
-            return;
-        }
+        // 当たったら次の選択へ。外れても (動作が終わったら) 次へ進み、最後の 1 人まで繋ぐ。
+        // 狙っていた敵が倒れていたら、BeginChoose で近くの別の敵に移る (残りがいなければ終わり)
         if (_hit)
         {
-            BeginChoose(); // 当たったら次の選択へ (残りがいなければ終わり)
+            BeginChoose();
             return;
         }
-
         float t = Time.unscaledTime - _attackStart;
         bool inQte = false;
         try { inQte = p.IsCurMotionQTE(); } catch { }
-        if ((t > 0.3f && !inQte) || t > 3f) End("追加攻撃が当たらなかった");
+        if ((t > 0.3f && !inQte) || t > 3f)
+        {
+            PartyManager.Log?.Info("Party: 連携攻撃 追加攻撃が当たらなかったが、次へ進む");
+            BeginChoose();
+        }
     }
 
     // ---- 終わり
@@ -406,6 +412,42 @@ internal static class ChainAttack
         if (_savedScale == null) return;
         Time.timeScale = _savedScale.Value;
         _savedScale = null;
+    }
+
+    private const float RetargetRange = 40f;
+
+    /// <summary>狙う敵が生きていればそのまま。倒れていたら、操作キャラに一番近い生きている敵に移る。いなければ false</summary>
+    private static bool EnsureTarget(PlayerController cur)
+    {
+        if (Alive(_target)) return true;
+        EnemyController best = null;
+        float bestDist = RetargetRange;
+        try
+        {
+            var from = cur != null ? cur.transform.position : Vector3.zero;
+            foreach (var e in UnityEngine.Object.FindObjectsOfType<EnemyController>())
+            {
+                if (!Alive(e)) continue;
+                float d = Vector3.Distance(from, e.transform.position);
+                if (d < bestDist) { bestDist = d; best = e; }
+            }
+        }
+        catch { }
+        if (best == null) return false;
+        PartyManager.Log?.Info($"Party: 連携攻撃 狙っていた敵が倒れたので、近くの敵 '{best.name}' ({bestDist:0.0}m) に移る");
+        _target = best;
+        return true;
+    }
+
+    /// <summary>フィールドに敵がいなくなった。まだ誰も繋いでいなければ 1 回分をストックに戻す</summary>
+    private static void NoEnemyLeft()
+    {
+        if (!_anyFollowUp)
+        {
+            Stock = 1;
+            PartyManager.Log?.Info("Party: 連携攻撃 敵がいなくなったので 1 回分をストックに戻した");
+        }
+        End("敵がいなくなった");
     }
 
     private static bool Alive(EnemyController e)
