@@ -101,6 +101,9 @@ internal static class ChainAttack
         bool qte = InQte(cur) || Time.unscaledTime <= _qteUntil;
         string motion = _qteMotion;
         if (!qte) return;
+        // 1 回の追加攻撃 (動作に入ってから出るまで) で聞くのは 1 回だけ。
+        // 連携回避の直後に、同じ追加攻撃の続きのヒットでストックを使って聞き直さないように
+        if (_qteSession == _usedSession) return;
 
         bool byPoints = Points >= PointsNeeded;
         bool byStock = !byPoints && Stock > 0;
@@ -116,6 +119,7 @@ internal static class ChainAttack
         }
         if (why != null) return;
 
+        _usedSession = _qteSession;
         // ポイントで発動したらポイントを 0 に、ストックで発動したらストックを使う
         if (byPoints) Points = 0;
         else Stock = 0;
@@ -132,6 +136,8 @@ internal static class ChainAttack
     private static bool _inQte;
     private static float _qteUntil = -999f;
     private static string _qteMotion = "";
+    private static int _qteSession;       // 追加攻撃の動作に入るたびに 1 増える
+    private static int _usedSession = -1; // 連携を始めた / 連携中に出した追加攻撃の番号
 
     private static bool InQte(PlayerController p)
     {
@@ -152,6 +158,7 @@ internal static class ChainAttack
         {
             if (!_inQte)
             {
+                _qteSession++;
                 try { _qteMotion = cur.GetCurMotion()?.name ?? ""; } catch { _qteMotion = ""; }
                 PartyManager.Log?.Info($"Party: 連携攻撃 {PartyManager.Name(cur)} が追加攻撃の動作に入った '{_qteMotion}' (ポイント {Points} ストック {Stock})");
             }
@@ -386,6 +393,7 @@ internal static class ChainAttack
     {
         if (_state != State.Idle) PartyManager.Log?.Info($"Party: 連携攻撃 終了 ({reason})");
         RestoreTime();
+        _usedSession = _qteSession; // 連携の最後の追加攻撃の続きのヒットで、すぐ始め直さない
         _state = State.Idle;
         _target = null;
         _attacker = null;
