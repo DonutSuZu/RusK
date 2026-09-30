@@ -96,16 +96,11 @@ internal static class ChainAttack
 
         Points++;
 
-        bool qte = false, alive = false;
-        string motion = "?";
-        try
-        {
-            qte = cur.IsCurMotionQTE();
-            alive = enemy.IsAlive();
-            motion = cur.GetCurMotion()?.name ?? "";
-        }
-        catch { }
-        if (!qte && motion.IndexOf("QTE", StringComparison.OrdinalIgnoreCase) >= 0) qte = true;
+        bool alive = false;
+        try { alive = enemy.IsAlive(); } catch { }
+        // 追加攻撃の動作中か、その動作が終わった直後 (弾などが遅れて当たる) のヒットを追加攻撃のヒットとみなす
+        bool qte = InQte(cur) || Time.unscaledTime <= _qteUntil;
+        string motion = _qteMotion;
         if (!qte) return;
 
         bool byPoints = Points >= PointsNeeded || Stock > 0;
@@ -134,6 +129,39 @@ internal static class ChainAttack
         _anyFollowUp = false;
         PartyManager.Log?.Info($"Party: 連携攻撃 開始 ({(byShield ? "シールド割れ" : "ポイント")}) {PartyManager.Name(cur)} → 選択へ");
         BeginChoose();
+    }
+
+    // ---- 追加攻撃の動作の見張り (毎フレーム)
+
+    private static bool _inQte;
+    private static float _qteUntil = -999f;
+    private static string _qteMotion = "";
+
+    private static bool InQte(PlayerController p)
+    {
+        try
+        {
+            if (p.IsCurMotionQTE()) return true;
+            var n = p.GetCurMotion()?.name;
+            return n != null && n.IndexOf("QTE", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+        catch { return false; }
+    }
+
+    private static void WatchQte()
+    {
+        var cur = PartyManager.Current;
+        bool now = cur != null && InQte(cur);
+        if (now)
+        {
+            if (!_inQte)
+            {
+                try { _qteMotion = cur.GetCurMotion()?.name ?? ""; } catch { _qteMotion = ""; }
+                PartyManager.Log?.Info($"Party: 連携攻撃 {PartyManager.Name(cur)} が追加攻撃の動作に入った '{_qteMotion}' (ポイント {Points} ストック {Stock})");
+            }
+            _qteUntil = Time.unscaledTime + 0.4f;
+        }
+        _inQte = now;
     }
 
     private static bool ShieldBroken(EnemyController e)
@@ -174,6 +202,7 @@ internal static class ChainAttack
             if (Active) End("無効にした");
             return;
         }
+        WatchQte();
 
         switch (_state)
         {
@@ -503,7 +532,7 @@ internal static class ChainEnemyHitPatch
 {
     private static void Postfix(EnemyController __instance, bool __result, AttackBoxType boxType)
     {
-        if (!__result) return;
+        // 戻り値は「当たったか」ではないらしい (追加攻撃のヒットが数えられなかった) ので見ない
         try { ChainAttack.OnEnemyHit(__instance, boxType); }
         catch (Exception e) { PartyManager.Log?.Warning($"Party: 連携攻撃のヒット処理でエラー: {e.Message}"); }
     }
