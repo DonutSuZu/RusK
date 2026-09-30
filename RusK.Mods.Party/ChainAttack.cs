@@ -11,11 +11,11 @@ namespace RusK.Mods.Party;
 /// 連携攻撃 (ゼンゼロのチェーン攻撃風)。
 ///
 /// ポイント: 敵への 1 ヒット (プレイヤーの攻撃判定) で 1P。ステージ移動・連携の発動・30 秒攻撃なしでリセット。
-/// きっかけ: 1500P たまっている (または前回キャンセルしたストックがある)、もしくは敵のシールドが割れている状態で、
-///           操作キャラの追加攻撃がその敵に当たる。
+/// きっかけ: 1500P たまっている (またはストックがある) 状態で、操作キャラの追加攻撃が敵に当たる
+///           (敵のシールド割れでも発動させていたが、雑魚のシールドが柔らかすぎるのでやめた)。
 /// 流れ: 時間をほぼ止めて 5 秒のゲージ → C / Z で次のキャラを選ぶ → 敵の前に出して追加攻撃 → 当たったら次の選択へ。
 ///       編成の人数だけ繋がる (最初の追加攻撃を含む)。敵が倒れる・追加攻撃が外れる・時間切れで終わる。
-///       最初の選択を時間切れにしたら、1 回分をストックする。連携中は操作キャラが攻撃を受けない。
+///       最初の選択で連携回避のキーを押すか時間切れにしたら、1 回分をストックする (最大 1)。連携中は攻撃を受けない。
 ///
 /// 追加攻撃は、キャラの動作の一覧から "NormalAttack_QTE_*" を名前で探して直接その動作にする
 /// (PlayerController.QTEAttack は今のコンボの続きの追加攻撃しか出せず、待機中や切り替え直後は何も出ない)
@@ -32,6 +32,7 @@ internal static class ChainAttack
     public static float Distance = 1.6f;
     public static Hotkey NextKey = new(KeyCode.C);
     public static Hotkey PrevKey = new(KeyCode.Z);
+    public static Hotkey SkipKey = new(KeyCode.X);
 
     public static int Points;
     public static int Stock;
@@ -43,7 +44,6 @@ internal static class ChainAttack
 
     private static EnemyController _target;
     private static readonly HashSet<IntPtr> Used = new();
-    private static readonly Dictionary<IntPtr, EnemyController> ShieldUsed = new(); // シールド割れで一度始めた敵 (シールドが戻るまで)
     private static bool _anyFollowUp;
     private static float _lastHit = -999f;
     private static float? _savedScale;
@@ -64,7 +64,6 @@ internal static class ChainAttack
     {
         if (Active) End("リセット");
         Points = 0;
-        ShieldUsed.Clear();
     }
 
     // ------------------------------------------------------------------ 敵に攻撃が当たったとき
@@ -103,31 +102,28 @@ internal static class ChainAttack
         string motion = _qteMotion;
         if (!qte) return;
 
-        bool byPoints = Points >= PointsNeeded || Stock > 0;
-        bool broken = ShieldBroken(enemy);
-        bool byShield = broken && !ShieldUsed.ContainsKey(enemy.Pointer);
+        bool byPoints = Points >= PointsNeeded;
+        bool byStock = !byPoints && Stock > 0;
         int remaining = Remaining(cur).Count;
         bool field = PartyHud.OnField();
         string why = !alive ? "敵が倒れている" : !field ? "戦闘画面ではない" : remaining == 0 ? "交代できる仲間がいない"
-            : !byPoints && !byShield ? (broken ? "この敵のシールド割れでは一度発動済み" : "ポイントが足りず、シールドも割れていない") : null;
+            : !byPoints && !byStock ? "ポイントが足りない" : null;
         if (why != null || Time.unscaledTime - _lastQteLog > 1f)
         {
             _lastQteLog = Time.unscaledTime;
-            int sp = -1, spMax = -1;
-            try { sp = enemy.GetShieldPoint(); spMax = enemy.GetMaxShieldPoint(); } catch { }
             PartyManager.Log?.Info($"Party: 連携攻撃 追加攻撃が命中 '{motion}' ポイント {Points} ストック {Stock} " +
-                                   $"シールド {sp}/{spMax} 仲間 {remaining} 人 → {(why ?? "発動")}");
+                                   $"仲間 {remaining} 人 → {(why ?? "発動")}");
         }
         if (why != null) return;
 
-        if (byShield) ShieldUsed[enemy.Pointer] = enemy;
-        Points = 0;
-        Stock = 0;
+        // ポイントで発動したらポイントを 0 に、ストックで発動したらストックを使う
+        if (byPoints) Points = 0;
+        else Stock = 0;
         _target = enemy;
         Used.Clear();
         Used.Add(cur.Pointer);
         _anyFollowUp = false;
-        PartyManager.Log?.Info($"Party: 連携攻撃 開始 ({(byShield ? "シールド割れ" : "ポイント")}) {PartyManager.Name(cur)} → 選択へ");
+        PartyManager.Log?.Info($"Party: 連携攻撃 開始 ({(byPoints ? "ポイント" : "ストック")}) {PartyManager.Name(cur)} → 選択へ");
         BeginChoose();
     }
 
@@ -164,12 +160,6 @@ internal static class ChainAttack
         _inQte = now;
     }
 
-    private static bool ShieldBroken(EnemyController e)
-    {
-        try { return e.GetMaxShieldPoint() > 0 && e.GetShieldPoint() <= 0; }
-        catch { return false; }
-    }
-
     // ------------------------------------------------------------------ 毎フレーム
 
     public static void Tick()
@@ -185,16 +175,7 @@ internal static class ChainAttack
         {
             if (Active) End("ステージ移動");
             Points = 0;
-            ShieldUsed.Clear();
             return;
-        }
-
-        // シールドが戻った敵は、また割れたら連携できる (0.5 秒に 1 回確かめる)
-        if (ShieldUsed.Count > 0 && Time.unscaledTime >= _nextShieldScan)
-        {
-            _nextShieldScan = Time.unscaledTime + 0.5f;
-            foreach (var key in ShieldUsed.Where(kv => kv.Value == null || !ShieldBroken(kv.Value)).Select(kv => kv.Key).ToList())
-                ShieldUsed.Remove(key);
         }
 
         if (!Enabled)
@@ -217,8 +198,6 @@ internal static class ChainAttack
                 break;
         }
     }
-
-    private static float _nextShieldScan;
 
     // ---- 選択 (時間をほぼ止めてゲージを出す)
 
@@ -277,16 +256,20 @@ internal static class ChainAttack
 
         if (RuskInput.WasPressed(NextKey)) Choose(LeftPick);
         else if (RuskInput.WasPressed(PrevKey)) Choose(RightPick);
-        else if (Time.unscaledTime - _chooseStart >= ChooseTime)
+        else if (RuskInput.WasPressed(SkipKey)) Cancel("連携回避");
+        else if (Time.unscaledTime - _chooseStart >= ChooseTime) Cancel("時間切れ");
+    }
+
+    /// <summary>選ばずに終える。まだ誰も繋いでいなければ 1 回分をストックする (最大 1)</summary>
+    private static void Cancel(string reason)
+    {
+        if (!_anyFollowUp)
         {
-            if (!_anyFollowUp)
-            {
-                Stock = 1;
-                PartyManager.Log?.Info("Party: 連携攻撃 キャンセル (時間切れ) → 1 回分ストック");
-                Ctx?.Notify(L.T("連携攻撃をストックしました"), NotifyLevel.Info);
-            }
-            End("時間切れ");
+            Stock = 1;
+            PartyManager.Log?.Info($"Party: 連携攻撃 キャンセル ({reason}) → 1 回分ストック");
+            Ctx?.Notify(L.T("連携攻撃をストックしました"), NotifyLevel.Info);
         }
+        End(reason);
     }
 
     private static IModContext Ctx => PartyManager.Ctx;
@@ -502,6 +485,12 @@ internal static class ChainAttack
         int sec = Mathf.FloorToInt(left), cs = Mathf.FloorToInt((left - sec) * 100f);
         Render.Text(bx, cy + bh * 0.5f + 4f * s, bw, 40f * s, $"00:{sec:00}:{cs:00}", new Color(1f, 1f, 1f, 0.85f),
             Mathf.RoundToInt(30f * s), TextAnchor.MiddleCenter, true, true);
+        if (!SkipKey.IsNone)
+        {
+            string hint = _anyFollowUp ? L.T("{0}: 連携をやめる", SkipKey.Display) : L.T("{0}: 連携回避 (ストックする)", SkipKey.Display);
+            Render.Text(bx, cy + bh * 0.5f + 44f * s, bw, 18f * s, hint, new Color(1f, 1f, 1f, 0.7f),
+                Mathf.RoundToInt(12f * s), TextAnchor.MiddleCenter, true, true);
+        }
     }
 
     private static void DrawPick(PlayerController p, float cx, float cy, float size, float ring, string key, float s)

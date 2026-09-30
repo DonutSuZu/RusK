@@ -67,3 +67,10 @@
 交代できる仲間がいない	no companion to switch to	没有可切换的队友
 この敵のシールド割れでは一度発動済み	already triggered by this shield break	此敌人的护盾击破已触发过
 ポイントが足りず、シールドも割れていない	not enough points and the shield is not broken	点数不足且护盾未击破
+{0}: 連携回避 (ストックする)	{0}: Skip chain (stock it)	{0}: 回避连携 (储存)
+{0}: 連携をやめる	{0}: Stop the chain	{0}: 停止连携
+ポイントが足りない	not enough points	点数不足
+連携回避	chain skipped	回避连携
+時間切れ	time up	时间到
+連携攻撃: 1500 ヒットためて追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる	Chain attack: after 1500 hits, landing a follow-up attack stops time; pick the next character to continue the follow-up attacks	连携攻击: 累计 1500 次命中后用追加攻击命中, 时间会停止, 可选择下一个角色继续追加攻击
+連携回避のキー: 連携の選択中に押すと、連携せずに 1 回分をストックする	Chain skip key: press it while choosing to skip the chain and stock one use	回避连携按键: 在选择连携时按下, 不连携并储存 1 次

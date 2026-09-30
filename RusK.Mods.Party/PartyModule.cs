@@ -58,6 +58,7 @@ public sealed class PartyModule : Module
     private readonly BoolSetting _justIgnoreCooldown;
     private readonly BoolSetting _shareBuffs;
     private readonly BoolSetting _chain;
+    private readonly HotkeySetting _chainSkipKey;
     private readonly BoolSetting _showHud;
     private readonly FloatSetting _hudX;
     private readonly FloatSetting _hudY;
@@ -85,7 +86,9 @@ public sealed class PartyModule : Module
         _shareBuffs = AddSetting(new BoolSetting("ShareBuffs", true,
             "戦闘中に獲得したパッシブバフをパーティ全員で共有する (操作中のキャラが得たバフを控えにも付ける)"));
         _chain = AddSetting(new BoolSetting("ChainAttack", true,
-            "連携攻撃: 1500 ヒットためるか敵のシールドを割って追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる"));
+            "連携攻撃: 1500 ヒットためて追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる"));
+        _chainSkipKey = AddSetting(new HotkeySetting("ChainSkipKey", new Hotkey(KeyCode.X),
+            "連携回避のキー: 連携の選択中に押すと、連携せずに 1 回分をストックする"));
         _showHud = AddSetting(new BoolSetting("ShowHud", true, "パーティ HUD (顔・HP・必殺技ゲージ) を出す"));
         _hudX = AddSetting(new FloatSetting("HudX", 0.015f, 0f, 1f, 0.005f, "0.000", "パーティ HUD の横位置 (画面比)"));
         _hudY = AddSetting(new FloatSetting("HudY", 0.34f, 0f, 1f, 0.005f, "0.000", "パーティ HUD の縦位置 (画面比)"));
@@ -108,6 +111,7 @@ public sealed class PartyModule : Module
         ChainAttack.Enabled = _chain.Value;
         ChainAttack.NextKey = _nextKey.Value;
         ChainAttack.PrevKey = _prevKey.Value;
+        ChainAttack.SkipKey = _chainSkipKey.Value;
         ChainAttack.Tick();
         PartyManager.Tick();
         PartyManager.SyncLeader();
