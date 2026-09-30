@@ -448,7 +448,7 @@ internal static class PartyHud
         return Sprites.TryGetValue(name, out sp) ? sp : null;
     }
 
-    private static Texture Portrait(MotionManager mm)
+    internal static Texture Portrait(MotionManager mm)
     {
         if (mm == null) return null;
         long id = (long)Math.Round(mm.id);

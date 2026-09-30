@@ -1,5 +1,10 @@
 {
   "連携攻撃をストックしました": "Chain attack stocked",
+  "敵が倒れている": "the enemy is down",
+  "戦闘画面ではない": "not on the battle screen",
+  "交代できる仲間がいない": "no companion to switch to",
+  "この敵のシールド割れでは一度発動済み": "already triggered by this shield break",
+  "ポイントが足りず、シールドも割れていない": "not enough points and the shield is not broken",
   ")} 動作='{motion}'": ")} 動作='{motion}'",
   "{0} が戦闘不能になりました": "{0} has been knocked out",
   "{0} がリーダーなので、仲間から外しました": "{0} is the leader, so they were removed from the companions",

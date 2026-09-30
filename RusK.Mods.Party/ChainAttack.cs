@@ -69,9 +69,20 @@ internal static class ChainAttack
 
     // ------------------------------------------------------------------ 敵に攻撃が当たったとき
 
+    private static bool _loggedFirstHit;
+    private static readonly HashSet<AttackBoxType> LoggedTypes = new();
+    private static float _lastQteLog = -999f;
+
     public static void OnEnemyHit(EnemyController enemy, AttackBoxType boxType)
     {
-        if (!Enabled || enemy == null || boxType != AttackBoxType.Player) return;
+        if (!_loggedFirstHit)
+        {
+            _loggedFirstHit = true;
+            PartyManager.Log?.Info("Party: 連携攻撃 敵へのヒットの検知 OK");
+        }
+        if (LoggedTypes.Add(boxType)) PartyManager.Log?.Info($"Party: 連携攻撃 ヒットの種類 {boxType} を検知");
+        if (!Enabled || enemy == null) return;
+        if (boxType != AttackBoxType.Player && boxType != AttackBoxType.PlayerCopy) return;
         var cur = PartyManager.Current;
         if (cur == null) return;
         _lastHit = Time.unscaledTime;
@@ -85,15 +96,34 @@ internal static class ChainAttack
 
         Points++;
 
-        bool qte;
-        try { qte = cur.IsCurMotionQTE() && enemy.IsAlive(); }
-        catch { return; }
-        if (!qte || !PartyHud.OnField()) return;
+        bool qte = false, alive = false;
+        string motion = "?";
+        try
+        {
+            qte = cur.IsCurMotionQTE();
+            alive = enemy.IsAlive();
+            motion = cur.GetCurMotion()?.name ?? "";
+        }
+        catch { }
+        if (!qte && motion.IndexOf("QTE", StringComparison.OrdinalIgnoreCase) >= 0) qte = true;
+        if (!qte) return;
 
         bool byPoints = Points >= PointsNeeded || Stock > 0;
-        bool byShield = ShieldBroken(enemy) && !ShieldUsed.ContainsKey(enemy.Pointer);
-        if (!byPoints && !byShield) return;
-        if (Remaining(cur).Count == 0) return;
+        bool broken = ShieldBroken(enemy);
+        bool byShield = broken && !ShieldUsed.ContainsKey(enemy.Pointer);
+        int remaining = Remaining(cur).Count;
+        bool field = PartyHud.OnField();
+        string why = !alive ? "敵が倒れている" : !field ? "戦闘画面ではない" : remaining == 0 ? "交代できる仲間がいない"
+            : !byPoints && !byShield ? (broken ? "この敵のシールド割れでは一度発動済み" : "ポイントが足りず、シールドも割れていない") : null;
+        if (why != null || Time.unscaledTime - _lastQteLog > 1f)
+        {
+            _lastQteLog = Time.unscaledTime;
+            int sp = -1, spMax = -1;
+            try { sp = enemy.GetShieldPoint(); spMax = enemy.GetMaxShieldPoint(); } catch { }
+            PartyManager.Log?.Info($"Party: 連携攻撃 追加攻撃が命中 '{motion}' ポイント {Points} ストック {Stock} " +
+                                   $"シールド {sp}/{spMax} 仲間 {remaining} 人 → {(why ?? "発動")}");
+        }
+        if (why != null) return;
 
         if (byShield) ShieldUsed[enemy.Pointer] = enemy;
         Points = 0;
@@ -396,43 +426,73 @@ internal static class ChainAttack
         finally { GUI.color = prev; }
     }
 
-    /// <summary>選択中のゲージ (画面中央の下)</summary>
+    /// <summary>
+    /// 選択中のゲージ (画面中央の下、ゼンゼロの連携の見た目)。
+    /// 左右に丸い顔 (オレンジの縁、下にキー)、真ん中に赤〜オレンジのバー。バーは時間とともに両端から中央へ削れていく。
+    /// バーの上に "C H A I N  A T T A C K"、下に残り時間
+    /// </summary>
     public static void DrawChoose()
     {
         if (_state != State.Choosing || !Render.IsRepaint) return;
         float s = Mathf.Max(0.6f, Screen.height / 1080f);
-        float w = 620f * s, h = 96f * s, face = 80f * s;
-        float x = (Screen.width - w) * 0.5f, y = Screen.height * 0.78f;
+        float face = 64f * s, ring = 4f * s;
+        float w = 620f * s;
+        float x = (Screen.width - w) * 0.5f, cy = Screen.height * 0.80f;
 
-        Render.Rect(x, y, w, h, PanelCol);
-        Render.Text(x, y - 30f * s, w, 28f * s, "CHAIN ATTACK", GaugeCol, Mathf.RoundToInt(22f * s),
-            TextAnchor.MiddleCenter, true, true);
+        // 左右の顔
+        DrawPick(LeftPick, x + face * 0.5f, cy, face, ring, NextKey.Display, s);
+        DrawPick(RightPick, x + w - face * 0.5f, cy, face, ring, PrevKey.Display, s);
 
-        // 左右の顔 (左 = 次へのキー、右 = 前へのキー)
-        DrawPick(LeftPick, x + 8f * s, y + 8f * s, face, NextKey.Display, s);
-        DrawPick(RightPick, x + w - 8f * s - face, y + 8f * s, face, PrevKey.Display, s);
+        // バー
+        float bx = x + face + 10f * s, bw = w - 2f * (face + 10f * s), bh = 16f * s;
+        float by = cy - bh * 0.5f;
+        Render.Rect(bx - 2f * s, by - 2f * s, bw + 4f * s, bh + 4f * s, new Color(0.02f, 0.02f, 0.03f, 0.9f), (bh + 4f * s) * 0.5f);
+        float remain = 1f - ChooseProgress;
+        float fw = bw * remain, fx = bx + (bw - fw) * 0.5f;
+        if (fw > 1f)
+        {
+            // 赤 → オレンジ → 赤 のグラデーション (細い帯を並べる)
+            const int seg = 40;
+            float sw = bw / seg;
+            for (int k = 0; k < seg; k++)
+            {
+                float sx = bx + k * sw, ex = sx + sw;
+                float a = Mathf.Max(sx, fx), b = Mathf.Min(ex, fx + fw);
+                if (b <= a) continue;
+                float t = Mathf.Abs((k + 0.5f) / seg - 0.5f) * 2f; // 中央 0 → 端 1
+                var col = Color.Lerp(new Color(1f, 0.42f, 0.18f, 1f), new Color(0.93f, 0.12f, 0.22f, 1f), t);
+                Render.Rect(a, by, b - a + 0.5f, bh, col);
+            }
+            Render.Rect(fx, by, fw, bh * 0.35f, new Color(1f, 1f, 1f, 0.18f)); // 上側の光沢
+        }
+        Render.Text(bx, by - 1f * s, bw, bh + 2f * s, "C H A I N    A T T A C K", new Color(1f, 1f, 1f, 0.92f),
+            Mathf.RoundToInt(11f * s), TextAnchor.MiddleCenter, true, true);
 
-        // 真ん中: 両端から中央に向かって進むゲージ
-        float gx = x + face + 24f * s, gw = w - 2f * (face + 24f * s), gh = 14f * s;
-        float gy = y + (h - gh) * 0.5f;
-        Render.Rect(gx, gy, gw, gh, new Color(0f, 0f, 0f, 0.7f));
-        float half = gw * 0.5f * ChooseProgress;
-        Render.Rect(gx, gy, half, gh, GaugeCol);
-        Render.Rect(gx + gw - half, gy, half, gh, GaugeCol);
+        // 残り時間 (00:SS:CC)
         float left = Mathf.Max(0f, ChooseTime - (Time.unscaledTime - _chooseStart));
-        Render.Text(gx, gy + gh + 4f * s, gw, 20f * s, left.ToString("0.0"), TextCol, Mathf.RoundToInt(14f * s),
-            TextAnchor.MiddleCenter, true, true);
+        int sec = Mathf.FloorToInt(left), cs = Mathf.FloorToInt((left - sec) * 100f);
+        Render.Text(bx, cy + bh * 0.5f + 4f * s, bw, 40f * s, $"00:{sec:00}:{cs:00}", new Color(1f, 1f, 1f, 0.85f),
+            Mathf.RoundToInt(30f * s), TextAnchor.MiddleCenter, true, true);
     }
 
-    private static void DrawPick(PlayerController p, float x, float y, float size, string key, float s)
+    private static void DrawPick(PlayerController p, float cx, float cy, float size, float ring, string key, float s)
     {
         if (p == null) return;
         var mm = PartyManager.FindCharacter(PartyManager.Id(p));
-        PartyHud.DrawPortrait(mm, x, y, size, 1f);
-        float kw = 26f * s, kh = 22f * s;
-        Render.Rect(x - 4f * s, y + size - kh + 4f * s, kw, kh, new Color(0.02f, 0.02f, 0.03f, 0.95f));
-        Render.Text(x - 4f * s, y + size - kh + 4f * s, kw, kh, key, TextCol, Mathf.RoundToInt(14f * s),
-            TextAnchor.MiddleCenter, true);
+        float r = size * 0.5f;
+        // オレンジの縁 → 暗い下地 → 丸く切り抜いた顔
+        Render.Rect(cx - r - ring, cy - r - ring, size + ring * 2f, size + ring * 2f, new Color(1f, 0.55f, 0.12f, 1f), r + ring);
+        Render.Rect(cx - r, cy - r, size, size, new Color(0.08f, 0.08f, 0.1f, 1f), r);
+        var tex = PartyHud.Portrait(mm);
+        if (tex != null)
+            GUI.DrawTexture(new Rect(cx - r, cy - r, size, size), tex, ScaleMode.StretchToFill, true, 0f, Color.white, 0f, r);
+
+        // 下のキー (小さな札)
+        int fs = Mathf.RoundToInt(11f * s);
+        float kw = Mathf.Max(22f * s, Render.TextWidth(key, fs, true) + 10f * s), kh = 16f * s;
+        float kx = cx - kw * 0.5f, ky = cy + r + ring + 5f * s;
+        Render.Rect(kx, ky, kw, kh, new Color(0.02f, 0.02f, 0.03f, 0.9f), kh * 0.5f);
+        Render.Text(kx, ky, kw, kh, key, Color.white, fs, TextAnchor.MiddleCenter, true);
     }
 }
 

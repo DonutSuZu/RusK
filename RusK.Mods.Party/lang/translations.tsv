@@ -62,3 +62,8 @@
 (調査用) 次のキャラに切り替えて追加攻撃を撃つ	(research) Switch to the next character and fire a follow-up attack	(调查用) 切换到下一个角色并发动追加攻击
 連携攻撃をストックしました	Chain attack stocked	已储存连携攻击
 連携攻撃: 1500 ヒットためるか敵のシールドを割って追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる	Chain attack: land a follow-up attack after 1500 hits or on an enemy whose shield is broken; time stops and you pick the next character to continue the follow-up attacks	连携攻击: 累计 1500 次命中或击破敌人护盾后用追加攻击命中, 时间会停止, 可选择下一个角色继续追加攻击
+敵が倒れている	the enemy is down	敌人已倒下
+戦闘画面ではない	not on the battle screen	不在战斗画面
+交代できる仲間がいない	no companion to switch to	没有可切换的队友
+この敵のシールド割れでは一度発動済み	already triggered by this shield break	此敌人的护盾击破已触发过
+ポイントが足りず、シールドも割れていない	not enough points and the shield is not broken	点数不足且护盾未击破
