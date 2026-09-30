@@ -74,6 +74,6 @@
 時間切れ	time up	时间到
 連携攻撃: 1500 ヒットためて追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる	Chain attack: after 1500 hits, landing a follow-up attack stops time; pick the next character to continue the follow-up attacks	连携攻击: 累计 1500 次命中后用追加攻击命中, 时间会停止, 可选择下一个角色继续追加攻击
 連携回避のキー: 連携の選択中に押すと、連携せずに 1 回分をストックする	Chain skip key: press it while choosing to skip the chain and stock one use	回避连携按键: 在选择连携时按下, 不连携并储存 1 次
- ← 操作中のキャラ		
-切り替えの直後		
-切り替えの 1 フレーム後		
+ ← 操作中のキャラ	 ← current character	 ← 当前角色
+切り替えの直後	right after switching	切换后立即
+切り替えの 1 フレーム後	1 frame after switching	切换后 1 帧
