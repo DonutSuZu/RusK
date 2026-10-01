@@ -19,7 +19,9 @@ internal static class FieldAi
 
     public static float AttackRange = 2.2f;
     public static float SearchRange = 15f;
-    public static float FollowStop = 1.5f;
+    public static float FollowStart = 2.5f;  // これより離れたら、ついて歩き始める
+    public static float FollowStop = 1.2f;   // ここまで近づいたら止まる
+    public static float RunSpeed = 6f;       // 走る速さ (m/秒)。遠いときは速くする
     public static float WarpDistance = 25f;
     public static float AttackInterval = 0.18f;
 
@@ -139,7 +141,8 @@ internal static class FieldAi
         var slot = FollowPoint(player, index);
         var toSlot = slot - p.transform.position;
         toSlot.y = 0f;
-        if (toSlot.magnitude > FollowStop && !busy)
+        float need = b.Moving ? FollowStop : FollowStart;
+        if (toSlot.magnitude > need && !busy)
         {
             if (!CheckStuck(p, b, toSlot.magnitude, slot)) MoveToward(p, b, toSlot);
             Act(p, b, $"ついて歩く ({toSlot.magnitude:0.0}m)");
@@ -161,25 +164,40 @@ internal static class FieldAi
         motion.IndexOf("Parry", StringComparison.OrdinalIgnoreCase) >= 0 ||
         motion.IndexOf("Hit", StringComparison.OrdinalIgnoreCase) >= 0;
 
+    /// <summary>
+    /// 走る。アニメ (Run) だけゲームに再生させ、向きと移動はこちらで CharacterController を直接動かす
+    /// (ゲームの MovementController.Move は意図した方向に進まなかった)
+    /// </summary>
     private static void MoveToward(PlayerController p, Brain b, Vector3 dir)
     {
-        var d = dir.normalized;
-        FieldSwap.Run(p, () =>
+        var d = dir;
+        d.y = 0f;
+        float dist = d.magnitude;
+        if (dist < 0.01f) return;
+        d /= dist;
+        if (!b.Moving)
         {
-            if (!b.Moving)
+            FieldSwap.Run(p, () =>
             {
-                p.ChangeMotion("Run", false, 0.1f, default);
-                b.Moving = true;
-            }
-            var mc = p.GetMovementController();
-            // 攻撃中に「向きを変えられない」状態にされたまま (コンボを途中で終わらせたとき) だと、
-            // 向いている方へまっすぐ走り続けるので、動ける・向きを変えられる状態に戻して、向きはこちらで回す
-            try { mc?.SetMoveAble(true); mc?.SetTurnAble(true); } catch { }
-            var want = Quaternion.LookRotation(d);
-            p.transform.rotation = Quaternion.RotateTowards(p.transform.rotation, want, 900f * Time.deltaTime);
-            mc?.Rotate(d);
-            mc?.Move(d);
-        });
+                try
+                {
+                    var mc = p.GetMovementController();
+                    mc?.SetMoveAble(true);
+                    mc?.SetTurnAble(true);
+                }
+                catch { }
+                p.ChangeMotion("Run", true, 0.1f, default);
+            });
+            b.Moving = true;
+        }
+
+        float dt = Mathf.Min(Time.deltaTime, 0.05f);
+        p.transform.rotation = Quaternion.RotateTowards(p.transform.rotation, Quaternion.LookRotation(d), 720f * dt);
+        float speed = RunSpeed * (dist > 8f ? 1.4f : 1f);
+        var step = d * Mathf.Min(speed * dt, dist) + Vector3.down * 4f * dt; // 少し下に押して地面に沿わせる
+        var cc = p.GetComponent<CharacterController>();
+        if (cc != null && cc.enabled) cc.Move(step);
+        else p.transform.position += step;
     }
 
     /// <summary>2 秒たっても目標に 0.5m も近づけていなければ (引っかかった・逆に走った)、目標の近くへワープして true</summary>
@@ -207,7 +225,8 @@ internal static class FieldAi
         FieldSwap.Run(p, () =>
         {
             string m = p.GetCurMotion()?.name ?? "";
-            if (m.StartsWith("Run") || m.StartsWith("FastRun")) p.ChangeMotion("Idle", false, 0.15f, default);
+            // 走る系の動作 (Run / RunStop / RunTurn / FastRun...) なら、強制で待機に
+            if (m.IndexOf("Run", StringComparison.OrdinalIgnoreCase) >= 0) p.ChangeMotion("Idle", true, 0.15f, default);
         });
     }
 
