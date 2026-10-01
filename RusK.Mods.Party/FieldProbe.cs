@@ -33,6 +33,30 @@ internal static class FieldProbe
     private static readonly Dictionary<string, int> HitsOn = new();
     private static readonly Dictionary<string, int> BoxesMade = new();
     private static readonly Dictionary<string, int> MaxDamage = new();
+    private static readonly Dictionary<string, string> CalcSample = new();
+
+    /// <summary>ダメージ計算 (GameUtil.CaculateDamage) の入口と出口 (持ち主ごとに、出口が最大のものを 1 つ)</summary>
+    public static void OnCalc(AttackBoxController boxCon, int input, int output, bool critical, int buffs, bool swapped)
+    {
+        if (Fielded.Count == 0) return;
+        string who;
+        try { who = Who(boxCon != null ? boxCon.m_owner : null); }
+        catch { who = "?"; }
+        string cur = PartyManager.Name(PartyManager.Current);
+        string text = $"{input}→{output}{(critical ? " 会心" : "")} バフ{buffs} 今のプレイヤー={cur}{(swapped ? " (差し替え中)" : "")}";
+        if (!CalcSample.TryGetValue(who, out var prev) || output > ParseOut(prev)) CalcSample[who] = text;
+    }
+
+    private static int ParseOut(string s)
+    {
+        try
+        {
+            int a = s.IndexOf('→') + 1, b = a;
+            while (b < s.Length && char.IsDigit(s[b])) b++;
+            return int.Parse(s.Substring(a, b - a));
+        }
+        catch { return 0; }
+    }
 
     /// <summary>敵に与えたダメージ (持ち主ごとの最大値)</summary>
     public static void OnDamage(Transform atker, int damage)
@@ -357,6 +381,7 @@ internal static class FieldProbe
                 if (m != null) sb.Append($" || {PartyManager.Name(m)}{(m.Pointer == PartyManager.Current?.Pointer ? "(操作中)" : "")} {BuffState(m)}");
         }
         catch { }
+        if (CalcSample.Count > 0) sb.Append($" || 計算: {string.Join(", ", CalcSample.Select(kv => $"{kv.Key} {kv.Value}"))}");
         if (MaxDamage.Count > 0) sb.Append($" || 最大ダメージ: {string.Join(", ", MaxDamage.Select(kv => $"{kv.Key} {kv.Value}"))}");
         if (HitsBy.Count > 0) sb.Append($" || 敵に当てた: {string.Join(", ", HitsBy.Select(kv => $"{kv.Key} {kv.Value} 回"))}");
         if (HitsOn.Count > 0) sb.Append($" || 敵の攻撃を受けた: {string.Join(", ", HitsOn.Select(kv => $"{kv.Key} {kv.Value} 回"))}");
@@ -366,6 +391,7 @@ internal static class FieldProbe
         HitsOn.Clear();
         BoxesMade.Clear();
         MaxDamage.Clear();
+        CalcSample.Clear();
         BoxesTouched.Clear();
         PartyManager.Log?.Info(sb.ToString());
     }
@@ -478,6 +504,17 @@ internal static class FieldProbeBoxTouchPatch
     private static void Postfix(AttackBoxController __instance, bool __result)
     {
         try { FieldProbe.OnBoxTouched(__instance, __result); } catch { }
+    }
+}
+
+// 調査用: int GameUtil.CaculateDamage(int damage, List<Buff> buffList, EnemyController enmCon, AttackBoxController boxCon, bool isCritical, bool breakShield)
+[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.CaculateDamage))]
+internal static class FieldProbeCalcPatch
+{
+    private static void Postfix(int damage, Il2CppSystem.Collections.Generic.List<Buff> buffList, AttackBoxController boxCon,
+        bool isCritical, int __result)
+    {
+        try { FieldProbe.OnCalc(boxCon, damage, __result, isCritical, buffList?.Count ?? -1, FieldSwap.InSwap); } catch { }
     }
 }
 
