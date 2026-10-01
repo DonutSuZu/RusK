@@ -29,6 +29,7 @@ internal static class FieldAi
     private sealed class Brain
     {
         public float NextAttack;
+        public float LastAttack = -999f;
         public bool Moving;
         public string LastAction = "";
         public float LastLog;
@@ -80,6 +81,21 @@ internal static class FieldAi
         string motion = p.GetCurMotion()?.name ?? "";
         bool busy = IsBusy(motion);
 
+        // 殴るのをやめてもコンボの動作のまま止まることがある (コンボを終わらせるのはキー入力の処理らしい)。
+        // 最後の Attack から 0.5 秒たってもコンボのままなら、コンボを終わらせて待機に戻す
+        if (motion.IndexOf("Combo", StringComparison.OrdinalIgnoreCase) >= 0 && Time.unscaledTime - b.LastAttack > 0.5f)
+        {
+            FieldSwap.Run(p, () =>
+            {
+                try { p.GetMotionController()?.ResetCombo(); } catch { }
+                p.ChangeMotion("Idle", true, 0.15f, default);
+            });
+            b.Moving = false;
+            motion = p.GetCurMotion()?.name ?? "";
+            busy = IsBusy(motion);
+            PartyManager.Log?.Info($"Party Lab オート: {PartyManager.Name(p)} のコンボを終わらせた → 動作='{motion}'");
+        }
+
         // 遠すぎたら操作キャラの近くへワープ
         if (Dist(p.transform.position, player.transform.position) > WarpDistance)
         {
@@ -103,6 +119,7 @@ internal static class FieldAi
             if (Time.unscaledTime >= b.NextAttack)
             {
                 b.NextAttack = Time.unscaledTime + AttackInterval;
+                b.LastAttack = Time.unscaledTime;
                 FieldSwap.Run(p, () =>
                 {
                     if (!busy || motion.IndexOf("Combo", StringComparison.OrdinalIgnoreCase) >= 0)
