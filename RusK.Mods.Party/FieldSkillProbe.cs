@@ -8,16 +8,17 @@ namespace RusK.Mods.Party;
 
 /// <summary>
 /// 調査用 (Party Lab、エンドフィールド風の戦闘の試作): 特殊攻撃と必殺技 (追加攻撃) のキー。
-///   - 共有 EP: パーティで 1 本 (最大 300)。仮に 1 秒に 10 ずつ自然に貯まる
-///   - 1〜4 の短押し: その番号のキャラが、操作を移さずにその場で特殊攻撃 (EP を 100 使う)
-///   - 1〜4 の長押し (0.4 秒): そのキャラの必殺技ゲージ (キャラごと、1 ヒット 1P、最大 50) が満タンなら追加攻撃
+///   - 共有 EP: パーティで 1 本 (最大 300)。パーティの誰かの攻撃が 1 ヒットするたびに +1 (仮。自然回復はしない)
+///   - 1〜3 の短押し: その番号のキャラが、操作を移さずにその場で特殊攻撃 (EP を 100 使う)
+///   - 1〜3 の長押し (0.4 秒): そのキャラの必殺技ゲージ (キャラごと、1 ヒット 1P、最大 50) が満タンなら追加攻撃
 /// 番号はパーティの並び (Party の HUD と同じ順)。操作していないキャラは「今のプレイヤー」を差し替えて撃たせる
 /// </summary>
 internal static class FieldSkillProbe
 {
     public const float MaxEp = 300f;
     public const float EpCost = 100f;
-    public const float EpRegen = 10f;
+    public const float EpPerHit = 1f;
+    public const int SlotCount = 3; // 3 人編成 (1〜3)
     public const int UltMax = 50;
     public const float LongPress = 0.4f;
 
@@ -26,9 +27,9 @@ internal static class FieldSkillProbe
     public static float Ep = 100f;
     private static readonly Dictionary<IntPtr, int> Ult = new();
 
-    private static readonly float[] PressedAt = { -1f, -1f, -1f, -1f };
-    private static readonly bool[] LongFired = new bool[4];
-    private static readonly KeyCode[] Keys = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4 };
+    private static readonly float[] PressedAt = { -1f, -1f, -1f };
+    private static readonly bool[] LongFired = new bool[SlotCount];
+    private static readonly KeyCode[] Keys = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3 };
 
     public static int UltOf(PlayerController p) => p != null && Ult.TryGetValue(p.Pointer, out var v) ? v : 0;
 
@@ -37,18 +38,18 @@ internal static class FieldSkillProbe
     {
         if (!Enabled || p == null) return;
         Ult[p.Pointer] = Math.Min(UltMax, UltOf(p) + 1);
+        Ep = Mathf.Min(MaxEp, Ep + EpPerHit);
     }
 
     /// <summary>パーティの並び (操作中のキャラと置いたキャラ。番号 1〜4)</summary>
-    private static List<PlayerController> Slots() => PartyManager.Members.Where(m => m != null).Take(4).ToList();
+    private static List<PlayerController> Slots() => PartyManager.Members.Where(m => m != null).Take(SlotCount).ToList();
 
     public static void Tick()
     {
         if (!Enabled) return;
-        Ep = Mathf.Min(MaxEp, Ep + EpRegen * Time.deltaTime);
 
         var slots = Slots();
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < SlotCount; i++)
         {
             var hotkey = new Hotkey(Keys[i]);
             if (RuskInput.WasPressed(hotkey))
@@ -168,7 +169,7 @@ internal static class FieldSkillProbe
         Render.Text(x, y, w, h, $"EP {Ep:0} / {MaxEp:0}", Color.white, Mathf.RoundToInt(13f * s), TextAnchor.MiddleCenter, true, true);
 
         var slots = Slots();
-        float cw = w / 4f;
+        float cw = w / SlotCount;
         for (int i = 0; i < slots.Count; i++)
         {
             var p = slots[i];

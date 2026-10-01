@@ -20,6 +20,7 @@ internal static class FieldSwap
 
     private static readonly Stack<PlayerController> Saved = new();
     private static readonly Dictionary<IntPtr, PlayerController> Owners = new();
+    private static readonly Dictionary<IntPtr, (IntPtr owner, PlayerController player)> BoxOwners = new();
 
     /// <summary>差し替え中か (このときはキー入力の処理を止める)</summary>
     public static bool InSwap => Saved.Count > 0;
@@ -27,6 +28,22 @@ internal static class FieldSwap
     private static PlayerController Owner(Component c)
     {
         if (c == null) return null;
+        // 攻撃の当たり判定は使い回されて持ち主が変わるので、毎回 m_owner から調べる
+        // (持ち主の Transform が前と同じなら、前の結果を使い回す。敵の分も含めて数が多いので)
+        var box = c.TryCast<AttackBoxController>();
+        if (box != null)
+        {
+            try
+            {
+                var owner = box.m_owner;
+                if (owner == null) return null;
+                if (BoxOwners.TryGetValue(c.Pointer, out var cached) && cached.owner == owner.Pointer) return cached.player;
+                var player = owner.GetComponentInParent<PlayerController>(true);
+                BoxOwners[c.Pointer] = (owner.Pointer, player);
+                return player;
+            }
+            catch { return null; }
+        }
         if (Owners.TryGetValue(c.Pointer, out var p) && p != null) return p;
         try { p = c.TryCast<PlayerController>() ?? c.GetComponentInParent<PlayerController>(true); }
         catch { p = null; }
@@ -86,6 +103,12 @@ internal static class FieldSwapPatch
         {
             var m = type.GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
             if (m != null) yield return m;
+        }
+        // 攻撃の当たり判定が敵に触れたときの処理 (風禾の攻撃が敵に効かなかった)
+        foreach (var m in typeof(AttackBoxController).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+        {
+            if (m.Name is "TryTriggerHit" or "OnTriggerEnter" or "OnTriggerStay" or "Update" or "FixedUpdate" or "LateUpdate")
+                yield return m;
         }
     }
 
