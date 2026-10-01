@@ -75,7 +75,7 @@ internal static class FieldSwap
         {
             try
             {
-                var save = util.m_gameSaveCache;
+                var save = GameUtil.m_gameSaveCache;
                 if (save != null)
                 {
                     crt = save.lastCrtId;
@@ -97,7 +97,7 @@ internal static class FieldSwap
         {
             var util = GameUtil.Instance;
             util.m_curPlayer = prev;
-            if (!double.IsNaN(crt) && util.m_gameSaveCache != null) util.m_gameSaveCache.lastCrtId = crt;
+            if (!double.IsNaN(crt) && GameUtil.m_gameSaveCache != null) GameUtil.m_gameSaveCache.lastCrtId = crt;
         }
         catch { }
     }
