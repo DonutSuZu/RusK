@@ -68,3 +68,7 @@
 切り替えの 1 フレーム後	1 frame after switching	切换后 1 帧
 開発者向け: Party Lab (調査用のウィンドウ) をメニューに出す。ゲームの再起動で反映	Developer: show Party Lab (the research window) in the menu. Takes effect after restarting the game	开发者用: 在菜单中显示 Party Lab (调查用窗口)。重启游戏后生效
 その場で切り替え	switch in place	原地切换
+バトルスタイル。ゼンゼロ: 控えは隠れて交代する。エンドフィールド: 全員がフィールドで戦い、操作していないキャラはオート (Custom Battle System and Ui for Op.2 が必要)	Battle style. ZZZ: reserves stay hidden and swap in. Endfield: the whole party fights on the field and characters you are not controlling fight automatically (requires Custom Battle System and Ui for Op.2)	战斗风格。绝区零: 后备角色隐藏并换人。终末地: 全队在场上战斗, 未操作的角色自动战斗 (需要 Custom Battle System and Ui for Op.2)
+ゼンゼロ	ZZZ	绝区零
+エンドフィールド	Endfield	终末地
+エンドフィールドスタイルには Custom Battle System and Ui for Op.2 が必要です (ゼンゼロのまま動きます)	The Endfield style requires Custom Battle System and Ui for Op.2 (running in ZZZ style)	终末地风格需要 Custom Battle System and Ui for Op.2 (将以绝区零风格运行)

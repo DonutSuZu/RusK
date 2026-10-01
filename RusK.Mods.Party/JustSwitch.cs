@@ -68,8 +68,7 @@ internal static class JustSwitch
     public static bool BeforeHit(PlayerController p, EnemyController enemy, AttackBox box)
     {
         _kind = HitKind.None;
-        FieldProbe.OnPlayerHit(p); // 調査用 (フィールドに置いたキャラが攻撃を受けるか)
-        if (FieldProbe.IsFielded(p) && p.Pointer != PartyManager.Current?.Pointer) return false; // 置いたキャラは攻撃を受けない
+        if (PartyBridge.IsShielded(p)) return false; // エンドフィールドスタイル: フィールドにいる操作していないキャラは攻撃を受けない
 
         // 戦闘不能で交代を待っているキャラは、これ以上攻撃を受けない
         if (PartyManager.IsDown(p)) return false;

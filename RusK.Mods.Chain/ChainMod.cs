@@ -7,7 +7,7 @@ using Module = RusK.API.Module;
 namespace RusK.Mods.Chain;
 
 /// <summary>連携攻撃 (ゼンゼロのチェーン攻撃風)。Party Mod が必要</summary>
-[RuskMod("chain", "Chain Attack", "1.0.0",
+[RuskMod("chain", "Chain Attack", "1.0.1",
     Author = "you",
     GameVersion = "0.0.1876",
     Description = "連携攻撃。ヒットをためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party Mod が必要)")]
@@ -39,6 +39,7 @@ public sealed class ChainModule : Module
     private static readonly int[] PointChoices = { 300, 600, 900, 1500 };
     private readonly BoolSetting _devTools;
     private bool _warnedNoParty;
+    private bool _pausedForEndfield;
 
     public ChainModule()
         : base("ChainAttack", "Party",
@@ -70,6 +71,18 @@ public sealed class ChainModule : Module
             }
             return;
         }
+        // エンドフィールドスタイル (全員がフィールドで戦う) では連携攻撃をしない (1〜3 長押しの必殺技が代わり)
+        if (PartyLink.EndfieldActive)
+        {
+            if (!_pausedForEndfield)
+            {
+                _pausedForEndfield = true;
+                ChainAttack.Shutdown();
+                ChainMod.Log?.Info("Chain: エンドフィールドスタイルなので連携攻撃を止めました");
+            }
+            return;
+        }
+        _pausedForEndfield = false;
         ChainAttack.Enabled = true; // OFF → ON に戻したとき
         ChainAttack.SkipKey = _skipKey.Value;
         ChainAttack.PointsNeeded = PointChoices[Mathf.Clamp(_pointsNeeded.Value, 0, PointChoices.Length - 1)];

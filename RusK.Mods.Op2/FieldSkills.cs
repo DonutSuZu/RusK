@@ -4,7 +4,7 @@ using System.Linq;
 using RusK.API;
 using UnityEngine;
 
-namespace RusK.Mods.Party;
+namespace RusK.Mods.Op2;
 
 /// <summary>
 /// 調査用 (Party Lab、エンドフィールド風の戦闘の試作): 特殊攻撃と必殺技 (追加攻撃) のキー。
@@ -13,7 +13,7 @@ namespace RusK.Mods.Party;
 ///   - 1〜3 の長押し (0.4 秒): そのキャラの必殺技ゲージ (キャラごと、1 ヒット 1P、最大 50) が満タンなら追加攻撃
 /// 番号はパーティの並び (Party の HUD と同じ順)。操作していないキャラは「今のプレイヤー」を差し替えて撃たせる
 /// </summary>
-internal static class FieldSkillProbe
+internal static class FieldSkills
 {
     public const float MaxEp = 300f;
     public const float EpCost = 100f;
@@ -22,7 +22,7 @@ internal static class FieldSkillProbe
     public const int UltMax = 50;
     public const float LongPress = 0.4f;
 
-    public static bool Enabled => FieldAi.Enabled;
+    public static bool Enabled => true;
 
     public static float Ep = 100f;
     private static readonly Dictionary<IntPtr, int> Ult = new();
@@ -43,7 +43,7 @@ internal static class FieldSkillProbe
     }
 
     /// <summary>パーティの並び (操作中のキャラと置いたキャラ。番号 1〜4)</summary>
-    private static List<PlayerController> Slots() => PartyManager.Members.Where(m => m != null).Take(SlotCount).ToList();
+    private static List<PlayerController> Slots() => P.Members.Where(m => m != null).Take(SlotCount).ToList();
 
     public static void Tick()
     {
@@ -56,9 +56,8 @@ internal static class FieldSkillProbe
         {
             if (!RuskInput.WasPressed(new Hotkey(SwitchKeys[i]))) continue;
             var target = slots[i];
-            if (target == null || target.Pointer == PartyManager.Current?.Pointer || !FieldProbe.IsFielded(target)) break;
-            bool just = JustSwitch.IsJustTiming;
-            PartyManager.SwitchInPlace(target, ignoreCooldown: just && JustSwitch.IgnoreCooldown, just: just);
+            if (target == null || target.Pointer == P.Current?.Pointer || !Field.IsFielded(target)) break;
+            P.SwitchTo(target); // Party の切り替え (ジャスト切り替え・クールタイムつき。エンドフィールドスタイルではその場で)
             break;
         }
 
@@ -91,12 +90,12 @@ internal static class FieldSkillProbe
 
     private static bool OnField(PlayerController p) =>
         p != null && p.gameObject.activeInHierarchy &&
-        (p.Pointer == PartyManager.Current?.Pointer || FieldProbe.IsFielded(p));
+        (p.Pointer == P.Current?.Pointer || Field.IsFielded(p));
 
     private static void Special(PlayerController p, int slot)
     {
         if (!OnField(p)) { Log($"{slot}: キャラがフィールドにいません"); return; }
-        if (Ep < EpCost) { Log($"{slot}: {PartyManager.Name(p)} の特殊攻撃 → EP が足りない ({Ep:0}/{EpCost:0})"); return; }
+        if (Ep < EpCost) { Log($"{slot}: {P.Name(p)} の特殊攻撃 → EP が足りない ({Ep:0}/{EpCost:0})"); return; }
         string before = Motion(p);
         Do(p, () =>
         {
@@ -107,26 +106,26 @@ internal static class FieldSkillProbe
         if (after == before || after.IndexOf("SpecialAttack", StringComparison.OrdinalIgnoreCase) < 0)
         {
             // 必殺技ゲージ (ゲームのエネルギー) が足りないなどで受け付けられなければ、動作を直接
-            var name = FieldProbe.FindMotion(p, "SpecialAttack", "QTE");
+            var name = Field.FindMotion(p, "SpecialAttack", "QTE");
             if (name != null) Do(p, () => p.ChangeMotion(name, true, 0.05f, default));
             after = Motion(p);
         }
         if (after.IndexOf("SpecialAttack", StringComparison.OrdinalIgnoreCase) < 0)
         {
-            Log($"{slot}: {PartyManager.Name(p)} の特殊攻撃を出せません (動作 '{before}' → '{after}')");
+            Log($"{slot}: {P.Name(p)} の特殊攻撃を出せません (動作 '{before}' → '{after}')");
             return;
         }
         Ep -= EpCost;
-        Log($"{slot}: {PartyManager.Name(p)} の特殊攻撃 '{after}' (EP 残り {Ep:0})");
+        Log($"{slot}: {P.Name(p)} の特殊攻撃 '{after}' (EP 残り {Ep:0})");
     }
 
     private static void Ultimate(PlayerController p, int slot)
     {
         if (!OnField(p)) { Log($"{slot}: キャラがフィールドにいません"); return; }
         int ult = UltOf(p);
-        if (ult < UltMax) { Log($"{slot}: {PartyManager.Name(p)} の必殺技 → ゲージが足りない ({ult}/{UltMax})"); return; }
-        var name = FieldProbe.FindMotion(p, "NormalAttack_QTE");
-        if (name == null) { Log($"{slot}: {PartyManager.Name(p)} に追加攻撃の動作がありません"); return; }
+        if (ult < UltMax) { Log($"{slot}: {P.Name(p)} の必殺技 → ゲージが足りない ({ult}/{UltMax})"); return; }
+        var name = Field.FindMotion(p, "NormalAttack_QTE");
+        if (name == null) { Log($"{slot}: {P.Name(p)} に追加攻撃の動作がありません"); return; }
         Do(p, () =>
         {
             FaceTarget(p);
@@ -134,7 +133,7 @@ internal static class FieldSkillProbe
             p.ChangeMotion(name, true, 0.05f, default);
         });
         Ult[p.Pointer] = 0;
-        Log($"{slot}: {PartyManager.Name(p)} の必殺技 (追加攻撃) '{Motion(p)}'");
+        Log($"{slot}: {P.Name(p)} の必殺技 (追加攻撃) '{Motion(p)}'");
     }
 
     /// <summary>操作中のキャラはそのまま、置いたキャラは「今のプレイヤー」を差し替えて</summary>
@@ -142,10 +141,10 @@ internal static class FieldSkillProbe
     {
         try
         {
-            if (p.Pointer == PartyManager.Current?.Pointer) action();
+            if (p.Pointer == P.Current?.Pointer) action();
             else FieldSwap.Run(p, action);
         }
-        catch (Exception e) { Log($"{PartyManager.Name(p)} でエラー: {e.Message}"); }
+        catch (Exception e) { Log($"{P.Name(p)} でエラー: {e.Message}"); }
     }
 
     private static void FaceTarget(PlayerController p)
@@ -167,7 +166,7 @@ internal static class FieldSkillProbe
         catch { return ""; }
     }
 
-    private static void Log(string s) => PartyManager.Log?.Info("Party Lab スキル: " + s);
+    private static void Log(string s) => P.Log?.Info("Op.2 スキル: " + s);
 
     // ------------------------------------------------------------------ HUD
     // エンドフィールドのレイアウトを参考に、図形とこのゲームの顔アイコンで描く (あちらの画像は使わない)
@@ -181,14 +180,14 @@ internal static class FieldSkillProbe
     private static readonly Color Panel = new(0.05f, 0.06f, 0.08f, 0.72f);
     private static readonly Color Ring = new(1f, 1f, 1f, 0.85f);
 
-    public static bool Active => Enabled && FieldProbe.Fielded.Count > 0;
+    public static bool Active => Enabled && Field.Fielded.Count > 0;
 
     public static void DrawHud()
     {
         if (!Active || !Render.IsRepaint) return;
         float s = Mathf.Max(0.6f, Screen.height / 1080f);
         var slots = Slots();
-        var cur = PartyManager.Current;
+        var cur = P.Current;
         DrawParty(slots, cur, s);
         DrawSkills(slots, s);
     }
@@ -199,10 +198,10 @@ internal static class FieldSkillProbe
         float small = 64f * s, big = 78f * s, gap = 18f * s;
 
         // 切り替えの案内
-        string keys = $"{PartyBridge.NextKey.Display} / {PartyBridge.PrevKey.Display}  F1〜F{SlotCount}";
+        string keys = $"{P.NextKey.Display} / {P.PrevKey.Display}  F1〜F{SlotCount}";
         Render.Rect(x, baseY - 40f * s, 22f * s, 22f * s, Panel, 4f * s);
         Render.Text(x, baseY - 40f * s, 22f * s, 22f * s, "⇄", Color.white, Mathf.RoundToInt(13f * s), TextAnchor.MiddleCenter, true);
-        Render.Text(x + 28f * s, baseY - 40f * s, 260f * s, 22f * s, $"切り替え ({keys})", Color.white,
+        Render.Text(x + 28f * s, baseY - 40f * s, 260f * s, 22f * s, L.T("切り替え ({0})", keys), Color.white,
             Mathf.RoundToInt(14f * s), TextAnchor.MiddleLeft, true, true);
 
         for (int i = 0; i < slots.Count; i++)
@@ -220,7 +219,7 @@ internal static class FieldSkillProbe
                 Render.Text(cx - 10f * s, cy - r - 26f * s, 20f * s, 16f * s, "▼", Ring, Mathf.RoundToInt(12f * s), TextAnchor.MiddleCenter, true);
             }
             Render.Rect(cx - r, cy - r, size, size, new Color(0.1f, 0.1f, 0.12f, 0.9f), r);
-            var tex = PartyBridge.Portrait(p);
+            var tex = P.Portrait(p);
             float dim = on ? 1f : 0.8f;
             if (tex != null)
                 GUI.DrawTexture(new Rect(cx - r, cy - r, size, size), tex, ScaleMode.StretchToFill, true, 0f,
@@ -251,7 +250,7 @@ internal static class FieldSkillProbe
     {
         float btn = 72f * s, gap = 26f * s;
         float total = SlotCount * btn + (SlotCount - 1) * gap;
-        float x = Screen.width * 0.69f - total, cy = Screen.height - 110f * s; // RusK UI のボタン HUD (右下、画面幅の 7 割から右) の左隣
+        float x = Screen.width - total - 60f * s, cy = Screen.height - 110f * s; // 右下 (エンドフィールドスタイルでは RusK UI のボタン HUD は隠れる)
 
         // 共有 EP (3 区切り)
         float ew = total, eh = 8f * s, ey = cy - btn * 0.5f - 86f * s;
@@ -279,13 +278,13 @@ internal static class FieldSkillProbe
             if (ult >= 1f)
             {
                 Render.Rect(cx - ur + 4f * s, uy - ur + 4f * s, ur * 2f - 8f * s, ur * 2f - 8f * s, UltCol, ur);
-                Render.Text(cx - 40f * s, uy - ur - 18f * s, 80f * s, 16f * s, "長押し", UltCol, Mathf.RoundToInt(11f * s), TextAnchor.MiddleCenter, true, true);
+                Render.Text(cx - 40f * s, uy - ur - 18f * s, 80f * s, 16f * s, L.T("長押し"), UltCol, Mathf.RoundToInt(11f * s), TextAnchor.MiddleCenter, true, true);
             }
 
             // ボタン: 暗い丸 → 顔 → EP が足りれば下側が青緑
             Render.Rect(cx - r - 3f * s, cy - r - 3f * s, btn + 6f * s, btn + 6f * s, new Color(1f, 1f, 1f, 0.25f), r + 3f * s);
             Render.Rect(cx - r, cy - r, btn, btn, new Color(0.08f, 0.09f, 0.11f, 0.92f), r);
-            var tex = p == null ? null : PartyBridge.Portrait(p);
+            var tex = p == null ? null : P.Portrait(p);
             if (tex != null)
             {
                 float dim = epReady ? 1f : 0.45f;

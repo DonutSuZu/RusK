@@ -29,6 +29,7 @@ internal static class PartyLink
     private static Func<PlayerController, Texture> _portrait;
     private static PropertyInfo _nextKey, _prevKey;
     private static FieldInfo _blockHits, _suppressKeys, _hudExtras;
+    private static PropertyInfo _endfield; // 版 2 から (無ければ常に false)
 
     /// <summary>Party の入口が見つかったか (見つからなければ 2 秒ごとに探し直す)</summary>
     public static bool Available
@@ -72,6 +73,7 @@ internal static class PartyLink
             _blockHits = t.GetField("BlockHits", st);
             _suppressKeys = t.GetField("SuppressSwitchKeys", st);
             _hudExtras = t.GetField("HudExtras", st);
+            _endfield = t.GetProperty("EndfieldActive", st);
             _bridge = t;
             ChainMod.Log?.Info($"Chain: Party の入口を見つけました (版 {v})");
             return true;
@@ -91,6 +93,16 @@ internal static class PartyLink
     public static Texture Portrait(PlayerController p) => Available ? _portrait(p) : null;
     public static Hotkey NextKey => Available ? (Hotkey)_nextKey.GetValue(null) : new Hotkey(KeyCode.C);
     public static Hotkey PrevKey => Available ? (Hotkey)_prevKey.GetValue(null) : new Hotkey(KeyCode.Z);
+
+    /// <summary>Party がエンドフィールドスタイルで動いているか (このときは連携攻撃をしない)</summary>
+    public static bool EndfieldActive
+    {
+        get
+        {
+            try { return Available && _endfield != null && (bool)_endfield.GetValue(null); }
+            catch { return false; }
+        }
+    }
 
     public static void SetBlockHits(bool on)
     {

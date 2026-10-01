@@ -13,7 +13,7 @@ internal static class PartyHpChangePatch
         try
         {
             if (change >= 0f) return true;
-            if (FieldProbe.IsFielded(__instance) && __instance.Pointer != PartyManager.Current?.Pointer) return false; // 置いたキャラはダメージを受けない
+            if (PartyBridge.IsShielded(__instance)) return false; // エンドフィールドスタイル: 操作していないキャラはダメージを受けない
             if (PartyBridge.BlockHits) return false; // ほかの Mod (連携攻撃など) が止めている間はダメージを受けない
             if (PartyManager.IsDown(__instance)) return false; // 交代待ちの間はダメージを受けない
             if (__instance.GetCurHp() + change > 0f) return true;

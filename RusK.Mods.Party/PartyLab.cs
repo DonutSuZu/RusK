@@ -51,41 +51,6 @@ internal sealed class PartyLabWindow : RuskWindow
         if (gui.Button("状態をログに出す", accent: true)) PartyManager.LogState("手動");
 
         gui.Space(6f);
-        gui.Header("フィールドに置く (エンドフィールド風の試作)", $"{FieldProbe.Fielded.Count} 人");
-        gui.Label("控えを表示したまま隣に置き、動作をさせます。1 秒ごとの様子・敵に当てた回数・攻撃を受けた回数がログに出ます",
-            RuskStyle.TextDim, small: true);
-        if (gui.Selectable("操作中でないキャラのキー入力 (KeyRespond) を止める", FieldProbe.BlockOthersInput))
-            FieldProbe.BlockOthersInput = !FieldProbe.BlockOthersInput;
-        if (gui.Selectable("置いたキャラが動く間だけ「今のプレイヤー」を差し替える", FieldSwap.Enabled))
-            FieldSwap.Enabled = !FieldSwap.Enabled;
-        if (gui.Selectable("置いたキャラをオートで動かす (敵を殴る・ついて歩く)", FieldAi.Enabled))
-            FieldAi.Enabled = !FieldAi.Enabled;
-        if (gui.Selectable("差し替えのとき、セーブの「今のキャラ」(lastCrtId) も差し替える", FieldSwap.SwapCharacterId))
-            FieldSwap.SwapCharacterId = !FieldSwap.SwapCharacterId;
-        if (gui.Selectable("差し替えのとき、「今のプレイヤーの装備」(m_playerEquipCur) も差し替える", FieldSwap.SwapEquip))
-            FieldSwap.SwapEquip = !FieldSwap.SwapEquip;
-        foreach (var m in PartyManager.Members.ToArray())
-        {
-            if (m == null || (cur != null && m.Pointer == cur.Pointer)) continue;
-            bool placed = FieldProbe.IsFielded(m);
-            gui.BeginRow(2.2f, 1.2f, 1.2f, 1.4f, 1.2f, 1.2f);
-            gui.Label(PartyManager.Name(m) + (placed ? " (置いた)" : ""));
-            if (gui.Button(placed ? "しまう" : "置く", accent: !placed))
-            {
-                if (placed) FieldProbe.Remove(m);
-                else FieldProbe.Place(m);
-            }
-            if (gui.Button("攻撃", enabled: placed)) FieldProbe.Act(m, "攻撃");
-            if (gui.Button("特殊攻撃", enabled: placed)) FieldProbe.Act(m, "特殊攻撃");
-            if (gui.Button("追加攻撃", enabled: placed)) FieldProbe.Act(m, "追加攻撃");
-            if (gui.Button("回避", enabled: placed)) FieldProbe.Act(m, "回避");
-        }
-        gui.BeginRow(1f, 1f, 1f);
-        if (gui.Button("全員しまう")) FieldProbe.RemoveAll();
-        if (gui.Button("アニメの速さを 1 に")) FieldProbe.ResetAnimSpeed();
-        if (gui.Button("アニメの再生を再開", accent: true)) FieldProbe.ResumeAnim();
-
-        gui.Space(6f);
         gui.Header("敵の AI (立ち尽くす問題の調査)");
         gui.BeginRow(1f, 1f);
         if (gui.Button("近くの敵の AI の変数をログに出す", accent: true)) EnemyAiRetarget.Dump();

@@ -125,7 +125,8 @@ public sealed class ButtonHudModule : Module
 
     public override void OnUpdate()
     {
-        _fader.Update(PlayerRef.Current != null && FieldState.ShouldShow(_show.Value));
+        // Party のエンドフィールドスタイルでは隠す (Op.2 のスキルボタンが代わりに出る)
+        _fader.Update(PlayerRef.Current != null && FieldState.ShouldShow(_show.Value) && !PartyStyle.HideButtonHud);
 
         if (Time.unscaledTime >= _nextResolve)
         {
@@ -240,7 +241,7 @@ public sealed class ButtonHudModule : Module
 
         // スキルの演出中などはゲームが HUD を消すのでボタン HUD も隠れるが、
         // 追加攻撃の受付中は、追加攻撃のボタンだけは必ず出して光らせる
-        if (_fader.Alpha < 0.99f && _slots.Any(sl => Time.unscaledTime < sl.ReadyUntil) && CanForceShow())
+        if (_fader.Alpha < 0.99f && !PartyStyle.HideButtonHud && _slots.Any(sl => Time.unscaledTime < sl.ReadyUntil) && CanForceShow())
             DrawButtons(player, onlyFollowUp: true);
     }
 

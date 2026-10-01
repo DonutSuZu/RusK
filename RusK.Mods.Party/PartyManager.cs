@@ -391,22 +391,25 @@ internal static class PartyManager
             LastBlockTime = Time.unscaledTime;
             return false;
         }
+        return SwitchByKey(next);
+    }
+
+    /// <summary>切り替えキーと同じ切り替え (攻撃の予兆の直後ならジャスト切り替え: クールタイムを無視してパリィ支援)</summary>
+    public static bool SwitchByKey(PlayerController next)
+    {
         bool just = JustSwitch.IsJustTiming;
-        // エンドフィールド風の試作: 次のキャラがフィールドにいれば、キャラは動かさず操作だけ移す
-        if (FieldAi.Enabled && FieldProbe.IsFielded(next))
-            return SwitchInPlace(next, ignoreCooldown: just && JustSwitch.IgnoreCooldown, just: just);
         return Switch(next, ignoreCooldown: just && JustSwitch.IgnoreCooldown, just: just);
     }
 
     /// <summary>
-    /// その場で切り替え (エンドフィールド風の試作)。キャラはフィールドのその場に残したまま、
-    /// 操作 (ゲームの「今のプレイヤー」)・カメラ・HUD・敵の狙いだけを next に移す。前のキャラはオートになる
+    /// その場で切り替え (エンドフィールドスタイル)。キャラはフィールドのその場に残したまま、
+    /// 操作 (ゲームの「今のプレイヤー」)・カメラ・HUD・敵の狙いだけを next に移す。前のキャラは Op.2 のオートになる
     /// </summary>
-    public static bool SwitchInPlace(PlayerController next, bool ignoreCooldown, bool just = false)
+    public static bool SwitchInPlace(PlayerController next, bool ignoreCooldown, bool just = false, bool force = false)
     {
         var cur = Current;
         if (next == null || cur == null || next.Pointer == cur.Pointer) return false;
-        var blocked = BlockReason(cur, ignoreCooldown);
+        var blocked = force ? null : BlockReason(cur, ignoreCooldown);
         if (blocked != null)
         {
             LastBlockReason = blocked;
@@ -418,7 +421,8 @@ internal static class PartyManager
             RememberObservingEnemies();
             TryDo("ガード解除", () => cur.SetInDefence(false));
             GameUtil.Instance.ChangePlayer(next);
-            FieldProbe.OnControlSwitched(cur, next);
+            try { PartyBridge.ControlSwitched?.Invoke(cur, next); }
+            catch (Exception e) { Log?.Warning($"Party: Op.2 の切り替えの処理でエラー: {e.Message}"); }
             RebindCamera(next);
             RestoreObservingEnemies();
             EnemyAiRetarget.Retarget(next, "その場で切り替え");
@@ -462,6 +466,10 @@ internal static class PartyManager
     {
         var cur = Current;
         if (next == null || cur == null || next.Pointer == cur.Pointer) return false;
+
+        // エンドフィールドスタイルで、次のキャラがフィールドにいれば、キャラは動かさず操作だけ移す
+        if (PartyBridge.EndfieldActive && next.gameObject.activeInHierarchy)
+            return SwitchInPlace(next, ignoreCooldown, just, force);
 
         var blocked = force ? null : BlockReason(cur, ignoreCooldown);
         if (blocked != null)

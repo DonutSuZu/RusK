@@ -1,0 +1,6 @@
+# 元の文	英語	中国語 (簡体字)
+ワープ	warp	传送
+待機	idle	待机
+切り替え ({0})	Switch ({0})	切换 ({0})
+長押し	Hold	长按
+エンドフィールド風のバトルスタイル。全員がフィールドで戦い、操作していないキャラはオート。Party の BattleStyle で切り替える (Party Mod が必要)	Endfield-style battle. The whole party fights on the field and characters you are not controlling fight automatically. Switch with BattleStyle in Party (requires the Party mod)	终末地风格的战斗。全队在场上战斗, 未操作的角色自动战斗。在 Party 的 BattleStyle 中切换 (需要 Party Mod)

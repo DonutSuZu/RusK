@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace RusK.Mods.Party;
+namespace RusK.Mods.Op2;
 
 /// <summary>
 /// 調査用 (Party Lab、エンドフィールド風の戦闘の試作): フィールドに置いたキャラのオート。
@@ -15,7 +15,7 @@ namespace RusK.Mods.Party;
 /// </summary>
 internal static class FieldAi
 {
-    public static bool Enabled;
+    public static bool Enabled = true;
 
     public static float AttackRange = 2.2f;
     public static float SearchRange = 15f;
@@ -49,13 +49,13 @@ internal static class FieldAi
 
     public static void Tick()
     {
-        if (!Enabled || FieldProbe.Fielded.Count == 0) return;
-        var player = PartyManager.Current;
+        if (!Enabled || Field.Fielded.Count == 0) return;
+        var player = P.Current;
         if (player == null) return;
 
         var target = PickTarget(player);
         int index = 0;
-        foreach (var p in FieldProbe.Fielded.ToArray())
+        foreach (var p in Field.Fielded.ToArray())
         {
             if (p == null || p.Pointer == player.Pointer || !p.gameObject.activeInHierarchy) continue;
             if (!Brains.TryGetValue(p.Pointer, out var b)) Brains[p.Pointer] = b = new Brain();
@@ -65,7 +65,7 @@ internal static class FieldAi
                 if (Time.unscaledTime - b.LastLog > 3f)
                 {
                     b.LastLog = Time.unscaledTime;
-                    PartyManager.Log?.Warning($"Party Lab オート: {PartyManager.Name(p)} でエラー: {e.Message}");
+                    P.Log?.Warning($"Op.2 オート: {P.Name(p)} でエラー: {e.Message}");
                 }
             }
         }
@@ -134,7 +134,7 @@ internal static class FieldAi
             b.Moving = false;
             motion = p.GetCurMotion()?.name ?? "";
             busy = IsBusy(motion);
-            PartyManager.Log?.Info($"Party Lab オート: {PartyManager.Name(p)} のコンボを終わらせた → 動作='{motion}'");
+            P.Log?.Info($"Op.2 オート: {P.Name(p)} のコンボを終わらせた → 動作='{motion}'");
         }
 
         // 遠すぎたら操作キャラの近くへワープ
@@ -222,7 +222,7 @@ internal static class FieldAi
             p.ChangeMotion("Idle", true, 0.15f, default);
         });
         b.Moving = false;
-        PartyManager.Log?.Info($"Party Lab オート: {PartyManager.Name(p)} の '{motion}' が{(ended ? "終わったのに戻らない" : " 8 秒続いた")}ので待機に戻した");
+        P.Log?.Info($"Op.2 オート: {P.Name(p)} の '{motion}' が{(ended ? "終わったのに戻らない" : " 8 秒続いた")}ので待機に戻した");
         return true;
     }
 
@@ -282,7 +282,7 @@ internal static class FieldAi
             return false;
         }
         if (now - b.WatchSince < 2f) return false;
-        PartyManager.Log?.Info($"Party Lab オート: {PartyManager.Name(p)} が 2 秒近づけない (あと {dist:0.0}m、向き {p.transform.forward}) → ワープ");
+        P.Log?.Info($"Op.2 オート: {P.Name(p)} が 2 秒近づけない (あと {dist:0.0}m、向き {p.transform.forward}) → ワープ");
         Teleport(p, goal);
         b.WatchDist = float.MaxValue;
         b.WatchSince = now;
@@ -330,7 +330,7 @@ internal static class FieldAi
         string key = what.Split('(')[0];
         if (key == b.LastAction) return;
         b.LastAction = key;
-        PartyManager.Log?.Info($"Party Lab オート: {PartyManager.Name(p)} → {what} 動作='{p.GetCurMotion()?.name}'");
+        P.Log?.Info($"Op.2 オート: {P.Name(p)} → {what} 動作='{p.GetCurMotion()?.name}'");
     }
 
     private static bool Alive(EnemyController e)

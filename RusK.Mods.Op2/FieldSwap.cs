@@ -4,7 +4,7 @@ using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 
-namespace RusK.Mods.Party;
+namespace RusK.Mods.Op2;
 
 /// <summary>
 /// 調査用 (Party Lab、エンドフィールド風の戦闘の試作): フィールドに置いたキャラの部品が動く間だけ、
@@ -87,9 +87,9 @@ internal static class FieldSwap
     /// <summary>c の持ち主が置いたキャラなら、今のプレイヤーを差し替えて true</summary>
     public static bool Begin(Component c)
     {
-        if (!Enabled || FieldProbe.Fielded.Count == 0) return false;
+        if (!Enabled || Field.Fielded.Count == 0) return false;
         var owner = Owner(c);
-        if (owner == null || !FieldProbe.IsFielded(owner)) return false;
+        if (owner == null || !Field.IsFielded(owner)) return false;
         var util = GameUtil.Instance;
         if (util == null) return false;
         var cur = util.m_curPlayer;
@@ -105,7 +105,7 @@ internal static class FieldSwap
                 if (save != null)
                 {
                     crt = save.lastCrtId;
-                    save.lastCrtId = PartyManager.Id(owner);
+                    save.lastCrtId = P.Id(owner);
                 }
             }
             catch { crt = double.NaN; }

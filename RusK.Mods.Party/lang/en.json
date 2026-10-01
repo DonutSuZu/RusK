@@ -1,4 +1,5 @@
 {
+  "エンドフィールドスタイルには Custom Battle System and Ui for Op.2 が必要です (ゼンゼロのまま動きます)": "The Endfield style requires Custom Battle System and Ui for Op.2 (running in ZZZ style)",
   " ← 操作中のキャラ": " ← current character",
   ")} 動作='{motion}'": ")} 動作='{motion}'",
   "{0} が戦闘不能になりました": "{0} has been knocked out",
@@ -42,6 +43,9 @@
   "パーティ HUD の縦位置 (画面比)": "Party HUD vertical position (fraction of the screen)",
   "パーティ HUD の大きさ": "Party HUD size",
   "仲間の選択画面を開く": "Open the companion selection window",
+  "ゼンゼロ": "ZZZ",
+  "エンドフィールド": "Endfield",
+  "バトルスタイル。ゼンゼロ: 控えは隠れて交代する。エンドフィールド: 全員がフィールドで戦い、操作していないキャラはオート (Custom Battle System and Ui for Op.2 が必要)": "Battle style. ZZZ: reserves stay hidden and swap in. Endfield: the whole party fights on the field and characters you are not controlling fight automatically (requires Custom Battle System and Ui for Op.2)",
   "開発者向け: Party Lab (調査用のウィンドウ) をメニューに出す。ゲームの再起動で反映": "Developer: show Party Lab (the research window) in the menu. Takes effect after restarting the game",
   "閉じる": "Close",
   "戦闘中は編成を変更できません。拠点に戻ると変更できます。": "You can't change the party during a battle. Return to the base to change it.",

@@ -2,15 +2,16 @@
   <Import Project="..\RusK.props" />
 
   <PropertyGroup>
-    <AssemblyName>RuskChain</AssemblyName>
-    <RootNamespace>RusK.Mods.Chain</RootNamespace>
-    <Version>1.0.1</Version>
+    <!-- RuskParty.dll の後に読み込まれる名前 (読み込み順に頼らない作りだが、念のため) -->
+    <AssemblyName>RuskPartyOp2</AssemblyName>
+    <RootNamespace>RusK.Mods.Op2</RootNamespace>
+    <Version>1.0.0</Version>
     <DeployDir>$(RuskGameDir)\mods</DeployDir>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
-    <!-- 出てくるキャラを敵の前に置く (CharacterController) -->
+    <!-- キャラを地面に置く (Raycast)・走らせる (CharacterController) -->
     <Reference Include="$(InteropDir)\UnityEngine.PhysicsModule.dll" Private="false" />
   </ItemGroup>
 

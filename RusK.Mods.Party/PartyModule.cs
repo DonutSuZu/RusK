@@ -11,7 +11,7 @@ namespace RusK.Mods.Party;
 /// アクティブ3人 (ZZZ 風のキャラ切り替え)。
 /// 選んだ仲間 2 人を戦闘ステージで控えに用意し、「次へ」「前へ」のキーで切り替える。
 /// </summary>
-[RuskMod("party", "Party", "1.3.0",
+[RuskMod("party", "Party", "1.4.0",
     Author = "you",
     GameVersion = "0.0.1876",
     Description = "アクティブ3人。仲間を選んで、戦闘中にキーでキャラを切り替える")]
@@ -42,14 +42,6 @@ public sealed class PartyMod : RuskMod
         if (party.DevTools)
         {
             Context.RegisterModule(new PartyLabModule(Context));
-            // エンドフィールド風の戦闘の試作 (控えをフィールドに置く) 用
-            Context.Harmony.PatchAll(typeof(FieldProbeKeyPatch));
-            Context.Harmony.PatchAll(typeof(FieldProbeEnemyHitPatch));
-            Context.Harmony.PatchAll(typeof(FieldSwapPatch));
-            Context.Harmony.PatchAll(typeof(FieldSwapSkillUiPatch));
-            Context.Harmony.PatchAll(typeof(FieldProbeBoxMadePatch));
-            Context.Harmony.PatchAll(typeof(FieldProbeBoxTouchPatch));
-            Context.Harmony.PatchAll(typeof(FieldProbeCalcPatch));
             Context.RegisterAction("PartyLabQte", () => QteProbe.Fire(PartyManager.Current, "キー割り当て"), "(調査用) 今のキャラで追加攻撃を撃つ");
             Context.RegisterAction("PartyLabQteSwitch", QteProbe.SwitchAndFire, "(調査用) 次のキャラに切り替えて追加攻撃を撃つ");
         }
@@ -72,6 +64,7 @@ public sealed class PartyModule : Module
     private readonly BoolSetting _justIgnoreCooldown;
     private readonly BoolSetting _shareBuffs;
     private readonly BoolSetting _devTools;
+    private readonly ModeSetting _style;
     private readonly BoolSetting _showHud;
     private readonly FloatSetting _hudX;
     private readonly FloatSetting _hudY;
@@ -103,6 +96,8 @@ public sealed class PartyModule : Module
         _hudY = AddSetting(new FloatSetting("HudY", 0.34f, 0f, 1f, 0.005f, "0.000", "パーティ HUD の縦位置 (画面比)"));
         _hudScale = AddSetting(new FloatSetting("HudScale", 1f, 0.5f, 2f, 0.05f, "0.00", "パーティ HUD の大きさ"));
         AddSetting(new ButtonSetting("SelectMembers", () => select.Visible = true, "仲間の選択画面を開く"));
+        _style = AddSetting(new ModeSetting("BattleStyle", new[] { "ゼンゼロ", "エンドフィールド" }, 0,
+            "バトルスタイル。ゼンゼロ: 控えは隠れて交代する。エンドフィールド: 全員がフィールドで戦い、操作していないキャラはオート (Custom Battle System and Ui for Op.2 が必要)"));
         _devTools = AddSetting(new BoolSetting("DevTools", false,
             "開発者向け: Party Lab (調査用のウィンドウ) をメニューに出す。ゲームの再起動で反映"));
         Enabled = true;
@@ -110,6 +105,9 @@ public sealed class PartyModule : Module
 
     /// <summary>開発者向けの Party Lab を出すか (読み込み時の値で決まる)</summary>
     public bool DevTools => _devTools.Value;
+
+    /// <summary>ほかの Mod 用 (PartyBridge): バトルスタイル (0: ゼンゼロ、1: エンドフィールド)</summary>
+    internal static int StyleValue;
 
     /// <summary>ほかの Mod 用 (PartyBridge): 今の「次へ」「前へ」のキー</summary>
     internal static Hotkey NextKeyValue = new(KeyCode.C);
@@ -128,21 +126,17 @@ public sealed class PartyModule : Module
         BuffShare.Enabled = _shareBuffs.Value;
         NextKeyValue = _nextKey.Value;
         PrevKeyValue = _prevKey.Value;
+        StyleValue = _style.Value;
+        EndfieldLink.Tick();
         PartyManager.Tick();
         PartyManager.SyncLeader();
         BuffShare.Tick();
 
         // 開発者向けの試作 (Party Lab で置いたキャラ)。ウィンドウを閉じても動き続けるように、ここで回す
-        if (FieldProbe.Fielded.Count > 0 && !PartyManager.InFight)
+        if (PartyBridge.EndfieldActive)
         {
-            // 戦闘ステージでなくなったら (拠点・ロード中)、置いたキャラはしまう
-            FieldProbe.RemoveAll();
-        }
-        if (FieldProbe.Fielded.Count > 0)
-        {
-            FieldProbe.Tick();
-            FieldAi.Tick();
-            FieldSkillProbe.Tick();
+            try { PartyBridge.EndfieldUpdate?.Invoke(); }
+            catch (Exception e) { EndfieldLink.Fault("毎フレームの処理", e); }
         }
 
         if (_autoSpawn.Value) PartyManager.AutoSpawn();
@@ -155,7 +149,7 @@ public sealed class PartyModule : Module
         }
 
         // HUD のフェード (ロード明けのチラつき防止に、少し待ってから出す)
-        bool visible = _showHud.Value && field && PartyManager.Members.Count >= 2 && !FieldSkillProbe.Active; // エンドフィールド風の試作中は隠す
+        bool visible = _showHud.Value && field && PartyManager.Members.Count >= 2 && !PartyBridge.EndfieldActive; // エンドフィールドスタイルでは Op.2 の HUD を出す
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
         _visibleFor = visible ? _visibleFor + dt : 0f;
         bool show = visible && _visibleFor >= 0.4f;
@@ -164,7 +158,11 @@ public sealed class PartyModule : Module
 
     public override void OnGUI()
     {
-        FieldSkillProbe.DrawHud(); // 開発者向けの試作 (置いたキャラがいるときだけ)
+        if (PartyBridge.EndfieldActive)
+        {
+            try { PartyBridge.EndfieldGui?.Invoke(); }
+            catch (Exception e) { EndfieldLink.Fault("画面の描画", e); }
+        }
         if (_alpha <= 0.001f || !Render.IsRepaint) return;
         var prev = GUI.color;
         GUI.color = new Color(prev.r, prev.g, prev.b, prev.a * _alpha);

@@ -1,0 +1,7 @@
+{
+  "ワープ": "warp",
+  "待機": "idle",
+  "切り替え ({0})": "Switch ({0})",
+  "長押し": "Hold",
+  "エンドフィールド風のバトルスタイル。全員がフィールドで戦い、操作していないキャラはオート。Party の BattleStyle で切り替える (Party Mod が必要)": "Endfield-style battle. The whole party fights on the field and characters you are not controlling fight automatically. Switch with BattleStyle in Party (requires the Party mod)"
+}
