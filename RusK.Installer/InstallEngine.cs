@@ -78,6 +78,16 @@ internal static class InstallEngine
         },
         new Component
         {
+            Id = "op2", Name = "Party Op.2", Asset = "RuskPartyOp2.dll", Requires = "party",
+            Description = "エンドフィールド風のバトルスタイル。3 人全員がフィールドで戦い、操作していないキャラはオート。共有 EP と 1〜3 キーの特殊攻撃・必殺技 (Party が必要)",
+        },
+        new Component
+        {
+            Id = "formation", Name = "Party Formation", Asset = "RuskPartyFormation.dll", Requires = "party",
+            Description = "ゼンゼロ風のカードで仲間とバトルスタイルを選ぶ編成画面 (Party が必要)",
+        },
+        new Component
+        {
             Id = "model", Name = "Custom VRM Loader", Asset = "RuskModel.dll",
             Description = "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)。口パク・表情・揺れ物に対応",
         },
@@ -167,7 +177,7 @@ internal static class InstallEngine
         // 3. Mod (選ばれたものは GitHub のリリースから最新の DLL をダウンロード、選ばれていないものは削除)
         var modsDir = Path.Combine(o.GameDir, "RusK", "mods");
         Directory.CreateDirectory(modsDir);
-        // 前提の Mod (Chain Attack → Party) は自動で足す
+        // 前提の Mod (Chain Attack・Party Op.2・Party Formation → Party) は自動で足す
         foreach (var c in Components.Where(c => c.Requires != null && o.Components.Contains(c.Id)).ToList())
         {
             if (o.Components.Add(c.Requires))

@@ -142,6 +142,12 @@ internal static class Strings
         ["連携攻撃。300 ヒットためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party が必要)"] = (
             "Chain attack. After 300 hits, landing a follow-up attack stops time and chains your companions' follow-up attacks (requires Party)",
             "连携攻击。累计 300 次命中后用追加攻击命中, 时间会停止, 可接上队友的追加攻击 (需要 Party)"),
+        ["エンドフィールド風のバトルスタイル。3 人全員がフィールドで戦い、操作していないキャラはオート。共有 EP と 1〜3 キーの特殊攻撃・必殺技 (Party が必要)"] = (
+            "Endfield-style battle. All three characters fight on the field and the ones you are not controlling fight automatically. Shared EP and special attacks / ultimates on keys 1–3 (requires Party)",
+            "终末地风格的战斗。三人全员在场上战斗, 未操作的角色自动战斗。共享 EP, 用 1〜3 键发动特殊攻击和必杀技 (需要 Party)"),
+        ["ゼンゼロ風のカードで仲間とバトルスタイルを選ぶ編成画面 (Party が必要)"] = (
+            "Party formation screen with ZZZ-style cards to choose companions and the battle style (requires Party)",
+            "用绝区零风格的卡片选择队友和战斗风格的编队画面 (需要 Party)"),
         ["キャラの見た目を VRM にする (RusK\\models に .vrm を置く)。口パク・表情・揺れ物に対応"] = (
             "Turns characters into VRM models (put .vrm files in RusK\\models). Lip sync, expressions and physics",
             "将角色外观替换为 VRM (把 .vrm 放入 RusK\\models)。支持口型、表情和物理摆动"),

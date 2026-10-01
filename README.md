@@ -8,7 +8,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 - TabGUI / ClickGUI (Horion 風)、ArrayList・通知・ウォーターマーク
 - Mod の着脱 (AssemblyLoadContext)、アクショントリガー、Config プロファイル
 - Flex Window (Mod 用のドラッグ・リサイズできるウィンドウ)
-- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Camera View** (視点の切り替え) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
+- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Camera View** (視点の切り替え) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
 - **RusK Check**: ゲームの更新で壊れた Mod を教える診断機能
 
 **ゲーム**: [VED:Recure (Steam)](https://store.steampowered.com/app/3255500/Ved/)
@@ -51,6 +51,8 @@ RusK/
 ├─ RusK.Mods.Camera/    同梱Mod: 視点の切り替え
 ├─ RusK.Mods.Party/     同梱Mod: アクティブ3人 (ほかの Mod 用の入口 PartyBridge)
 ├─ RusK.Mods.Chain/     同梱Mod: 連携攻撃 (Party の PartyBridge をリフレクションで使う)
+├─ RusK.Mods.Op2/       同梱Mod: Party Op.2 (エンドフィールド風のバトルスタイル。Party から呼ばれる)
+├─ RusK.Mods.Formation/ 同梱Mod: Party Formation (ゼンゼロ風の編成画面。PartyBridge 版 3 を使う)
 ├─ RusK.Mods.Model/     同梱Mod: キャラの見た目を VRM に (glb の読み込み・動きの写し・揺れ物・表情)
 ├─ RusK.Mods.ItemModel/ 同梱Mod: 武器・装飾品の見た目を glb に (glb の読み込みは RusK.Mods.Model/Vrm をソースごとリンク)
 ├─ RusK.Mods.Shared/    ゲーム用 Mod で共有するソース (キャラの表示名など。各 csproj に Compile Include でリンク)
@@ -153,6 +155,22 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 - 最初の選択で **X** (SkipKey) を押すか時間切れにすると、連携せずに 1 回分をストックする (最大 1。次に追加攻撃を当てると使う)
 - 追加攻撃は、キャラの動作の一覧から `NormalAttack_QTE_*` を名前で探して直接出す (`PlayerController.QTEAttack()` は今のコンボの続きしか出せない)
 - 追加攻撃のヒットは、操作キャラの動作を毎フレーム見張り「QTE の動作中か、終わって 0.4 秒以内」のヒットで判定する (`EnemyController.GetHit` の戻り値は当てにならない)
+- Party Op.2 のエンドフィールドスタイルのときは止まる
+
+### Party Op.2（エンドフィールド風のバトルスタイル、Party が必要）
+- Party の **BattleStyle** を「エンドフィールド」にすると有効 (Op.2 はメニューに項目を作らない。Party が `EndfieldLink` で `RusK.Mods.Op2.Op2Entry.Attach` を呼ぶ)
+- 戦闘ステージでは 3 人全員をフィールドに置き、操作していないキャラはオート (追いかける・攻撃・ついていく・離れたらワープ)。オートのキャラは無敵
+- **C / Z / F1〜F3** でその場で切り替え (キャラは動かさず、操作・カメラ・HUD・敵の狙いだけ移す)。切り替えパリィも効く
+- **共有 EP**: 1 ヒットで 1、バフなどで増えたゲームのエネルギーも足す。最大はフィールドのキャラのエネルギーの最大値でいちばん大きいもの
+- **1〜3 短押し**: そのキャラが EP 100 で特殊攻撃 (操作は切り替えない)。**長押し (0.4 秒)**: キャラごとの必殺ゲージ (そのキャラのヒットで 1、50 で満タン) で必殺技 (追加攻撃の動作)
+- E キーの特殊攻撃・Q キーの追加攻撃は封印し、ゲームのエネルギーは EP の割合に同期。RusK UI のボタン HUD は隠す
+- 仕組み: キャラのコンポーネントは `GameUtil.m_curPlayer` がそのキャラのときしか動かないので、置いたキャラの `Update` などの間だけ
+  `m_curPlayer`・`GameSave.lastCrtId`・`GameUtil.m_playerEquipCur` (装備。差し替えないとリーダーの装備でダメージを計算する) を差し替える (`FieldSwap.cs`)
+
+### Party Formation（ゼンゼロ風の編成画面、Party が必要）
+- メニューの **Formation > PartyFormation** (アクション `FormationOpen`) で開く。リーダー + 仲間 2 人の斜めのカード (顔・テーマカラー・役割)
+- 仲間のカードをクリックするとキャラの一覧が出て選べる。下のボタンでバトルスタイル (ゼンゼロ / エンドフィールド) を切り替える
+- 編成は Party の `PartyBridge` (版 3: `Companions` / `SetCompanion` / `SetBattleStyle` など) で読み書きする
 
 ### Custom Model（VRM）
 - `RusK\models` に `.vrm` (VRM 0.x / 1.0) を置き、**Visual > CustomModel** でキャラごとに選ぶ

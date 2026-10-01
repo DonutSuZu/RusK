@@ -15,7 +15,7 @@ internal static class Rusk
 {
     public const string Guid = "rusk.core";
     public const string Name = "RusK";
-    public const string Version = "1.1.3";
+    public const string Version = "1.1.4";
 
     private static readonly Queue<Action> Deferred = new();
 
