@@ -27,8 +27,6 @@ public sealed class PartyLabModule : Module
     public override void OnUpdate()
     {
         QteProbe.Tick();
-        FieldProbe.Tick();
-        FieldAi.Tick();
     }
 }
 

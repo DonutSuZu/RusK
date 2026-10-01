@@ -128,6 +128,13 @@ public sealed class PartyModule : Module
         PartyManager.SyncLeader();
         BuffShare.Tick();
 
+        // 開発者向けの試作 (Party Lab で置いたキャラ)。ウィンドウを閉じても動き続けるように、ここで回す
+        if (FieldProbe.Fielded.Count > 0)
+        {
+            FieldProbe.Tick();
+            FieldAi.Tick();
+        }
+
         if (_autoSpawn.Value) PartyManager.AutoSpawn();
 
         bool field = PartyHud.OnField();
