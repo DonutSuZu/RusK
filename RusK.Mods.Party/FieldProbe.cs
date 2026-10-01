@@ -45,8 +45,9 @@ internal static class FieldProbe
             p.transform.SetPositionAndRotation(cur.transform.position + side, cur.transform.rotation);
             p.gameObject.SetActive(true);
             if (!IsFielded(p)) Fielded.Add(p);
-            PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} をフィールドに置いた (表示したまま)");
-            LogMotions(p);
+            PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} をフィールドに置いた (表示したまま) 動作 {MotionCount(p)} 個");
+            _initTarget = p;
+            _initFrame = Time.frameCount + 2; // Awake / Start が走った後に、準備ができたか確かめる
         }
         catch (Exception e) { PartyManager.Log?.Warning($"Party Lab 場: 置けません: {e}"); }
     }
@@ -64,6 +65,59 @@ internal static class FieldProbe
     {
         foreach (var p in Fielded.ToArray()) Remove(p);
         Fielded.Clear();
+    }
+
+    private static PlayerController _initTarget;
+    private static int _initFrame;
+
+    private static int MotionCount(PlayerController p)
+    {
+        try { return p.GetMotionList()?.Count ?? -1; }
+        catch { return -1; }
+    }
+
+    /// <summary>
+    /// 置いたキャラの準備 (動作の一覧・アニメーション) ができていなければやり直す。
+    /// A: 動作の一覧とアニメーションの準備だけ。B: それでもだめなら SetData を丸ごと (HUD を操作キャラに戻す)
+    /// </summary>
+    private static void EnsureInitialized(PlayerController p)
+    {
+        int before = MotionCount(p);
+        if (before > 0)
+        {
+            PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} は準備済み (動作 {before} 個)");
+            LogMotions(p);
+            return;
+        }
+        try
+        {
+            p.InitialMotionList();
+            p.InitialSetting();
+            try { p.GetMotionController()?.InitialData(); } catch (Exception e) { PartyManager.Log?.Info($"Party Lab 場: MotionController.InitialData 失敗: {e.Message}"); }
+        }
+        catch (Exception e) { PartyManager.Log?.Info($"Party Lab 場: 準備 A で例外: {e.Message}"); }
+        int a = MotionCount(p);
+        PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} 準備 A (InitialMotionList / InitialSetting / MotionController.InitialData) → 動作 {before} → {a} 個");
+        if (a <= 0)
+        {
+            try
+            {
+                var mm = PartyManager.FindCharacter(PartyManager.Id(p));
+                if (mm != null) p.SetData(mm.name, mm.id);
+            }
+            catch (Exception e) { PartyManager.Log?.Info($"Party Lab 場: 準備 B で例外: {e.Message}"); }
+            var cur = PartyManager.Current;
+            if (cur != null) try { PartyManager.RefreshHud(cur); } catch { }
+            PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} 準備 B (SetData) → 動作 {MotionCount(p)} 個");
+        }
+        try
+        {
+            var idle = FindMotion(p, "Idle", "Long", "Show", "Talk", "Near");
+            if (idle != null) p.ChangeMotion(idle, true, 0.1f, default);
+            PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} を待機 '{idle}' に → 今の動作 '{p.GetCurMotion()?.name}'");
+        }
+        catch (Exception e) { PartyManager.Log?.Info($"Party Lab 場: 待機にできません: {e.Message}"); }
+        LogMotions(p);
     }
 
     /// <summary>名前に keyword を含む動作のうち、いちばん短い名前のもの (除外語を含むものは除く)</summary>
@@ -149,6 +203,12 @@ internal static class FieldProbe
     public static void Tick()
     {
         Fielded.RemoveAll(f => f == null);
+        if (_initTarget != null && Time.frameCount >= _initFrame)
+        {
+            var t = _initTarget;
+            _initTarget = null;
+            EnsureInitialized(t);
+        }
         if (Fielded.Count == 0 || Time.unscaledTime < _nextReport) return;
         _nextReport = Time.unscaledTime + 1f;
         var sb = new StringBuilder("Party Lab 場: 様子");

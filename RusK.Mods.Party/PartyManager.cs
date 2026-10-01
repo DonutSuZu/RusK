@@ -540,7 +540,7 @@ internal static class PartyManager
     }
 
     /// <summary>HP 周りの HUD (キャラ特有のゲージ・スキル UI・HP・必殺技ゲージ) を作り直す</summary>
-    private static void RefreshHud(PlayerController p)
+    internal static void RefreshHud(PlayerController p)
     {
         var ui = UIController.Instance;
         if (ui == null) return;
