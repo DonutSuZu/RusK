@@ -188,9 +188,9 @@ internal static class FieldSkills
     public static bool Active => Enabled && Field.Fielded.Count > 0;
 
     // 水のゲージ (1 つずつテクスチャを持つので、描く場所ごとに用意する)
-    private static readonly LiquidFill[] SkillFill = { new(), new(), new() };
-    private static readonly LiquidFill[] UltFillTop = { new(), new(), new() };
-    private static readonly LiquidFill[] UltFillParty = { new(), new(), new() };
+    private static readonly LiquidFill[] SkillFill = { new(72), new(72), new(72) };
+    private static readonly LiquidFill[] UltFillTop = { new(40), new(40), new(40) };
+    private static readonly LiquidFill[] UltFillParty = { new(32), new(32), new(32) };
 
     // 表示のフェード (Party の HUD と同じく、出すときは少し待ってから)
     private static float _alpha, _visibleFor;
