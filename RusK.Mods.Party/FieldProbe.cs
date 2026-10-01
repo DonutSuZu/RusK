@@ -32,7 +32,21 @@ internal static class FieldProbe
     private static readonly Dictionary<string, int> HitsBy = new();
     private static readonly Dictionary<string, int> HitsOn = new();
 
-    public static bool IsFielded(PlayerController p) => p != null && Fielded.Any(f => f != null && f.Pointer == p.Pointer);
+    /// <summary>置いたキャラか (Harmony のパッチから毎フレーム何度も呼ばれるので、LINQ を使わず軽く)</summary>
+    public static bool IsFielded(PlayerController p)
+    {
+        if (p == null || Fielded.Count == 0) return false;
+        var ptr = p.Pointer;
+        for (int i = 0; i < Fielded.Count; i++)
+        {
+            var f = Fielded[i];
+            if (f != null && f.Pointer == ptr) return true;
+        }
+        return false;
+    }
+
+    // FPS の計測 (1 秒ごとの様子に出す)
+    private static int _frames;
 
     public static void Place(PlayerController p)
     {
@@ -241,6 +255,7 @@ internal static class FieldProbe
     /// <summary>Party Lab を開いている間、毎フレーム呼ぶ。1 秒ごとに、置いたキャラの様子をログに出す</summary>
     public static void Tick()
     {
+        _frames++;
         Fielded.RemoveAll(f => f == null);
         if (_initTarget != null && Time.frameCount >= _initFrame)
         {
@@ -250,7 +265,8 @@ internal static class FieldProbe
         }
         if (Fielded.Count == 0 || Time.unscaledTime < _nextReport) return;
         _nextReport = Time.unscaledTime + 1f;
-        var sb = new StringBuilder("Party Lab 場: 様子");
+        var sb = new StringBuilder($"Party Lab 場: 様子 FPS {_frames}");
+        _frames = 0;
         foreach (var p in Fielded)
         {
             try

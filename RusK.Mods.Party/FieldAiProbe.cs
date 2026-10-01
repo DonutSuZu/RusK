@@ -66,13 +66,33 @@ internal static class FieldAi
         }
     }
 
+    // 敵の一覧 (FindObjectsOfType は重いので 0.5 秒に 1 回だけ作り直す)
+    private static readonly List<EnemyController> Enemies = new();
+    private static float _enemiesAt = -999f;
+
+    private static List<EnemyController> AliveEnemies()
+    {
+        if (Time.unscaledTime - _enemiesAt >= 0.5f)
+        {
+            _enemiesAt = Time.unscaledTime;
+            Enemies.Clear();
+            try
+            {
+                foreach (var e in Object.FindObjectsOfType<EnemyController>())
+                    if (e != null) Enemies.Add(e);
+            }
+            catch { }
+        }
+        return Enemies;
+    }
+
     private static EnemyController PickTarget(PlayerController player)
     {
         if (Alive(PlayerTarget) && Dist(PlayerTarget.transform.position, player.transform.position) < SearchRange * 1.5f)
             return PlayerTarget;
         EnemyController best = null;
         float bestDist = SearchRange;
-        foreach (var e in Object.FindObjectsOfType<EnemyController>())
+        foreach (var e in AliveEnemies())
         {
             if (!Alive(e)) continue;
             float d = Dist(e.transform.position, player.transform.position);
