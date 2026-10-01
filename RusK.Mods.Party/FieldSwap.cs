@@ -26,6 +26,32 @@ internal static class FieldSwap
     /// m_curPlayer だけ差し替えると置いたキャラがリーダーの装備でダメージを計算していた (180 → 17000)
     /// </summary>
     public static bool SwapCharacterId = true;
+
+    /// <summary>
+    /// 「今のプレイヤーの装備の一覧」(GameUtil.m_playerEquipCur) も差し替えるか。ChangePlayer のときに作り直される一覧で、
+    /// 差し替えないと置いたキャラのダメージ計算にリーダーの装備の能力値が入る (リーダーが強いと置いたキャラも 19000 出た)
+    /// </summary>
+    public static bool SwapEquip = true;
+
+    private static readonly Stack<Il2CppSystem.Collections.Generic.List<EquipSave>> SavedEquip = new();
+    private static readonly Dictionary<IntPtr, (float at, Il2CppSystem.Collections.Generic.List<EquipSave> list)> EquipCache = new();
+
+    /// <summary>キャラの装備の一覧 (2 秒に 1 回だけ作り直す)</summary>
+    private static Il2CppSystem.Collections.Generic.List<EquipSave> EquipOf(PlayerController p)
+    {
+        if (EquipCache.TryGetValue(p.Pointer, out var c) && Time.unscaledTime - c.at < 2f && c.list != null) return c.list;
+        Il2CppSystem.Collections.Generic.List<EquipSave> list = null;
+        try { list = p.GetPlayerEquip(); } catch { }
+        EquipCache[p.Pointer] = (Time.unscaledTime, list);
+        return list;
+    }
+
+    /// <summary>調査用: 今の「装備の一覧」の数</summary>
+    public static int CurrentEquipCount()
+    {
+        try { return GameUtil.Instance?.m_playerEquipCur?.Count ?? -1; }
+        catch { return -2; }
+    }
     private static readonly Dictionary<IntPtr, PlayerController> Owners = new();
     private static readonly Dictionary<IntPtr, (IntPtr owner, PlayerController player)> BoxOwners = new();
 
@@ -85,18 +111,42 @@ internal static class FieldSwap
             catch { crt = double.NaN; }
         }
         SavedCrtId.Push(crt);
+
+        Il2CppSystem.Collections.Generic.List<EquipSave> equip = null;
+        bool equipSwapped = false;
+        if (SwapEquip)
+        {
+            try
+            {
+                var mine = EquipOf(owner);
+                if (mine != null)
+                {
+                    equip = util.m_playerEquipCur;
+                    util.m_playerEquipCur = mine;
+                    equipSwapped = true;
+                }
+            }
+            catch { }
+        }
+        SavedEquip.Push(equipSwapped ? equip : null);
+        EquipSwappedFlags.Push(equipSwapped);
         return true;
     }
+
+    private static readonly Stack<bool> EquipSwappedFlags = new();
 
     public static void End(bool swapped)
     {
         if (!swapped || Saved.Count == 0) return;
         var prev = Saved.Pop();
         double crt = SavedCrtId.Count > 0 ? SavedCrtId.Pop() : double.NaN;
+        var equip = SavedEquip.Count > 0 ? SavedEquip.Pop() : null;
+        bool equipSwapped = EquipSwappedFlags.Count > 0 && EquipSwappedFlags.Pop();
         try
         {
             var util = GameUtil.Instance;
             util.m_curPlayer = prev;
+            if (equipSwapped) util.m_playerEquipCur = equip;
             if (!double.IsNaN(crt) && GameUtil.m_gameSaveCache != null) GameUtil.m_gameSaveCache.lastCrtId = crt;
         }
         catch { }

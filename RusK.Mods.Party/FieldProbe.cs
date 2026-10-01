@@ -43,7 +43,7 @@ internal static class FieldProbe
         try { who = Who(boxCon != null ? boxCon.m_owner : null); }
         catch { who = "?"; }
         string cur = PartyManager.Name(PartyManager.Current);
-        string text = $"{input}→{output}{(critical ? " 会心" : "")} バフ{buffs} 今のプレイヤー={cur}{(swapped ? " (差し替え中)" : "")}";
+        string text = $"{input}→{output}{(critical ? " 会心" : "")} バフ{buffs} 装備{FieldSwap.CurrentEquipCount()} 今のプレイヤー={cur}{(swapped ? " (差し替え中)" : "")}";
         if (!CalcSample.TryGetValue(who, out var prev) || output > ParseOut(prev)) CalcSample[who] = text;
     }
 

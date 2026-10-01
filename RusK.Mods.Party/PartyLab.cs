@@ -62,6 +62,8 @@ internal sealed class PartyLabWindow : RuskWindow
             FieldAi.Enabled = !FieldAi.Enabled;
         if (gui.Selectable("差し替えのとき、セーブの「今のキャラ」(lastCrtId) も差し替える", FieldSwap.SwapCharacterId))
             FieldSwap.SwapCharacterId = !FieldSwap.SwapCharacterId;
+        if (gui.Selectable("差し替えのとき、「今のプレイヤーの装備」(m_playerEquipCur) も差し替える", FieldSwap.SwapEquip))
+            FieldSwap.SwapEquip = !FieldSwap.SwapEquip;
         foreach (var m in PartyManager.Members.ToArray())
         {
             if (m == null || (cur != null && m.Pointer == cur.Pointer)) continue;
