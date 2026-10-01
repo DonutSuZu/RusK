@@ -120,6 +120,13 @@ internal static class FieldProbe
         PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} をしまった");
     }
 
+    /// <summary>その場で切り替えたとき: 新しく操作するキャラは「置いたキャラ」から外し、前のキャラを「置いたキャラ」にする (オートで動く)</summary>
+    public static void OnControlSwitched(PlayerController oldCur, PlayerController next)
+    {
+        Fielded.RemoveAll(f => f == null || f.Pointer == next.Pointer);
+        if (oldCur != null && !IsFielded(oldCur)) Fielded.Add(oldCur);
+    }
+
     public static void RemoveAll()
     {
         foreach (var p in Fielded.ToArray()) Remove(p);

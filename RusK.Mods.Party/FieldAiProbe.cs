@@ -111,6 +111,9 @@ internal static class FieldAi
         string motion = p.GetCurMotion()?.name ?? "";
         bool busy = IsBusy(motion);
 
+        // 操作していたキャラがオートになった直後など、走る動作のままなら「走っている」扱いにする (止められるように)
+        if (!b.Moving && motion.IndexOf("Run", StringComparison.OrdinalIgnoreCase) >= 0) b.Moving = true;
+
         // 特殊攻撃・追加攻撃・回避なども、アニメが終わっても動作のまま止まる (戻すのはキー入力の処理らしい)。
         // アニメが最後まで進んで 0.3 秒たつか、同じ動作のまま 8 秒たったら待機に戻す
         if (ReleaseFinished(p, b, motion))

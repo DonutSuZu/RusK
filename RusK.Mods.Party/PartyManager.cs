@@ -392,7 +392,52 @@ internal static class PartyManager
             return false;
         }
         bool just = JustSwitch.IsJustTiming;
+        // エンドフィールド風の試作: 次のキャラがフィールドにいれば、キャラは動かさず操作だけ移す
+        if (FieldAi.Enabled && FieldProbe.IsFielded(next))
+            return SwitchInPlace(next, ignoreCooldown: just && JustSwitch.IgnoreCooldown, just: just);
         return Switch(next, ignoreCooldown: just && JustSwitch.IgnoreCooldown, just: just);
+    }
+
+    /// <summary>
+    /// その場で切り替え (エンドフィールド風の試作)。キャラはフィールドのその場に残したまま、
+    /// 操作 (ゲームの「今のプレイヤー」)・カメラ・HUD・敵の狙いだけを next に移す。前のキャラはオートになる
+    /// </summary>
+    public static bool SwitchInPlace(PlayerController next, bool ignoreCooldown, bool just = false)
+    {
+        var cur = Current;
+        if (next == null || cur == null || next.Pointer == cur.Pointer) return false;
+        var blocked = BlockReason(cur, ignoreCooldown);
+        if (blocked != null)
+        {
+            LastBlockReason = blocked;
+            LastBlockTime = Time.unscaledTime;
+            return false;
+        }
+        try
+        {
+            RememberObservingEnemies();
+            TryDo("ガード解除", () => cur.SetInDefence(false));
+            GameUtil.Instance.ChangePlayer(next);
+            FieldProbe.OnControlSwitched(cur, next);
+            RebindCamera(next);
+            RestoreObservingEnemies();
+            EnemyAiRetarget.Retarget(next, "その場で切り替え");
+
+            _pending = next;
+            _pendingInPlace = true;
+            _pendingFrame = Time.frameCount + 1;
+            _lastSwitch = Time.unscaledTime;
+            LastSwitchGameTime = Time.time;
+            LastSwitchedIn = next.Pointer;
+            JustSwitch.OnSwitched(next, just);
+            Log?.Info($"Party: その場で切り替え {Name(cur)} → {Name(next)}");
+            return true;
+        }
+        catch (Exception e)
+        {
+            Log?.Error($"Party: その場で切り替えに失敗: {e}");
+            return false;
+        }
     }
 
     /// <summary>今切り替えてはいけない理由 (切り替えてよいなら null)</summary>
@@ -461,6 +506,7 @@ internal static class PartyManager
     // ---- 後処理 (新しいキャラの初期化は表示した次のフレームに走るので、その後に整える)
 
     private static PlayerController _pending;
+    private static bool _pendingInPlace; // その場で切り替え (動作を待機に戻さない)
     private static int _pendingFrame;
 
     /// <summary>毎フレーム呼ぶ</summary>
@@ -475,7 +521,8 @@ internal static class PartyManager
         try
         {
             if (p == null || Current?.Pointer != p.Pointer) return;
-            ResetToIdle(p);
+            if (!_pendingInPlace) ResetToIdle(p);
+            _pendingInPlace = false;
             RebindCamera(p);
             RefreshHud(p);
             RestoreObservingEnemies();
