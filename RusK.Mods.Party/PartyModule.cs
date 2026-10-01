@@ -133,6 +133,7 @@ public sealed class PartyModule : Module
         {
             FieldProbe.Tick();
             FieldAi.Tick();
+            FieldSkillProbe.Tick();
         }
 
         if (_autoSpawn.Value) PartyManager.AutoSpawn();
@@ -154,6 +155,7 @@ public sealed class PartyModule : Module
 
     public override void OnGUI()
     {
+        FieldSkillProbe.DrawHud(); // 開発者向けの試作 (置いたキャラがいるときだけ)
         if (_alpha <= 0.001f || !Render.IsRepaint) return;
         var prev = GUI.color;
         GUI.color = new Color(prev.r, prev.g, prev.b, prev.a * _alpha);

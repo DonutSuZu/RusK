@@ -402,6 +402,7 @@ internal static class FieldProbeEnemyHitPatch
             // 操作キャラが殴った敵を、オートの仲間の狙いにする
             var p = atker != null ? atker.GetComponentInParent<PlayerController>(true) : null;
             if (p != null && p.Pointer == PartyManager.Current?.Pointer && !FieldSwap.InSwap) FieldAi.PlayerTarget = __instance;
+            FieldSkillProbe.OnHit(p); // 必殺技ゲージ (キャラごと、1 ヒット 1P)
         }
         catch { }
     }
