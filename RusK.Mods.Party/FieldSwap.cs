@@ -82,6 +82,15 @@ internal static class FieldSwap
     }
 }
 
+// void SkillController.SkillUpdateCheck(PlayerController playerCon): PlayerController.Update から毎フレーム。
+// 画面のスキル UI は操作キャラの分しか無いので、置いたキャラ (差し替え中) で呼ぶと SkillUIController.SkillUIUpdate が
+// NullReferenceException で落ち、その Update の残りも飛ぶ (毎フレーム 1 万回以上のエラー)。差し替え中は飛ばす
+[HarmonyPatch(typeof(SkillController), nameof(SkillController.SkillUpdateCheck))]
+internal static class FieldSwapSkillUiPatch
+{
+    private static bool Prefix() => !FieldSwap.InSwap;
+}
+
 [HarmonyPatch]
 internal static class FieldSwapPatch
 {
