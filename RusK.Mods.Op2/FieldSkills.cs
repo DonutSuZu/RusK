@@ -46,9 +46,49 @@ internal static class FieldSkills
     /// <summary>パーティの並び (操作中のキャラと置いたキャラ。番号 1〜4)</summary>
     private static List<PlayerController> Slots() => P.Members.Where(m => m != null).Take(SlotCount).ToList();
 
+    /// <summary>1〜3 キーから特殊攻撃を撃っている最中 (このときだけ PlayerController.SpecialAttack を通す)</summary>
+    public static bool Casting;
+
+    private static float _nextSync;
+
+    /// <summary>
+    /// ゲームのエネルギー (HP の下の 3 区切りのゲージ。E キーの特殊攻撃に使う) を、共有 EP の割合に合わせる。
+    /// フィールドの全員が同じ値になるので、1〜3 で撃つときにゲーム側のエネルギー不足で断られない
+    /// </summary>
+    public static void SyncEnergy()
+    {
+        var cur = P.Current;
+        var list = new List<PlayerController>(Field.Fielded);
+        if (cur != null) list.Add(cur);
+        foreach (var p in list)
+        {
+            if (p == null) continue;
+            try
+            {
+                int max = p.GetMaxEnergy();
+                int want = Mathf.RoundToInt(Mathf.Clamp01(Ep / MaxEp) * max);
+                if (p.GetCurEnergy() == want) continue;
+                if (p.Pointer == cur?.Pointer)
+                {
+                    p.SetCurrentEnergy(want);
+                    try { UIController.Instance?.SetEnergyHud(want); } catch { }
+                }
+                else FieldSwap.Run(p, () => p.SetCurrentEnergy(want)); // 操作していないキャラの分で HUD が変わらないように
+            }
+            catch { }
+        }
+    }
+
     public static void Tick()
     {
         if (!Enabled) return;
+
+        // ゲームのエネルギーを共有 EP に合わせる (ゲームが攻撃でエネルギーを足しても EP の値に戻す。0.1 秒ごと)
+        if (Time.unscaledTime >= _nextSync)
+        {
+            _nextSync = Time.unscaledTime + 0.1f;
+            SyncEnergy();
+        }
 
         var slots = Slots();
 
@@ -101,7 +141,9 @@ internal static class FieldSkills
         Do(p, () =>
         {
             FaceTarget(p);
-            p.SpecialAttack();
+            Casting = true; // E キーの特殊攻撃は止めているので、ここからだけ通す
+            try { p.SpecialAttack(); }
+            finally { Casting = false; }
         });
         string after = Motion(p);
         if (after == before || after.IndexOf("SpecialAttack", StringComparison.OrdinalIgnoreCase) < 0)
@@ -117,6 +159,7 @@ internal static class FieldSkills
             return;
         }
         Ep -= EpCost;
+        SyncEnergy();
         Log($"{slot}: {P.Name(p)} の特殊攻撃 '{after}' (EP 残り {Ep:0})");
     }
 

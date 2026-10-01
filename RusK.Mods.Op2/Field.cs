@@ -201,6 +201,24 @@ internal static class Field
     }
 }
 
+// void PlayerController.SpecialAttack() / OnSpecialAttackPressStart() / OnSpecialAttackPressRelease():
+// エンドフィールドスタイルでは E キー (ゲームの特殊攻撃) を止め、1〜3 キー (共有 EP) からだけ撃てるようにする
+[HarmonyPatch]
+internal static class FieldSpecialKeyPatch
+{
+    private static System.Collections.Generic.IEnumerable<System.Reflection.MethodBase> TargetMethods()
+    {
+        foreach (var name in new[] { "SpecialAttack", "OnSpecialAttackPressStart", "OnSpecialAttackPressRelease" })
+        {
+            var m = typeof(PlayerController).GetMethod(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic |
+                                                             System.Reflection.BindingFlags.Instance, null, Type.EmptyTypes, null);
+            if (m != null) yield return m;
+        }
+    }
+
+    private static bool Prefix() => Field.Fielded.Count == 0 || FieldSkills.Casting;
+}
+
 // void PlayerController.KeyRespond(): 毎フレームのキー入力への反応 (移動・走り)。操作していないキャラは反応しない
 [HarmonyPatch(typeof(PlayerController), nameof(PlayerController.KeyRespond))]
 internal static class FieldKeyPatch
