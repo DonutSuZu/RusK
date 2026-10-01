@@ -28,6 +28,7 @@ public sealed class PartyLabModule : Module
     {
         QteProbe.Tick();
         FieldProbe.Tick();
+        FieldAi.Tick();
     }
 }
 
@@ -59,6 +60,8 @@ internal sealed class PartyLabWindow : RuskWindow
             FieldProbe.BlockOthersInput = !FieldProbe.BlockOthersInput;
         if (gui.Selectable("置いたキャラが動く間だけ「今のプレイヤー」を差し替える", FieldSwap.Enabled))
             FieldSwap.Enabled = !FieldSwap.Enabled;
+        if (gui.Selectable("置いたキャラをオートで動かす (敵を殴る・ついて歩く)", FieldAi.Enabled))
+            FieldAi.Enabled = !FieldAi.Enabled;
         foreach (var m in PartyManager.Members.ToArray())
         {
             if (m == null || (cur != null && m.Pointer == cur.Pointer)) continue;

@@ -378,8 +378,15 @@ internal static class FieldProbeKeyPatch
 [HarmonyPatch(typeof(EnemyController), nameof(EnemyController.GetHit))]
 internal static class FieldProbeEnemyHitPatch
 {
-    private static void Postfix(Transform atker)
+    private static void Postfix(EnemyController __instance, Transform atker)
     {
-        try { FieldProbe.OnEnemyHit(atker); } catch { }
+        try
+        {
+            FieldProbe.OnEnemyHit(atker);
+            // 操作キャラが殴った敵を、オートの仲間の狙いにする
+            var p = atker != null ? atker.GetComponentInParent<PlayerController>(true) : null;
+            if (p != null && p.Pointer == PartyManager.Current?.Pointer && !FieldSwap.InSwap) FieldAi.PlayerTarget = __instance;
+        }
+        catch { }
     }
 }
