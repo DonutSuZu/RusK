@@ -16,7 +16,11 @@ namespace RusK.Mods.Op2;
 /// </summary>
 internal static class FieldSkills
 {
-    public const float MaxEp = 300f;
+    /// <summary>
+    /// 共有 EP の最大値。フィールドにいるキャラのエネルギーの最大値のうち、いちばん大きいもの (はじめは 300)。
+    /// バフでキャラのエネルギーの最大値が増えると、共有 EP の最大値も増える (ゲージの長さは変えず、区切りを細かく)
+    /// </summary>
+    public static float MaxEp = 300f;
     public const float EpCost = 100f;
     public const float EpPerHit = 1f;
     public const int SlotCount = 3; // 3 人編成 (1〜3)
@@ -79,6 +83,19 @@ internal static class FieldSkills
         var cur = P.Current;
         var list = new List<PlayerController>(Field.Fielded);
         if (cur != null) list.Add(cur);
+
+        // 共有 EP の最大値 = いちばん大きいキャラのエネルギーの最大値
+        int biggest = 0;
+        foreach (var p in list)
+        {
+            try { if (p != null) biggest = Math.Max(biggest, p.GetMaxEnergy()); } catch { }
+        }
+        if (biggest > 0 && Math.Abs(biggest - MaxEp) > 0.5f)
+        {
+            Log($"共有 EP の最大値 {MaxEp:0} → {biggest}");
+            MaxEp = biggest;
+        }
+        Ep = Mathf.Min(Ep, MaxEp);
         foreach (var p in list)
         {
             if (p == null) continue;
@@ -344,9 +361,10 @@ internal static class FieldSkills
 
         // 共有 EP (3 区切り)
         float ew = total, eh = 8f * s, ey = cy - btn * 0.5f - 86f * s;
-        for (int k = 0; k < 3; k++)
+        int segs = Mathf.Max(1, Mathf.RoundToInt(MaxEp / EpCost)); // 100 ごとに 1 区切り (長さは変えない)
+        for (int k = 0; k < segs; k++)
         {
-            float sx = x + k * (ew + 6f * s) / 3f, sw = ew / 3f - 4f * s;
+            float sx = x + k * (ew + 4f * s) / segs, sw = ew / segs - 4f * s;
             float fill = Mathf.Clamp01((Ep - k * EpCost) / EpCost);
             Render.Rect(sx, ey, sw, eh, new Color(0f, 0f, 0f, 0.6f), 3f * s);
             if (fill > 0f) Render.Rect(sx, ey, sw * fill, eh, fill >= 1f ? Teal : TealDim, 3f * s);
