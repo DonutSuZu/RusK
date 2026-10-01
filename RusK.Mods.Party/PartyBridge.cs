@@ -61,7 +61,7 @@ public static class PartyBridge
     /// <summary>カメラの追従・HUD (HP・スキル UI など) を p に付け替える</summary>
     public static void RebindCamera(PlayerController p) => PartyManager.RebindCamera(p);
 
-    public static void RefreshHud(PlayerController p) => PartyManager.RefreshHud(p);
+    public static void RefreshHud(PlayerController p) => PartyManager.RefreshHud(p, initSkill: true);
 
     /// <summary>Party の「次へ」「前へ」のキー</summary>
     public static Hotkey NextKey => PartyModule.NextKeyValue;

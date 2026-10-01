@@ -168,6 +168,20 @@ internal static class FieldSwap
 internal static class FieldSwapSkillUiPatch
 {
     private static bool Prefix() => !FieldSwap.InSwap;
+
+    // 念のため: スキル UI の更新で例外が起きても握りつぶし、PlayerController.Update の残り (移動など) を続けさせる
+    // (操作キャラのスキル UI が準備されていないと、毎フレーム落ちて一瞬動けなくなっていた)
+    private static Exception Finalizer(Exception __exception)
+    {
+        if (__exception != null && Time.unscaledTime - _warnedAt > 10f)
+        {
+            _warnedAt = Time.unscaledTime;
+            P.Log?.Warning($"Op.2: スキル UI の更新でエラー (無視して続けます): {__exception.Message}");
+        }
+        return null;
+    }
+
+    private static float _warnedAt = -999f;
 }
 
 [HarmonyPatch]

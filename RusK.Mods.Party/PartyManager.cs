@@ -570,10 +570,11 @@ internal static class PartyManager
         try
         {
             if (p == null || Current?.Pointer != p.Pointer) return;
-            if (!_pendingInPlace) ResetToIdle(p);
+            bool inPlace = _pendingInPlace;
+            if (!inPlace) ResetToIdle(p);
             _pendingInPlace = false;
             RebindCamera(p);
-            RefreshHud(p);
+            RefreshHud(p, initSkill: inPlace);
             RestoreObservingEnemies();
             EnemyAiRetarget.Retarget(p, "切り替えの 1 フレーム後");
             if (Verbose) Log?.Info($"Party: 後処理 OK {Name(p)} HP {p.GetCurHp():0}/{p.GetMaxHp():0}");
@@ -639,7 +640,11 @@ internal static class PartyManager
     }
 
     /// <summary>HP 周りの HUD (キャラ特有のゲージ・スキル UI・HP・必殺技ゲージ) を作り直す</summary>
-    internal static void RefreshHud(PlayerController p)
+    /// <param name="initSkill">
+    /// スキル UI をキャラ側でも準備する (PlayerController.InitialSkillUI)。その場で切り替えたときなど、
+    /// キャラの準備 (SetData) が走らない場合は必要 (作っただけのスキル UI を更新しようとして、毎フレーム例外で落ちていた)
+    /// </param>
+    internal static void RefreshHud(PlayerController p, bool initSkill = false)
     {
         var ui = UIController.Instance;
         if (ui == null) return;
@@ -653,6 +658,7 @@ internal static class PartyManager
                 try { ui.AddSkillUI(mm); }
                 catch { p.InitialSkillUI(); }
             });
+            if (initSkill) TryDo("スキル UI の準備", () => p.InitialSkillUI());
         }
         TryDo("HP", () => { ui.SetMaxHpHud(p.GetMaxHp()); ui.SetHpHud(p.GetCurHp()); });
         TryDo("必殺技ゲージ", () => { ui.InitialEnergy(p.GetMaxEnergy()); ui.SetEnergyHud(p.GetCurEnergy()); });
