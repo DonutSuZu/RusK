@@ -35,6 +35,11 @@ internal static class FieldAi
         // 近づけているかの見張り (2 秒で 0.5m も近づけなければワープ)
         public float WatchDist = float.MaxValue;
         public float WatchSince;
+        // 動作の見張り (終わったのに戻らない動作を待機に戻す)
+        public string Motion = "";
+        public float MotionSince;
+        public float EndedSince = -1f;
+        public ActionAnimController Anim;
         public bool Moving;
         public string LastAction = "";
         public float LastLog;
@@ -106,6 +111,14 @@ internal static class FieldAi
         string motion = p.GetCurMotion()?.name ?? "";
         bool busy = IsBusy(motion);
 
+        // 特殊攻撃・追加攻撃・回避なども、アニメが終わっても動作のまま止まる (戻すのはキー入力の処理らしい)。
+        // アニメが最後まで進んで 0.3 秒たつか、同じ動作のまま 8 秒たったら待機に戻す
+        if (ReleaseFinished(p, b, motion))
+        {
+            motion = p.GetCurMotion()?.name ?? "";
+            busy = IsBusy(motion);
+        }
+
         // 殴るのをやめてもコンボの動作のまま止まることがある (コンボを終わらせるのはキー入力の処理らしい)。
         // 最後の Attack から 0.5 秒たってもコンボのままなら、コンボを終わらせて待機に戻す
         if (motion.IndexOf("Combo", StringComparison.OrdinalIgnoreCase) >= 0 && Time.unscaledTime - b.LastAttack > 0.5f)
@@ -173,6 +186,41 @@ internal static class FieldAi
             b.WatchDist = float.MaxValue;
             Act(p, b, "待機");
         }
+    }
+
+    private static bool ReleaseFinished(PlayerController p, Brain b, string motion)
+    {
+        float now = Time.unscaledTime;
+        if (motion != b.Motion)
+        {
+            b.Motion = motion;
+            b.MotionSince = now;
+            b.EndedSince = -1f;
+        }
+        if (!IsBusy(motion) || motion.IndexOf("Combo", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+
+        float norm = 0f;
+        try
+        {
+            b.Anim ??= p.GetComponentInChildren<ActionAnimController>(true);
+            if (b.Anim != null) norm = b.Anim.GetCurAnimNormalizedTime();
+        }
+        catch { }
+        if (norm >= 0.98f) { if (b.EndedSince < 0f) b.EndedSince = now; }
+        else b.EndedSince = -1f;
+
+        bool ended = b.EndedSince >= 0f && now - b.EndedSince > 0.3f;
+        bool tooLong = now - b.MotionSince > 8f;
+        if (!ended && !tooLong) return false;
+
+        FieldSwap.Run(p, () =>
+        {
+            try { p.GetMotionController()?.ResetCombo(); } catch { }
+            p.ChangeMotion("Idle", true, 0.15f, default);
+        });
+        b.Moving = false;
+        PartyManager.Log?.Info($"Party Lab オート: {PartyManager.Name(p)} の '{motion}' が{(ended ? "終わったのに戻らない" : " 8 秒続いた")}ので待機に戻した");
+        return true;
     }
 
     /// <summary>攻撃・回避・被弾などの最中 (移動で上書きしない)</summary>
