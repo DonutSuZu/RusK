@@ -132,6 +132,11 @@ public sealed class PartyModule : Module
         BuffShare.Tick();
 
         // 開発者向けの試作 (Party Lab で置いたキャラ)。ウィンドウを閉じても動き続けるように、ここで回す
+        if (FieldProbe.Fielded.Count > 0 && !PartyManager.InFight)
+        {
+            // 戦闘ステージでなくなったら (拠点・ロード中)、置いたキャラはしまう
+            FieldProbe.RemoveAll();
+        }
         if (FieldProbe.Fielded.Count > 0)
         {
             FieldProbe.Tick();

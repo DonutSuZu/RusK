@@ -466,6 +466,7 @@ internal static class PartyManager
     /// <summary>毎フレーム呼ぶ</summary>
     public static void Tick()
     {
+        TickBaseCleanup();
         TickRescue();
         TickKeepObserving();
         if (_pending == null || Time.frameCount < _pendingFrame) return;
@@ -564,6 +565,63 @@ internal static class PartyManager
     // ---- 敵の「気付き」の引き継ぎ (切り替えで見失った扱いにならないように)
 
     private static readonly List<EnemyController> Observing = new();
+
+    // ---- 拠点に戻ったときの片付け
+    // 戦闘で使った控えが拠点まで残り、次のランで同じキャラが 2 人になったり (リーダーと仲間に同じ赤悠)、
+    // 操作キャラが入れ替わったまま戦闘に行けなくなったりしていた。
+    // 拠点 (SceneType.CharacterChoose) に 1 秒いたら、操作キャラ以外をパーティから外す。
+    // Party が作った控えは消し、ゲームが作った元のキャラは念のため消さずに隠したままにする
+
+    private static float _atBaseFor;
+
+    private static void TickBaseCleanup()
+    {
+        bool atBase = false;
+        try
+        {
+            var util = GameUtil.Instance;
+            atBase = util != null && util.GetCurSceneType() == SceneType.CharacterChoose && !util.GetInLoading();
+        }
+        catch { }
+        if (!atBase)
+        {
+            _atBaseFor = 0f;
+            return;
+        }
+        _atBaseFor += Time.unscaledDeltaTime;
+        if (_atBaseFor < 1f) return;
+
+        var cur = Current;
+        if (cur == null) return;
+        var others = Members.Where(m => m != null && m.Pointer != cur.Pointer).ToList();
+        if (others.Count == 0 && Members.Count <= 1) return;
+
+        int destroyed = 0, hidden = 0;
+        foreach (var m in others)
+        {
+            try
+            {
+                if (KnownIds.ContainsKey(m.Pointer))
+                {
+                    KnownIds.Remove(m.Pointer);
+                    Object.Destroy(m.gameObject);
+                    destroyed++;
+                }
+                else
+                {
+                    m.gameObject.SetActive(false);
+                    hidden++;
+                }
+            }
+            catch { }
+        }
+        Members.Clear();
+        Members.Add(cur);
+        Down.Clear();
+        _pending = null;
+        _rescueTo = null;
+        Log?.Info($"Party: 拠点に戻ったので控えを片付けました (消した {destroyed}、隠した {hidden})。操作キャラ {Name(cur)}");
+    }
 
     /// <summary>切り替えの後、この時刻まで敵の「気付き」を付け直し続ける (Time.unscaledTime)</summary>
     private static float _keepObservingUntil = -999f;
