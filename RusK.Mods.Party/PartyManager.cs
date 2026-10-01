@@ -291,6 +291,47 @@ internal static class PartyManager
         _nextAutoSpawn = 0f;
     }
 
+    /// <summary>仲間の slot 番目 (0 から) を id のキャラにする (Party Formation から)。ほかの枠にいれば入れ替える</summary>
+    public static bool SetCompanion(int slot, double id)
+    {
+        if (InFight)
+        {
+            Ctx?.Notify(L.T("戦闘中は編成を変更できません"), NotifyLevel.Warning);
+            return false;
+        }
+        if (slot < 0 || slot >= MaxCompanions) return false;
+        var leader = Leader;
+        if (leader != null && Same(Id(leader), id)) return false; // リーダーは仲間にできない
+
+        int already = Companions.FindIndex(c => Same(c, id));
+        if (already >= 0 && already == slot) return true;
+        if (slot < Companions.Count)
+        {
+            double old = Companions[slot];
+            if (already >= 0) Companions[already] = old; // 入れ替え
+            else
+            {
+                var m = Members.FirstOrDefault(p => p != null && Same(Id(p), old));
+                if (m != null && m.Pointer != Current?.Pointer) Despawn(m);
+            }
+            Companions[slot] = id;
+        }
+        else
+        {
+            if (already >= 0) Companions.RemoveAt(already);
+            Companions.Add(id);
+        }
+        SaveCompanions();
+        _nextAutoSpawn = 0f;
+        return true;
+    }
+
+    /// <summary>仲間から外す (Party Formation から)</summary>
+    public static void RemoveCompanion(double id)
+    {
+        if (Companions.Any(c => Same(c, id))) ToggleCompanion(id);
+    }
+
     // ------------------------------------------------------------------ 控えの自動作成
 
     private static float _nextAutoSpawn;

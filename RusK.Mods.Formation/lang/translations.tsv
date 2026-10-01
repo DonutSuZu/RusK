@@ -1,0 +1,29 @@
+# 元の文	英語	中国語 (簡体字)
+Party Mod とつないでいます…	Connecting to the Party mod…	正在连接 Party Mod…
+戦闘中は編成を変更できません。拠点に戻ると変更できます。	You can't change the party during a battle. You can change it after returning to the base.	战斗中无法更改编队。回到据点后可以更改。
+仲間のカードをクリックすると、キャラを選べます。リーダーは拠点のキャラ選択で変わります。	Click a companion card to choose a character. The leader is the character you pick at the base.	点击队友卡片即可选择角色。队长是在据点选择的角色。
+閉じる	Close	关闭
+リーダー	Leader	队长
+仲間 {0}	Companion {0}	队友 {0}
+不参加	Not joined	未参加
+戦闘不能	Knocked out	无法战斗
+操作中	Controlling	操作中
+控え	Reserve	后备
+外す	Remove	移除
+仲間を選ぶ	Choose a companion	选择队友
+仲間 {0} を選ぶ	Choose companion {0}	选择队友 {0}
+クリックで決定	Click to choose	点击确定
+キャラ一覧を取得できません (ゲームに入ってから開いてください)	Can't get the character list (open this after entering the game)	无法获取角色列表 (请进入游戏后再打开)
+バトルスタイル	Battle style	战斗风格
+エンドフィールドには Party Op.2 が必要です	Endfield requires Party Op.2	终末地需要 Party Op.2
+ゼンゼロ	ZZZ	绝区零
+エンドフィールド	Endfield	终末地
+控えは隠れて交代する	Reserves stay hidden and swap in	后备角色隐藏并换人
+全員がフィールドで戦い、操作していないキャラはオート	Everyone fights on the field; characters you are not controlling fight automatically	全员在场上战斗, 未操作的角色自动战斗
+Party の編成画面 (ゼンゼロ風のカード)。仲間の選択とバトルスタイルの切り替え (Party Mod が必要)	Party formation screen (ZZZ-style cards). Choose companions and switch the battle style (requires the Party mod)	Party 的编队画面 (绝区零风格的卡片)。选择队友并切换战斗风格 (需要 Party Mod)
+パーティ編成の画面を開く / 閉じる	Open / close the party formation screen	打开 / 关闭编队画面
+パーティ編成の画面を開く (仲間の選択・バトルスタイル)	Open the party formation screen (companions, battle style)	打开编队画面 (队友、战斗风格)
+パーティ編成	Party Formation	编队
+Party Mod が見つかりません	The Party mod wasn't found	找不到 Party Mod
+Party Mod が古いです。更新してください	The Party mod is too old. Please update it	Party Mod 版本过旧, 请更新
+Party Mod とつなげません: {0}	Can't connect to the Party mod: {0}	无法连接 Party Mod: {0}

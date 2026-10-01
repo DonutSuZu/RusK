@@ -16,7 +16,7 @@ namespace RusK.Mods.Party;
 public static class PartyBridge
 {
     /// <summary>入口の版。互換性のない変更をしたら上げる (2: バトルスタイルとエンドフィールド用の入口)</summary>
-    public const int Version = 2;
+    public const int Version = 3; // 3: 編成 (Party Formation 用)
 
     /// <summary>パーティのキャラ (操作中のキャラと控え)</summary>
     public static List<PlayerController> Members()
@@ -95,6 +95,39 @@ public static class PartyBridge
 
     /// <summary>Op.2 が登録する: このキャラは攻撃もダメージも受けないか (フィールドにいる操作していないキャラ)</summary>
     public static Func<PlayerController, bool> Shielded;
+
+    // ------------------------------------------------------------------ 編成 (版 3、Party Formation 用)
+
+    /// <summary>仲間の最大人数 (リーダーを除く)</summary>
+    public static int MaxCompanions() => PartyManager.MaxCompanions;
+
+    /// <summary>仲間に選んだキャラの ID (並び順)</summary>
+    public static List<double> Companions() => PartyManager.Companions.ToList();
+
+    /// <summary>仲間の slot 番目 (0 から) を id のキャラにする。戦闘中・リーダーと同じキャラなら false</summary>
+    public static bool SetCompanion(int slot, double id) => PartyManager.SetCompanion(slot, id);
+
+    public static void RemoveCompanion(double id) => PartyManager.RemoveCompanion(id);
+
+    /// <summary>リーダー (戦闘中は最初に操作していたキャラ、戦闘外は今のキャラ)</summary>
+    public static PlayerController Leader() => PartyManager.Leader;
+
+    /// <summary>選べるキャラ (解放済みで、戦闘用のプレハブがあるもの)</summary>
+    public static List<MotionManager> Characters() => PartyManager.Characters();
+
+    public static string DisplayName(MotionManager mm) => PartyManager.DisplayName(mm);
+
+    /// <summary>キャラの顔アイコン (正方形) とテーマカラー</summary>
+    public static Texture PortraitOf(MotionManager mm) => PartyHud.Portrait(mm);
+
+    public static Color ThemeOf(MotionManager mm) => PartyHud.ThemeColor(mm);
+
+    /// <summary>バトルスタイルを変える (0: ゼンゼロ、1: エンドフィールド)。Party の設定にも保存される</summary>
+    public static void SetBattleStyle(int style) => PartyModule.Instance?.SetStyle(style);
+
+    /// <summary>Party Op.2 (エンドフィールドスタイル) が入っているか</summary>
+    public static bool EndfieldInstalled() =>
+        EndfieldUpdate != null || AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == "RuskPartyOp2");
 
     internal static bool IsShielded(PlayerController p)
     {

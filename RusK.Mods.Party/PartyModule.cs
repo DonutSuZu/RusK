@@ -96,6 +96,7 @@ public sealed class PartyModule : Module
         _hudY = AddSetting(new FloatSetting("HudY", 0.34f, 0f, 1f, 0.005f, "0.000", "パーティ HUD の縦位置 (画面比)"));
         _hudScale = AddSetting(new FloatSetting("HudScale", 1f, 0.5f, 2f, 0.05f, "0.00", "パーティ HUD の大きさ"));
         AddSetting(new ButtonSetting("SelectMembers", () => select.Visible = true, "仲間の選択画面を開く"));
+        Instance = this;
         _style = AddSetting(new ModeSetting("BattleStyle", new[] { "ゼンゼロ", "エンドフィールド" }, 0,
             "バトルスタイル。ゼンゼロ: 控えは隠れて交代する。エンドフィールド: 全員がフィールドで戦い、操作していないキャラはオート (Party Op.2 が必要)"));
         _devTools = AddSetting(new BoolSetting("DevTools", false,
@@ -108,6 +109,14 @@ public sealed class PartyModule : Module
 
     /// <summary>ほかの Mod 用 (PartyBridge): バトルスタイル (0: ゼンゼロ、1: エンドフィールド)</summary>
     internal static int StyleValue;
+    internal static PartyModule Instance;
+
+    /// <summary>バトルスタイルを変える (Party Formation から)。設定にも保存される</summary>
+    internal void SetStyle(int style)
+    {
+        _style.Value = Mathf.Clamp(style, 0, 1);
+        StyleValue = _style.Value;
+    }
 
     /// <summary>ほかの Mod 用 (PartyBridge): 今の「次へ」「前へ」のキー</summary>
     internal static Hotkey NextKeyValue = new(KeyCode.C);
@@ -419,7 +428,7 @@ internal static class PartyHud
 
     private static readonly Dictionary<double, Color> Themes = new();
 
-    private static Color ThemeColor(MotionManager mm)
+    internal static Color ThemeColor(MotionManager mm)
     {
         var fallback = new Color(0.36f, 0.62f, 1f, 1f);
         if (mm == null) return fallback;
