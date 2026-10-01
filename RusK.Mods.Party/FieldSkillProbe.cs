@@ -195,7 +195,7 @@ internal static class FieldSkillProbe
 
     private static void DrawParty(List<PlayerController> slots, PlayerController cur, float s)
     {
-        float x = 40f * s, baseY = Screen.height - 170f * s;
+        float x = 40f * s, baseY = Screen.height - 340f * s; // ゲームの HP 表示 (左下) より上
         float small = 64f * s, big = 78f * s, gap = 18f * s;
 
         // 切り替えの案内
@@ -251,7 +251,7 @@ internal static class FieldSkillProbe
     {
         float btn = 72f * s, gap = 26f * s;
         float total = SlotCount * btn + (SlotCount - 1) * gap;
-        float x = Screen.width - total - 60f * s, cy = Screen.height - 110f * s;
+        float x = Screen.width * 0.69f - total, cy = Screen.height - 110f * s; // RusK UI のボタン HUD (右下、画面幅の 7 割から右) の左隣
 
         // 共有 EP (3 区切り)
         float ew = total, eh = 8f * s, ey = cy - btn * 0.5f - 86f * s;
