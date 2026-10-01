@@ -29,6 +29,7 @@ public sealed class Op2Mod : RuskMod
         Context.Harmony.PatchAll(typeof(FieldSpecialKeyPatch));
         Context.Harmony.PatchAll(typeof(FieldHitScopePatch));
         Context.Harmony.PatchAll(typeof(FieldEnergyGainPatch));
+        Context.Harmony.PatchAll(typeof(FieldQteSealPatch));
     }
 
     protected override void OnUnload()

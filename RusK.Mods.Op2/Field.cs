@@ -219,6 +219,15 @@ internal static class FieldSpecialKeyPatch
     private static bool Prefix() => Field.Fielded.Count == 0 || FieldSkills.Casting;
 }
 
+// void PlayerController.QTEAttack(): Q キーの追加攻撃 (ガード・回避の直後に出る)。
+// エンドフィールドスタイルでは封印する (エンドフィールドには無く、封印するとバランスが取れる。ユーザーの判断)。
+// 1〜3 の長押しの必殺技は追加攻撃の動作を直接出すので、こちらは影響しない
+[HarmonyPatch(typeof(PlayerController), nameof(PlayerController.QTEAttack))]
+internal static class FieldQteSealPatch
+{
+    private static bool Prefix() => Field.Fielded.Count == 0;
+}
+
 // void PlayerController.MakeDamageCallBack(...): 攻撃のヒットの処理。この中のエネルギーの増加は EP に足さない
 [HarmonyPatch(typeof(PlayerController), nameof(PlayerController.MakeDamageCallBack))]
 internal static class FieldHitScopePatch
