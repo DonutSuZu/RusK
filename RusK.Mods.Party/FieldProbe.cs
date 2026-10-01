@@ -31,6 +31,41 @@ internal static class FieldProbe
     private static readonly Dictionary<IntPtr, Vector3> LastPos = new();
     private static readonly Dictionary<string, int> HitsBy = new();
     private static readonly Dictionary<string, int> HitsOn = new();
+    private static readonly Dictionary<string, int> BoxesMade = new();
+    private static readonly Dictionary<string, int> BoxesTouched = new();
+
+    private static string Who(Transform owner)
+    {
+        if (owner == null) return "(持ち主なし)";
+        try
+        {
+            var p = owner.GetComponentInParent<PlayerController>(true);
+            if (p == null) return $"'{owner.name}'";
+            return PartyManager.Name(p) + (IsFielded(p) ? "(置いた)" : "");
+        }
+        catch { return "?"; }
+    }
+
+    /// <summary>攻撃の当たり判定が作られた (持ち主・種類ごとに数える)</summary>
+    public static void OnBoxMade(Transform owner, AttackBoxType type)
+    {
+        if (Fielded.Count == 0 || type == AttackBoxType.Enemy) return;
+        string key = $"{Who(owner)} {type}";
+        BoxesMade[key] = BoxesMade.GetValueOrDefault(key) + 1;
+    }
+
+    /// <summary>攻撃の当たり判定が何かに触れた (結果ごとに数える)</summary>
+    public static void OnBoxTouched(AttackBoxController box, bool result)
+    {
+        if (Fielded.Count == 0 || box == null) return;
+        try
+        {
+            if (box.m_atkType == AttackBoxType.Enemy) return;
+            string key = $"{Who(box.m_owner)} → {(result ? "当たり" : "外れ")}";
+            BoxesTouched[key] = BoxesTouched.GetValueOrDefault(key) + 1;
+        }
+        catch { }
+    }
 
     /// <summary>置いたキャラか (Harmony のパッチから毎フレーム何度も呼ばれるので、LINQ を使わず軽く)</summary>
     public static bool IsFielded(PlayerController p)
@@ -281,8 +316,12 @@ internal static class FieldProbe
         }
         if (HitsBy.Count > 0) sb.Append($" || 敵に当てた: {string.Join(", ", HitsBy.Select(kv => $"{kv.Key} {kv.Value} 回"))}");
         if (HitsOn.Count > 0) sb.Append($" || 敵の攻撃を受けた: {string.Join(", ", HitsOn.Select(kv => $"{kv.Key} {kv.Value} 回"))}");
+        if (BoxesMade.Count > 0) sb.Append($" || 当たり判定を作った: {string.Join(", ", BoxesMade.Select(kv => $"{kv.Key} {kv.Value}"))}");
+        if (BoxesTouched.Count > 0) sb.Append($" || 当たり判定が触れた: {string.Join(", ", BoxesTouched.Select(kv => $"{kv.Key} {kv.Value}"))}");
         HitsBy.Clear();
         HitsOn.Clear();
+        BoxesMade.Clear();
+        BoxesTouched.Clear();
         PartyManager.Log?.Info(sb.ToString());
     }
 
@@ -375,6 +414,25 @@ internal static class FieldProbe
         if (Fielded.Count == 0 || p == null) return;
         string who = PartyManager.Name(p) + (p.Pointer == PartyManager.Current?.Pointer ? "(操作中)" : "(置いたキャラ)");
         HitsOn[who] = HitsOn.GetValueOrDefault(who) + 1;
+    }
+}
+
+// 調査用: 攻撃の当たり判定が作られた / 触れたときを数える (風禾の攻撃が敵に効かない原因を探す)
+[HarmonyPatch(typeof(AttackBoxController), nameof(AttackBoxController.InitialAttackBox))]
+internal static class FieldProbeBoxMadePatch
+{
+    private static void Postfix(Transform owner, AttackBoxType atkType)
+    {
+        try { FieldProbe.OnBoxMade(owner, atkType); } catch { }
+    }
+}
+
+[HarmonyPatch(typeof(AttackBoxController), nameof(AttackBoxController.TryTriggerHit))]
+internal static class FieldProbeBoxTouchPatch
+{
+    private static void Postfix(AttackBoxController __instance, bool __result)
+    {
+        try { FieldProbe.OnBoxTouched(__instance, __result); } catch { }
     }
 }
 
