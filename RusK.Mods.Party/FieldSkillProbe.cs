@@ -30,6 +30,7 @@ internal static class FieldSkillProbe
     private static readonly float[] PressedAt = { -1f, -1f, -1f };
     private static readonly bool[] LongFired = new bool[SlotCount];
     private static readonly KeyCode[] Keys = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3 };
+    private static readonly KeyCode[] SwitchKeys = { KeyCode.F1, KeyCode.F2, KeyCode.F3 };
 
     public static int UltOf(PlayerController p) => p != null && Ult.TryGetValue(p.Pointer, out var v) ? v : 0;
 
@@ -49,6 +50,18 @@ internal static class FieldSkillProbe
         if (!Enabled) return;
 
         var slots = Slots();
+
+        // F1〜F3: その番号のキャラに、その場で操作を移す (C / Z に加えて)
+        for (int i = 0; i < SlotCount && i < slots.Count; i++)
+        {
+            if (!RuskInput.WasPressed(new Hotkey(SwitchKeys[i]))) continue;
+            var target = slots[i];
+            if (target == null || target.Pointer == PartyManager.Current?.Pointer || !FieldProbe.IsFielded(target)) break;
+            bool just = JustSwitch.IsJustTiming;
+            PartyManager.SwitchInPlace(target, ignoreCooldown: just && JustSwitch.IgnoreCooldown, just: just);
+            break;
+        }
+
         for (int i = 0; i < SlotCount; i++)
         {
             var hotkey = new Hotkey(Keys[i]);
@@ -156,28 +169,160 @@ internal static class FieldSkillProbe
 
     private static void Log(string s) => PartyManager.Log?.Info("Party Lab スキル: " + s);
 
-    /// <summary>試作の表示: 画面下に EP と各キャラの必殺技ゲージ</summary>
+    // ------------------------------------------------------------------ HUD
+    // エンドフィールドのレイアウトを参考に、図形とこのゲームの顔アイコンで描く (あちらの画像は使わない)
+    //   左下: パーティの顔 (操作中は大きく縁が光る、上に印)。下に HP、右上に必殺技ゲージの丸。上に「切り替え」の案内
+    //   右下: スキルボタン 1〜3 (丸い顔、下にキー)。EP が足りれば下側が青緑に満ちる。上に必殺技ゲージの輪 (満タンで光る)
+    //   右下の上: 共有 EP (100 ごとの 3 区切り)
+
+    private static readonly Color Teal = new(0.18f, 0.78f, 0.82f, 1f);
+    private static readonly Color TealDim = new(0.18f, 0.78f, 0.82f, 0.25f);
+    private static readonly Color UltCol = new(0.75f, 0.95f, 0.25f, 1f);
+    private static readonly Color Panel = new(0.05f, 0.06f, 0.08f, 0.72f);
+    private static readonly Color Ring = new(1f, 1f, 1f, 0.85f);
+
+    public static bool Active => Enabled && FieldProbe.Fielded.Count > 0;
+
     public static void DrawHud()
     {
-        if (!Enabled || !Render.IsRepaint || FieldProbe.Fielded.Count == 0) return;
+        if (!Active || !Render.IsRepaint) return;
         float s = Mathf.Max(0.6f, Screen.height / 1080f);
-        float w = 520f * s, h = 22f * s;
-        float x = (Screen.width - w) * 0.5f, y = Screen.height - 150f * s;
-        Render.Rect(x, y, w, h, new Color(0f, 0f, 0f, 0.6f), 4f * s);
-        Render.Rect(x, y, w * (Ep / MaxEp), h, new Color(1f, 0.82f, 0.3f, 0.9f), 4f * s);
-        for (int k = 1; k < 3; k++) Render.Rect(x + w * k / 3f, y, 2f * s, h, new Color(0f, 0f, 0f, 0.7f));
-        Render.Text(x, y, w, h, $"EP {Ep:0} / {MaxEp:0}", Color.white, Mathf.RoundToInt(13f * s), TextAnchor.MiddleCenter, true, true);
-
         var slots = Slots();
-        float cw = w / SlotCount;
+        var cur = PartyManager.Current;
+        DrawParty(slots, cur, s);
+        DrawSkills(slots, s);
+    }
+
+    private static void DrawParty(List<PlayerController> slots, PlayerController cur, float s)
+    {
+        float x = 40f * s, baseY = Screen.height - 170f * s;
+        float small = 64f * s, big = 78f * s, gap = 18f * s;
+
+        // 切り替えの案内
+        string keys = $"{PartyBridge.NextKey.Display} / {PartyBridge.PrevKey.Display}  F1〜F{SlotCount}";
+        Render.Rect(x, baseY - 40f * s, 22f * s, 22f * s, Panel, 4f * s);
+        Render.Text(x, baseY - 40f * s, 22f * s, 22f * s, "⇄", Color.white, Mathf.RoundToInt(13f * s), TextAnchor.MiddleCenter, true);
+        Render.Text(x + 28f * s, baseY - 40f * s, 260f * s, 22f * s, $"切り替え ({keys})", Color.white,
+            Mathf.RoundToInt(14f * s), TextAnchor.MiddleLeft, true, true);
+
         for (int i = 0; i < slots.Count; i++)
         {
             var p = slots[i];
-            int ult = UltOf(p);
-            bool ready = ult >= UltMax;
-            string text = $"{i + 1} {PartyManager.Name(p)}  必殺 {ult}/{UltMax}";
-            Render.Text(x + cw * i, y + h + 2f * s, cw, 18f * s, text, ready ? new Color(1f, 0.85f, 0.3f) : Color.white,
-                Mathf.RoundToInt(12f * s), TextAnchor.MiddleCenter, true, true);
+            bool on = cur != null && p.Pointer == cur.Pointer;
+            float size = on ? big : small;
+            float cx = x + size * 0.5f, cy = baseY + big * 0.5f + (on ? 0f : (big - small) * 0.5f);
+            float r = size * 0.5f;
+
+            // 縁 → 顔 (丸)
+            if (on)
+            {
+                RingArc(cx, cy, r + 6f * s, 2.5f * s, 1f, Ring);
+                Render.Text(cx - 10f * s, cy - r - 26f * s, 20f * s, 16f * s, "▼", Ring, Mathf.RoundToInt(12f * s), TextAnchor.MiddleCenter, true);
+            }
+            Render.Rect(cx - r, cy - r, size, size, new Color(0.1f, 0.1f, 0.12f, 0.9f), r);
+            var tex = PartyBridge.Portrait(p);
+            float dim = on ? 1f : 0.8f;
+            if (tex != null)
+                GUI.DrawTexture(new Rect(cx - r, cy - r, size, size), tex, ScaleMode.StretchToFill, true, 0f,
+                    new Color(dim, dim, dim, 1f), 0f, r);
+
+            // 番号
+            Render.Text(cx - r, cy + r - 18f * s, 26f * s, 16f * s, $"F{i + 1}", Color.white, Mathf.RoundToInt(11f * s), TextAnchor.MiddleLeft, true, true);
+
+            // 必殺技ゲージの丸 (右上)
+            float ux = cx + r - 2f * s, uy = cy - r + 8f * s, ur = 9f * s;
+            float ult = UltOf(p) / (float)UltMax;
+            Render.Rect(ux - ur, uy - ur, ur * 2f, ur * 2f, Panel, ur);
+            RingArc(ux, uy, ur, 2.5f * s, ult, ult >= 1f ? UltCol : Teal);
+            if (ult >= 1f) Render.Rect(ux - 4f * s, uy - 4f * s, 8f * s, 8f * s, UltCol, 4f * s);
+
+            // HP
+            float hp = 0f;
+            try { hp = Mathf.Clamp01(p.GetCurHp() / Mathf.Max(1f, p.GetMaxHp())); } catch { }
+            float bw = size, by = cy + r + 8f * s;
+            Render.Rect(cx - r, by, bw, 5f * s, new Color(0f, 0f, 0f, 0.6f), 2f * s);
+            Render.Rect(cx - r, by, bw * hp, 5f * s, hp > 0.3f ? Teal : new Color(0.95f, 0.3f, 0.3f), 2f * s);
+
+            x += size + gap;
+        }
+    }
+
+    private static void DrawSkills(List<PlayerController> slots, float s)
+    {
+        float btn = 72f * s, gap = 26f * s;
+        float total = SlotCount * btn + (SlotCount - 1) * gap;
+        float x = Screen.width - total - 60f * s, cy = Screen.height - 110f * s;
+
+        // 共有 EP (3 区切り)
+        float ew = total, eh = 8f * s, ey = cy - btn * 0.5f - 86f * s;
+        for (int k = 0; k < 3; k++)
+        {
+            float sx = x + k * (ew + 6f * s) / 3f, sw = ew / 3f - 4f * s;
+            float fill = Mathf.Clamp01((Ep - k * EpCost) / EpCost);
+            Render.Rect(sx, ey, sw, eh, new Color(0f, 0f, 0f, 0.6f), 3f * s);
+            if (fill > 0f) Render.Rect(sx, ey, sw * fill, eh, fill >= 1f ? Teal : TealDim, 3f * s);
+        }
+        Render.Text(x, ey - 20f * s, ew, 18f * s, $"EP {Ep:0} / {MaxEp:0}", Color.white, Mathf.RoundToInt(12f * s), TextAnchor.MiddleRight, true, true);
+
+        bool epReady = Ep >= EpCost;
+        for (int i = 0; i < SlotCount; i++)
+        {
+            float cx = x + btn * 0.5f + i * (btn + gap);
+            float r = btn * 0.5f;
+            var p = i < slots.Count ? slots[i] : null;
+
+            // 必殺技ゲージの輪 (ボタンの上)
+            float ur = 13f * s, uy = cy - r - 30f * s;
+            float ult = p == null ? 0f : UltOf(p) / (float)UltMax;
+            Render.Rect(cx - ur, uy - ur, ur * 2f, ur * 2f, Panel, ur);
+            RingArc(cx, uy, ur, 3f * s, ult, ult >= 1f ? UltCol : Teal);
+            if (ult >= 1f)
+            {
+                Render.Rect(cx - ur + 4f * s, uy - ur + 4f * s, ur * 2f - 8f * s, ur * 2f - 8f * s, UltCol, ur);
+                Render.Text(cx - 40f * s, uy - ur - 18f * s, 80f * s, 16f * s, "長押し", UltCol, Mathf.RoundToInt(11f * s), TextAnchor.MiddleCenter, true, true);
+            }
+
+            // ボタン: 暗い丸 → 顔 → EP が足りれば下側が青緑
+            Render.Rect(cx - r - 3f * s, cy - r - 3f * s, btn + 6f * s, btn + 6f * s, new Color(1f, 1f, 1f, 0.25f), r + 3f * s);
+            Render.Rect(cx - r, cy - r, btn, btn, new Color(0.08f, 0.09f, 0.11f, 0.92f), r);
+            var tex = p == null ? null : PartyBridge.Portrait(p);
+            if (tex != null)
+            {
+                float dim = epReady ? 1f : 0.45f;
+                GUI.DrawTexture(new Rect(cx - r, cy - r, btn, btn), tex, ScaleMode.StretchToFill, true, 0f, new Color(dim, dim, dim, 1f), 0f, r);
+            }
+            if (epReady)
+            {
+                // 下 3 割を青緑に (丸の下側を細い横帯で塗る)
+                int bands = 10;
+                for (int k = 0; k < bands; k++)
+                {
+                    float yy = cy + r * 0.35f + k * (r * 0.65f / bands);
+                    float dy = yy + r * 0.65f / bands * 0.5f - cy;
+                    float half = Mathf.Sqrt(Mathf.Max(0f, r * r - dy * dy));
+                    Render.Rect(cx - half, yy, half * 2f, r * 0.65f / bands + 0.5f, new Color(Teal.r, Teal.g, Teal.b, 0.85f));
+                }
+            }
+
+            // キー
+            float kw = 22f * s, kh = 20f * s;
+            Render.Rect(cx - kw * 0.5f, cy + r + 10f * s, kw, kh, Panel, 3f * s);
+            Render.Text(cx - kw * 0.5f, cy + r + 10f * s, kw, kh, (i + 1).ToString(), Color.white, Mathf.RoundToInt(13f * s), TextAnchor.MiddleCenter, true);
+        }
+    }
+
+    /// <summary>円弧 (上から時計回りに fraction の割合)。小さな丸を並べて描く</summary>
+    private static void RingArc(float cx, float cy, float radius, float thickness, float fraction, Color color)
+    {
+        fraction = Mathf.Clamp01(fraction);
+        if (fraction <= 0f) return;
+        int n = Mathf.Max(12, Mathf.RoundToInt(radius * 1.6f));
+        int count = Mathf.CeilToInt(n * fraction);
+        for (int k = 0; k < count; k++)
+        {
+            float a = (k / (float)n) * Mathf.PI * 2f - Mathf.PI * 0.5f;
+            float px = cx + Mathf.Cos(a) * radius, py = cy + Mathf.Sin(a) * radius;
+            Render.Rect(px - thickness * 0.5f, py - thickness * 0.5f, thickness, thickness, color, thickness * 0.5f);
         }
     }
 }

@@ -155,7 +155,7 @@ public sealed class PartyModule : Module
         }
 
         // HUD のフェード (ロード明けのチラつき防止に、少し待ってから出す)
-        bool visible = _showHud.Value && field && PartyManager.Members.Count >= 2;
+        bool visible = _showHud.Value && field && PartyManager.Members.Count >= 2 && !FieldSkillProbe.Active; // エンドフィールド風の試作中は隠す
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
         _visibleFor = visible ? _visibleFor + dt : 0f;
         bool show = visible && _visibleFor >= 0.4f;
