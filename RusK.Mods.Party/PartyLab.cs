@@ -57,6 +57,8 @@ internal sealed class PartyLabWindow : RuskWindow
             RuskStyle.TextDim, small: true);
         if (gui.Selectable("操作中でないキャラのキー入力 (KeyRespond) を止める", FieldProbe.BlockOthersInput))
             FieldProbe.BlockOthersInput = !FieldProbe.BlockOthersInput;
+        if (gui.Selectable("置いたキャラが動く間だけ「今のプレイヤー」を差し替える", FieldSwap.Enabled))
+            FieldSwap.Enabled = !FieldSwap.Enabled;
         foreach (var m in PartyManager.Members.ToArray())
         {
             if (m == null || (cur != null && m.Pointer == cur.Pointer)) continue;

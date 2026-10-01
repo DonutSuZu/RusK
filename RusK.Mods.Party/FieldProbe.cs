@@ -192,9 +192,13 @@ internal static class FieldProbe
         FaceNearestEnemy(p);
         try
         {
-            if (kind == "攻撃") p.Attack();               // 入力と同じ入り口 (コンボを進める)
-            else if (kind == "特殊攻撃") p.SpecialAttack();
-            else p.ChangeMotion(name, true, 0.05f, default);
+            // 入力と同じ入り口 (コンボを進める)。置いたキャラを「今のプレイヤー」にしている間に呼ぶ
+            FieldSwap.Run(p, () =>
+            {
+                if (kind == "攻撃") p.Attack();
+                else if (kind == "特殊攻撃") p.SpecialAttack();
+                else p.ChangeMotion(name, true, 0.05f, default);
+            });
             PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} に「{kind}」'{name}' をさせた → 今の動作 '{p.GetCurMotion()?.name}'");
         }
         catch (Exception e) { PartyManager.Log?.Warning($"Party Lab 場: 動作をさせられません: {e.Message}"); }
@@ -364,6 +368,7 @@ internal static class FieldProbeKeyPatch
 {
     private static bool Prefix(PlayerController __instance)
     {
+        if (FieldSwap.InSwap) return false; // 置いたキャラを「今のプレイヤー」に差し替えている間は、キー入力に反応しない
         if (!FieldProbe.BlockOthersInput || FieldProbe.Fielded.Count == 0) return true;
         var cur = PartyManager.Current;
         return cur == null || __instance.Pointer == cur.Pointer; // 操作中でないキャラはキーに反応しない
