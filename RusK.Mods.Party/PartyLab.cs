@@ -73,9 +73,10 @@ internal sealed class PartyLabWindow : RuskWindow
             if (gui.Button("追加攻撃", enabled: placed)) FieldProbe.Act(m, "追加攻撃");
             if (gui.Button("回避", enabled: placed)) FieldProbe.Act(m, "回避");
         }
-        gui.BeginRow(1f, 1f);
+        gui.BeginRow(1f, 1f, 1f);
         if (gui.Button("全員しまう")) FieldProbe.RemoveAll();
         if (gui.Button("アニメの速さを 1 に")) FieldProbe.ResetAnimSpeed();
+        if (gui.Button("アニメの再生を再開", accent: true)) FieldProbe.ResumeAnim();
 
         gui.Space(6f);
         gui.Header("敵の AI (立ち尽くす問題の調査)");

@@ -42,7 +42,17 @@ internal static class FieldProbe
         {
             int index = Fielded.Count;
             var side = cur.transform.right * (index % 2 == 0 ? 1.8f : -1.8f) - cur.transform.forward * (1f + index / 2);
-            p.transform.SetPositionAndRotation(cur.transform.position + side, cur.transform.rotation);
+            var pos = cur.transform.position + side;
+            // 地面の高さに合わせる (坂で埋まらないように)
+            // (キャラや敵の当たり判定は除いて、上からいちばん近い地面)
+            float best = float.MaxValue;
+            foreach (var hit in Physics.RaycastAll(pos + Vector3.up * 3f, Vector3.down, 10f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                var col = hit.collider;
+                if (col == null || col.GetComponentInParent<PlayerController>() != null || col.GetComponentInParent<EnemyController>() != null) continue;
+                if (hit.distance < best) { best = hit.distance; pos.y = hit.point.y; }
+            }
+            p.transform.SetPositionAndRotation(pos, cur.transform.rotation);
             p.gameObject.SetActive(true);
             if (!IsFielded(p)) Fielded.Add(p);
             PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} をフィールドに置いた (表示したまま) 動作 {MotionCount(p)} 個");
@@ -268,10 +278,48 @@ internal static class FieldProbe
         if (a == null) return "(アニメ部品なし)";
         try
         {
+            string graph = "?";
+            try
+            {
+                var anim = a.m_anim;
+                var animator = anim?.Animator;
+                graph = $"準備={anim?.IsPlayableInitialized} 再生中={(anim != null && anim.IsPlayableInitialized ? anim.Playable.IsGraphPlaying : false)} " +
+                        $"Animator 有効={animator?.enabled} 速さ={animator?.speed:0.##} カリング={animator?.cullingMode}";
+            }
+            catch (Exception e) { graph = $"(Animancer を読めません: {e.Message})"; }
             return $"[アニメ 有効={a.enabled} 速さ={a.GetAnimSpeed():0.##} 係数={a.m_animSpeedFactor:0.##} 止め={a.m_freezeAnimCnt} " +
-                   $"'{a.GetCurAnimName()}' 進み={a.GetCurAnimNormalizedTime():0.00}]";
+                   $"'{a.GetCurAnimName()}' 進み={a.GetCurAnimNormalizedTime():0.00} {graph}]";
         }
         catch (Exception e) { return $"(アニメを読めません: {e.Message})"; }
+    }
+
+    /// <summary>置いたキャラのアニメの再生を再開する (Animator を有効に、常に動かす、グラフの一時停止を解く)</summary>
+    public static void ResumeAnim()
+    {
+        foreach (var p in Fielded)
+        {
+            var a = Anim(p);
+            if (a == null) continue;
+            try
+            {
+                var anim = a.m_anim;
+                var animator = anim?.Animator;
+                if (animator != null)
+                {
+                    animator.enabled = true;
+                    animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    animator.speed = 1f;
+                }
+                if (anim != null)
+                {
+                    if (!anim.IsPlayableInitialized) anim.InitializePlayable();
+                    anim.Playable.UnpauseGraph();
+                    anim.Playable.Speed = 1f;
+                }
+                PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} のアニメの再生を再開 → {AnimState(p)}");
+            }
+            catch (Exception e) { PartyManager.Log?.Info($"Party Lab 場: 再開できません: {e.Message}"); }
+        }
     }
 
     /// <summary>置いたキャラのアニメの速さを 1 にする (止まっているか確かめる用)</summary>

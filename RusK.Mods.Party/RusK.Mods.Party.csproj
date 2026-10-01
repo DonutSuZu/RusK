@@ -12,6 +12,12 @@
     <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
     <!-- 敵の AI (Behavior Designer) の変数を付け替える -->
     <Reference Include="$(InteropDir)\BehaviorDesigner.Runtime.dll" Private="false" />
+    <!-- Party Lab: フィールドに置いたキャラのアニメ (Animancer) を調べる -->
+    <Reference Include="$(InteropDir)\Animancer.dll" Private="false" />
+    <!-- Animator -->
+    <Reference Include="$(InteropDir)\UnityEngine.AnimationModule.dll" Private="false" />
+    <!-- Party Lab: 置くときに地面の高さに合わせる (Raycast) -->
+    <Reference Include="$(InteropDir)\UnityEngine.PhysicsModule.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>
