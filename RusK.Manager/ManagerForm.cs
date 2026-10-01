@@ -48,6 +48,7 @@ internal sealed class ManagerForm : Form
     private List<ModEntry> _entries = new();
     private ModEntry _selected;
     private bool _busy;
+    private bool _welcomed; // 「はじめに」は 1 回の起動で 1 回だけ
 
     private readonly ListView _list = new();
     private readonly FlowLayoutPanel _banners = new();
@@ -344,6 +345,7 @@ internal sealed class ManagerForm : Form
             _fetching = false;
             SetStatus(releases ? Strings.T("最新の情報を取得しました") : Strings.T("最新の情報を取得できませんでした"));
             Rescan();
+            MaybeWelcome();
         }));
     }
 
@@ -646,6 +648,29 @@ internal sealed class ManagerForm : Form
         });
     }
 
+    /// <summary>RusK が入っていなければ、初回の「はじめに」を出して、選んだ Mod と本体をまとめて入れる</summary>
+    private void MaybeWelcome()
+    {
+        if (_welcomed || _busy || _fetching || _gameDir == null || CoreInstalled != null || CoreLatest == null) return;
+        _welcomed = true;
+        var mods = _entries.Where(e => !e.Installed && e.Latest != null).ToList();
+        using var dialog = new WelcomeDialog(mods, _font, _bold, _title, _small, !GameLocator.HasBepInEx(_gameDir));
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        // 必要な Mod (Party) を先に入れる
+        var selected = dialog.Selected.OrderBy(m => m.Requires.Length).ToList();
+        var core = CoreLatest;
+        Run(Strings.T("RusK を入れています..."), progress =>
+        {
+            InstallEngine.InstallCore(_gameDir, _client, core, SetStatusAsync, progress);
+            for (int i = 0; i < selected.Count; i++)
+            {
+                SetStatusAsync(Strings.T("{0} をダウンロードしています ({1})...", selected[i].Name, $"{i + 1}/{selected.Count}"));
+                ModLibrary.Download(_gameDir, selected[i], _client, progress);
+            }
+            SetStatusAsync(Strings.T("インストールが完了しました。「ゲームを起動」で遊べます"));
+        });
+    }
+
     private void UpdateAll()
     {
         if (!CheckGameDir()) return;
@@ -776,6 +801,7 @@ internal sealed class ManagerForm : Form
         _gameDir = dialog.SelectedPath;
         Settings.GameDir = _gameDir;
         Rescan();
+        MaybeWelcome();
     }
 
     // ------------------------------------------------------------------ DLL の追加

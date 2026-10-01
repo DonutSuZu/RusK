@@ -157,6 +157,19 @@ internal static class Strings
             "{0} has no RusK mod information. Add it anyway?", "{0} 没有 RusK Mod 的信息。仍要添加吗?"),
         ["{0} を追加しました"] = ("Added {0}", "已添加 {0}"),
 
+        // はじめに
+        ["RusK へようこそ"] = ("Welcome to RusK", "欢迎使用 RusK"),
+        ["RusK 本体と、使う Mod をまとめてインストールします。"] = (
+            "RusK and the mods you choose will be installed together.", "将一并安装 RusK 本体和所选的 Mod。"),
+        ["BepInEx (Mod を動かす土台) も一緒に入れます。"] = (
+            "BepInEx (the base that runs mods) will be installed too.", "也会一并安装 BepInEx (运行 Mod 的基础)。"),
+        ["Mod はあとから一覧で入れたり外したりできます。"] = (
+            "You can add or remove mods from the list later.", "之后也可以在列表中添加或移除 Mod。"),
+        ["全部選ぶ / 全部外す"] = ("Select all / none", "全选 / 全不选"),
+        ["あとで"] = ("Later", "稍后"),
+        ["インストールが完了しました。「ゲームを起動」で遊べます"] = (
+            "Installation complete. Press \"Play\" to start", "安装完成。点击\"启动游戏\"即可开始"),
+
         // ダウンロード・展開
         ["BepInEx {0} をダウンロードしています..."] = ("Downloading BepInEx {0}...", "正在下载 BepInEx {0}..."),
         ["BepInEx を展開しています..."] = ("Extracting BepInEx...", "正在解压 BepInEx..."),
