@@ -24,12 +24,13 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 ゲームが更新されたときは、メニューの Mods > Check で動かなくなった Mod を確認できます。
 
 ## インストール (利用者向け)
-1. [Releases](https://github.com/DonutSuZu/RusK/releases) から `RusK-Setup-vX.Y.Z.exe` をダウンロード
-2. 実行して、画面の案内に従う (ゲームフォルダは Steam から自動検出。表示は日本語 / English / 中文)
-   - BepInEx 6 (IL2CPP 版) が入っていなければ、動作確認済みの公式 be.788 をセットアップがダウンロードして一緒に入れる (SHA256 で確認)
-   - セットアップには RusK 本体だけが入っていて、選んだ Mod は GitHub のリリースから最新版をダウンロードする
-   - Mod の DLL だけ欲しいときは、各 Mod のリリース (例: Custom VRM Loader Mod) から落として `RusK\mods` に置く
-3. ゲームを起動して **Insert** キーでメニューを開く
+1. [最新のリリース](https://github.com/DonutSuZu/RusK/releases/latest) から `RusK-Mod-Manager.exe` をダウンロード (好きな場所に置いてよい)
+2. 起動すると、ゲームフォルダを Steam から自動で探し、GitHub から最新の情報を取得する (表示は日本語 / English / 中文)
+   - 「RusK を入れる」で RusK 本体を入れる。BepInEx 6 (IL2CPP 版) が無ければ、動作確認済みの公式 be.788 も一緒に入れる (SHA256 で確認)
+   - 一覧から Mod を選んで「インストール」。必要な Mod (例: Chain Attack → Party) も一緒に入る
+   - 起動するたびに RusK 本体・Mod・Mod Manager 自身の更新を確かめる。「すべて更新」でまとめて更新できる
+   - Mod の DLL をウィンドウにドラッグ＆ドロップすると追加できる。有効 / 無効の切り替え・削除もここで
+3. 「ゲームを起動」(Steam から起動) → **Insert** キーでメニューを開く
 
 ※ 署名していない exe なので、初回は SmartScreen の警告が出ることがある (「詳細情報」→「実行」)
 
@@ -56,7 +57,8 @@ RusK/
 ├─ RusK.Mods.Model/     同梱Mod: キャラの見た目を VRM に (glb の読み込み・動きの写し・揺れ物・表情)
 ├─ RusK.Mods.ItemModel/ 同梱Mod: 武器・装飾品の見た目を glb に (glb の読み込みは RusK.Mods.Model/Vrm をソースごとリンク)
 ├─ RusK.Mods.Shared/    ゲーム用 Mod で共有するソース (キャラの表示名など。各 csproj に Compile Include でリンク)
-├─ RusK.Installer/      配布用セットアップ (RusK-Setup.exe)
+├─ RusK.Manager/        RusK Mod Manager (ランチャー。本体・Mod の導入と更新、ゲームの起動)
+├─ catalog.json         公開中の Mod の一覧とお知らせ (Mod Manager が main から取得する)
 ├─ RusK.sln
 └─ build.bat            全体をビルドしてゲームへ配置
 
@@ -67,25 +69,30 @@ RusK/
   RusK/data/<modid>/      各Modの作業フォルダ
 ```
 
-## 配布用セットアップ (RusK-Setup.exe) を作る
-`release.bat` をダブルクリック → `dist\RusK-Setup-vX.Y.Z.exe` ができる（これ 1 つを配布すればよい）。
-- `RusK.Installer` は .NET Framework 4.8 の WinForms アプリ（Windows 10/11 は追加インストール不要）
-- ビルド時に RusK 本体と同梱 Mod を payload.zip にまとめて exe に埋め込む
-- 利用者向けの説明は `RusK.Installer\Docs\README.txt`（インストール先の `RusK\README.txt` になる）
-- BepInEx は同梱しない（未導入の人には公式ページへのリンクと、zip を選んで展開する機能を出す）
+## RusK Mod Manager (ランチャー) と配布物を作る
+`release.bat` をダブルクリック → `dist\RusK-Mod-Manager.exe` (配る exe) と `dist\RusK-Core.zip` (本体) ができる。
+- `RusK.Manager` は .NET Framework 4.8 の WinForms アプリ（Windows 10/11 は追加インストール不要）
+- 起動するたびに `catalog.json` (main ブランチ) と GitHub のリリースの一覧を取得して、本体・Mod・Mod Manager 自身の更新を確かめる。
+  取得できないときは exe に埋め込んだビルド時の `catalog.json` を使う
+- Mod の情報 (名前・版・説明・動作確認したゲーム) は、DLL を読み込まずにメタデータから `[RuskMod]` 属性と埋め込みの言語ファイルを読む (`ModInfoReader.cs`)
+- 無効にした Mod は `RusK\mods\disabled\` に移す (RusK は `RusK\mods` の直下の DLL だけを読み込む)
+- Mod Manager 自身の更新: 新しい exe を `.new` に落とし、今の exe を `.old` に名前を変えて入れ替え、新しい方を起動する (次の起動で `.old` を消す)
+- 利用者向けの説明は `RusK.Manager\Docs\README.txt`（`RusK-Core.zip` に入り、ゲームフォルダの `RusK\README.txt` になる）
 
 バージョンを上げるときに変える場所:
-`RusK.Core\Rusk.cs` の `Version` / 各 `.csproj` の `<Version>` / `RusK.Installer\app.manifest` / `Docs\README.txt`
+本体は `RusK.Core\Rusk.cs` の `Version` と `RusK.Core.csproj` の `<Version>`、Mod Manager は `RusK.Manager.csproj` の `<Version>`、各 Mod は `.csproj` の `<Version>` と `[RuskMod]` の版
 
-対応ゲームバージョンが変わったら: `RusK.Installer\InstallEngine.cs` の `SupportedGameVersion` / このファイルと `Docs\README.txt`（各 Mod の `GameVersion` は、その Mod を直したときだけ上げればよい。Check は版の違いだけでは注意を出さない）
+対応ゲームバージョンが変わったら: `catalog.json` の `gameVersion` / このファイルと `Docs\README.txt`（各 Mod の `GameVersion` は、その Mod を直したときだけ上げればよい。Check は版の違いだけでは注意を出さない）
 
-Mod を増やしたら: `RusK.Installer\InstallEngine.cs` の `Components` (DLL の名前) と `RusK.Installer\Strings.cs` (説明の訳)
+Mod を増やしたら / お知らせを出したら: `catalog.json` に足して main に push するだけ (Mod Manager の更新はいらない)。
+DLL のリリースが無い Mod は一覧に出ないので、先に push しても大丈夫
 
 ## リリースの分け方
-- 本体: タグ `vX.Y.Z`「RusK vX.Y.Z」に `RusK-Setup-vX.Y.Z.exe` (セットアップには本体だけが入る)
-- Mod: タグ `<Mod の ID>-vX.Y.Z` (例: `model-v1.2.5`「Custom VRM Loader Mod v1.2.5」) に DLL (例: `RuskModel.dll`)
-- セットアップはリリースを新しい順に見て、Mod ごとにその DLL がある最初のリリースを最新として落とす。
-  Mod だけ更新したいときは、その Mod のリリースを出すだけでよい (本体のリリースを「Latest」のままにするため `--latest=false`)
+- Mod Manager: タグ `manager-vX.Y.Z`「RusK Mod Manager vX.Y.Z」に `RusK-Mod-Manager.exe`。**これを Latest にする** (利用者が落とすのはこれだけ)
+- 本体: タグ `vX.Y.Z`「RusK vX.Y.Z」に `RusK-Core.zip` (`--latest=false`)
+- Mod: タグ `<Mod の ID>-vX.Y.Z` (例: `model-v1.2.5`「Custom VRM Loader Mod v1.2.5」) に DLL (例: `RuskModel.dll`) (`--latest=false`)
+- Mod Manager はリリースを新しい順に見て、ファイルの名前ごとに、それがある最初のリリースを最新とする (版はタグの `-v` の後ろ)。
+  本体や Mod だけ更新したいときは、そのリリースを出すだけでよい
 
 ## 言語ファイル
 - 各プロジェクトの `lang/translations.tsv` (元の文 / 英語 / 中国語) に訳を書き、`python tools/langgen.py <プロジェクト>` で

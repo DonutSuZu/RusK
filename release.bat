@@ -1,5 +1,5 @@
 @echo off
-rem Build a release: RusK core + mods -> payload.zip -> RusK-Setup-vX.exe in dist\
+rem Build a release: RusK Mod Manager (dist\RusK-Mod-Manager.exe) + RusK core (dist\RusK-Core.zip)
 rem (ASCII-only: cmd misparses UTF-8 multibyte text in .bat files)
 setlocal
 chcp 65001 > nul
@@ -15,12 +15,12 @@ if not defined GAMEDIR (
 )
 
 echo GameDir: %GAMEDIR%
-dotnet build "RusK.Installer\RusK.Installer.csproj" -c Release -p:GameDir="%GAMEDIR%"
+dotnet build "RusK.Manager\RusK.Manager.csproj" -c Release -p:GameDir="%GAMEDIR%"
 if errorlevel 1 goto :fail
 
 echo.
-echo [OK] Installer is in dist\
-dir /b dist\*.exe
+echo [OK] Mod Manager and RusK core are in dist\
+dir /b dist\RusK-Mod-Manager.exe dist\RusK-Core.zip
 pause
 exit /b 0
 

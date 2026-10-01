@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "gameVersion": "0.0.1876 (a46bc78)",
+  "news": [
+    {
+      "date": "2026-10-02",
+      "ja": "RusK Mod Manager を公開しました。これからはこのアプリで RusK 本体と Mod を更新できます。",
+      "en": "RusK Mod Manager is out. From now on, you can update RusK and your mods from this app.",
+      "zh": "RusK Mod Manager 已发布。今后可以用这个应用更新 RusK 本体和 Mod。"
+    }
+  ],
+  "core": { "asset": "RusK-Core.zip" },
+  "manager": { "asset": "RusK-Mod-Manager.exe" },
+  "mods": [
+    {
+      "id": "ui", "name": "RusK UI", "asset": "RuskUi.dll",
+      "ja": "ゼンゼロ風ボタン HUD (液体ゲージ・追加攻撃が光る)・攻撃予兆・キー追加",
+      "en": "Zenless Zone Zero–style button HUD (liquid gauge, glowing follow-up), attack warnings, extra keys",
+      "zh": "绝区零风格按键 HUD (液体能量槽、追加攻击发光)、攻击预警、追加按键"
+    },
+    {
+      "id": "extreme", "name": "EXTREME Difficulty", "asset": "RuskExtreme.dll",
+      "ja": "難易度 EXTREME を解放。敵の HP・攻撃力・攻撃頻度・シールドを強化",
+      "en": "Unlocks the EXTREME difficulty. Stronger enemy HP, attack, attack rate and shields",
+      "zh": "解锁 EXTREME 难度。强化敌人的生命值、攻击力、攻击频率和护盾"
+    },
+    {
+      "id": "music", "name": "Music Manager", "asset": "RuskMusic.dll", "folders": ["music", "music/boss"],
+      "ja": "戦闘中の BGM を RusK\\music の曲 (mp3 / ogg / wav) に置き換える",
+      "en": "Replaces the battle music with songs in RusK\\music (mp3 / ogg / wav)",
+      "zh": "将战斗 BGM 替换为 RusK\\music 中的歌曲 (mp3 / ogg / wav)"
+    },
+    {
+      "id": "camera", "name": "Camera View", "asset": "RuskCamera.dll",
+      "ja": "視点の切り替え (近い肩越し / 真後ろ / 一人称 / カスタム)",
+      "en": "Camera views (close over-the-shoulder / behind / first person / custom)",
+      "zh": "切换视角 (近距离越肩 / 正后方 / 第一人称 / 自定义)"
+    },
+    {
+      "id": "party", "name": "Party", "asset": "RuskParty.dll",
+      "ja": "アクティブ3人。仲間 2 人と戦闘中にキーで交代。切り替えパリィ・戦闘不能時の自動交代・パッシブバフの共有",
+      "en": "Three active characters. Switch between you and two companions in battle; switch parries; auto-switch when knocked out; shared passive buffs",
+      "zh": "三人同时上场。战斗中用按键与两名队友切换。切换招架、无法战斗时自动切换、共享被动增益"
+    },
+    {
+      "id": "chain", "name": "Chain Attack", "asset": "RuskChain.dll", "requires": ["party"],
+      "ja": "連携攻撃。300 ヒットためて追加攻撃を当てると時間が止まり、仲間の追加攻撃を繋げる (Party が必要)",
+      "en": "Chain attack. After 300 hits, landing a follow-up attack stops time and chains your companions' follow-up attacks (requires Party)",
+      "zh": "连携攻击。累计 300 次命中后用追加攻击命中, 时间会停止, 可接上队友的追加攻击 (需要 Party)"
+    },
+    {
+      "id": "op2", "name": "Party Op.2", "asset": "RuskPartyOp2.dll", "requires": ["party"],
+      "ja": "エンドフィールド風のバトルスタイル。3 人全員がフィールドで戦い、操作していないキャラはオート。共有 EP と 1〜3 キーの特殊攻撃・必殺技 (Party が必要)",
+      "en": "Endfield-style battle. All three characters fight on the field and the ones you are not controlling fight automatically. Shared EP and special attacks / ultimates on keys 1–3 (requires Party)",
+      "zh": "终末地风格的战斗。三人全员在场上战斗, 未操作的角色自动战斗。共享 EP, 用 1〜3 键发动特殊攻击和必杀技 (需要 Party)"
+    },
+    {
+      "id": "formation", "name": "Party Formation", "asset": "RuskPartyFormation.dll", "requires": ["party"],
+      "ja": "ゼンゼロ風のカードで仲間とバトルスタイルを選ぶ編成画面 (Party が必要)",
+      "en": "Party formation screen with ZZZ-style cards to choose companions and the battle style (requires Party)",
+      "zh": "用绝区零风格的卡片选择队友和战斗风格的编队画面 (需要 Party)"
+    },
+    {
+      "id": "model", "name": "Custom VRM Loader", "asset": "RuskModel.dll", "folders": ["models"],
+      "ja": "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)。口パク・表情・揺れ物に対応",
+      "en": "Turns characters into VRM models (put .vrm files in RusK\\models). Lip sync, expressions and physics",
+      "zh": "将角色外观替换为 VRM (把 .vrm 放入 RusK\\models)。支持口型、表情和物理摆动"
+    },
+    {
+      "id": "itemmodel", "name": "Custom Item Model", "asset": "RuskItemModel.dll", "folders": ["props"],
+      "ja": "武器・装飾品の見た目を glb にする (RusK\\props に .glb を置く)。発光も設定できる",
+      "en": "Replaces weapons and accessories with glb models (put .glb files in RusK\\props). Glow can be set",
+      "zh": "将武器和饰品替换为 glb 模型 (把 .glb 放入 RusK\\props)。可设置发光"
+    }
+  ]
+}

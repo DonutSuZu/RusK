@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 
-namespace RusK.Installer;
+namespace RusK.Manager;
 
 /// <summary>ゲームフォルダの自動検出と、フォルダの状態 (ゲーム・BepInEx・RusK) の判定</summary>
 internal static class GameLocator
@@ -84,6 +84,23 @@ internal static class GameLocator
 
     public static string BepInExVersion(string dir) =>
         FileVersion(Path.Combine(dir, "BepInEx", "core", "BepInEx.Core.dll"));
+
+    /// <summary>ゲームの版 (build_info.txt の buildVersion、例: 0.0.1876)。読めなければ null</summary>
+    public static string GameBuildVersion(string dir)
+    {
+        try
+        {
+            var path = Path.Combine(dir, "build_info.txt");
+            if (!File.Exists(path)) return null;
+            foreach (var line in File.ReadAllLines(path))
+            {
+                var parts = line.Split('=');
+                if (parts.Length == 2 && parts[0].Trim() == "buildVersion") return parts[1].Trim();
+            }
+        }
+        catch { }
+        return null;
+    }
 
     public static string RuskVersion(string dir) =>
         FileVersion(Path.Combine(dir, "BepInEx", "plugins", "RusK", "RusK.Core.dll"));

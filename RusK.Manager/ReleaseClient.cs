@@ -8,7 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web.Script.Serialization;
 
-namespace RusK.Installer;
+namespace RusK.Manager;
 
 /// <summary>リリースに添付されたファイル (Mod の DLL など)</summary>
 internal sealed class ReleaseAsset
@@ -19,6 +19,7 @@ internal sealed class ReleaseAsset
     public long Size;
     public string DownloadUrl; // ブラウザ用の URL (公開リポジトリ)
     public string ApiUrl;      // API の URL (トークンで非公開リポジトリから落とすとき)
+    public string ReleaseUrl;  // リリースのページ
 }
 
 /// <summary>
@@ -41,12 +42,12 @@ internal sealed class ReleaseClient
         ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         _token = Environment.GetEnvironmentVariable("RUSK_GITHUB_TOKEN");
         _http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = true }) { Timeout = TimeSpan.FromMinutes(5) };
-        _http.DefaultRequestHeaders.UserAgent.ParseAdd($"RusK-Setup/{InstallEngine.PayloadVersion}");
+        _http.DefaultRequestHeaders.UserAgent.ParseAdd($"RusK-Mod-Manager/{Program.Version}");
         if (!string.IsNullOrEmpty(_token))
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", _token);
     }
 
-    /// <summary>リリースの一覧を取得して、ファイル名ごとに最新のものを覚える</summary>
+    /// <summary>リリースの一覧を取得する (新しい順)</summary>
     public IReadOnlyList<ReleaseAsset> Fetch()
     {
         if (_assets != null) return _assets;
@@ -65,6 +66,7 @@ internal sealed class ReleaseClient
             if (rel.TryGetValue("draft", out var d) && d is bool draft && draft) continue;
             if (rel.TryGetValue("prerelease", out var p) && p is bool pre && pre) continue;
             string tag = rel.TryGetValue("tag_name", out var t) ? t as string : "";
+            string page = rel.TryGetValue("html_url", out var h) ? h as string : null;
             if (!rel.TryGetValue("assets", out var a) || a is not IEnumerable assets) continue;
             foreach (var ao in assets)
             {
@@ -77,11 +79,21 @@ internal sealed class ReleaseClient
                     Size = asset.TryGetValue("size", out var s) ? Convert.ToInt64(s) : 0,
                     DownloadUrl = asset.TryGetValue("browser_download_url", out var u) ? u as string : null,
                     ApiUrl = asset.TryGetValue("url", out var au) ? au as string : null,
+                    ReleaseUrl = page,
                 });
             }
         }
         _assets = result;
         return _assets;
+    }
+
+    /// <summary>テキストを取得する (catalog.json)。キャッシュされないように時刻を付ける</summary>
+    public string GetText(string url)
+    {
+        var res = _http.GetAsync(url + "?t=" + DateTime.UtcNow.Ticks).GetAwaiter().GetResult();
+        if (!res.IsSuccessStatusCode)
+            throw new InvalidOperationException($"{(int)res.StatusCode} {res.ReasonPhrase}");
+        return res.Content.ReadAsStringAsync().GetAwaiter().GetResult();
     }
 
     /// <summary>そのファイル名がある、いちばん新しいリリースのファイル (無ければ null)</summary>
@@ -135,7 +147,7 @@ internal sealed class ReleaseClient
     {
         ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-        http.DefaultRequestHeaders.UserAgent.ParseAdd($"RusK-Setup/{InstallEngine.PayloadVersion}");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd($"RusK-Mod-Manager/{Program.Version}");
         using var res = http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
         if (!res.IsSuccessStatusCode)
             throw new InvalidOperationException($"{(int)res.StatusCode} {res.ReasonPhrase}");
@@ -174,6 +186,18 @@ internal sealed class ReleaseClient
         int i = tag.LastIndexOf("-v", StringComparison.OrdinalIgnoreCase);
         if (i >= 0) return tag.Substring(i + 2);
         return tag.TrimStart('v', 'V');
+    }
+
+    /// <summary>版を比べる ("1.2.10" > "1.2.9")。読めない版は 0 として比べる</summary>
+    public static int CompareVersions(string a, string b)
+    {
+        int[] Parse(string v) => (v ?? "").Split('+', '-')[0].Split('.')
+            .Select(x => int.TryParse(x, out var n) ? n : 0).Concat(new[] { 0, 0, 0 }).Take(4).ToArray();
+        var x = Parse(a);
+        var y = Parse(b);
+        for (int i = 0; i < 4; i++)
+            if (x[i] != y[i]) return x[i].CompareTo(y[i]);
+        return 0;
     }
 
     public static string FormatSize(long bytes) =>

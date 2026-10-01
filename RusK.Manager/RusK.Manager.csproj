@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    RusK Mod Manager (ランチャー)。
+    .NET Framework 4.8 (Windows 10/11 に標準で入っている) の WinForms アプリなので、利用者は追加インストール不要。
+    RusK 本体・Mod・この Mod Manager 自身は、起動するたびに GitHub のリリースから最新版を確かめてダウンロードする。
+    ビルドすると dist\ に、配る exe (RusK-Mod-Manager.exe) と、本体のリリースに添付する RusK-Core.zip ができる
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>RusK Mod Manager</AssemblyName>
+    <RootNamespace>RusK.Manager</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- icon.ico は ..\icon.png から作ったもの (16～256px) -->
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <!-- Mod Manager の版 (リリースのタグ manager-vX.Y.Z と合わせる。RusK 本体の版とは別) -->
+    <Version>1.0.0</Version>
+    <Product>RusK Mod Manager</Product>
+    <Company>RusK</Company>
+    <Description>RusK Mod Manager</Description>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DistDir>$(MSBuildThisFileDirectory)..\dist\</DistDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- .NET Framework 4.8 の参照アセンブリ (SDK だけでビルドできるように) -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <!-- GitHub からのダウンロード (HttpClient と、JSON の読み取り) -->
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ロゴ -->
+    <EmbeddedResource Include="..\icon.png" LogicalName="icon.png" />
+    <!-- 公開中の Mod の一覧 (オフラインのときに使う。ふだんは main の catalog.json を取得する) -->
+    <EmbeddedResource Include="..\catalog.json" LogicalName="catalog.json" />
+  </ItemGroup>
+
+  <!-- RusK 本体を先にビルドさせる (参照はしない。ゲームへの自動配置もしない) -->
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.Core\RusK.Core.csproj" ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true" AdditionalProperties="DeployToGame=false" />
+  </ItemGroup>
+
+  <!-- RusK 本体をゲームフォルダと同じ並びで集めて RusK-Core.zip にする (本体のリリースに添付する) -->
+  <Target Name="BuildCoreZip" AfterTargets="Build">
+    <PropertyGroup>
+      <_ObjDir>$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(IntermediateOutputPath)))</_ObjDir>
+      <CoreStaging>$(_ObjDir)core_staging\</CoreStaging>
+      <CoreOut>$(MSBuildThisFileDirectory)..\RusK.Core\bin\$(Configuration)\</CoreOut>
+    </PropertyGroup>
+    <ItemGroup>
+      <_Core Include="$(CoreOut)RusK.Core.dll;$(CoreOut)RusK.Core.pdb;$(CoreOut)RusK.API.dll;$(CoreOut)RusK.API.pdb" />
+    </ItemGroup>
+    <Error Condition="!Exists('$(CoreOut)RusK.Core.dll')" Text="RusK.Core.dll が見つかりません: $(CoreOut)" />
+    <RemoveDir Directories="$(CoreStaging)" />
+    <Copy SourceFiles="@(_Core)" DestinationFolder="$(CoreStaging)BepInEx\plugins\RusK" Condition="Exists('%(FullPath)')" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)Docs\README.txt" DestinationFolder="$(CoreStaging)RusK" />
+    <MakeDir Directories="$(DistDir)" />
+    <ZipDirectory SourceDirectory="$(CoreStaging)" DestinationFile="$(DistDir)RusK-Core.zip" Overwrite="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(DistDir)RusK-Mod-Manager.exe" />
+    <Message Importance="high" Text="Mod Manager -&gt; $(DistDir)RusK-Mod-Manager.exe, RusK -&gt; $(DistDir)RusK-Core.zip" />
+  </Target>
+</Project>
