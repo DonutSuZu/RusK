@@ -87,6 +87,7 @@ internal static class PartyManager
     public static void Clear()
     {
         Members.Clear();
+        KnownIds.Clear();
         Down.Clear();
         _pending = null;
         _rescueTo = null;
@@ -351,6 +352,7 @@ internal static class PartyManager
             player.SetData(character.name, character.id);
             go.SetActive(false);
             Members.Add(player);
+            KnownIds[player.Pointer] = character.id;
             string hp = FillHpIfEmpty(player, character);
             Log?.Info($"Party: {character.name} を控えに作成 ({sw.ElapsedMilliseconds}ms) {hp}");
             return player;
@@ -624,8 +626,16 @@ internal static class PartyManager
 
     // ------------------------------------------------------------------ ユーティリティ
 
+    /// <summary>
+    /// 控えに作ったキャラの ID (作った時点で覚える)。作った直後のキャラは GetPlayerId がまだ正しい ID を返さず、
+    /// 「まだいない」と判断して同じキャラをもう 1 体作ってしまっていた
+    /// </summary>
+    private static readonly Dictionary<IntPtr, double> KnownIds = new();
+
     public static double Id(PlayerController p)
     {
+        if (p == null) return -1;
+        if (KnownIds.TryGetValue(p.Pointer, out var known)) return known;
         try { return p.GetPlayerId(); }
         catch { return -1; }
     }
