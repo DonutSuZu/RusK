@@ -219,6 +219,25 @@ internal static class FieldSpecialKeyPatch
     private static bool Prefix() => Field.Fielded.Count == 0 || FieldSkills.Casting;
 }
 
+// void PlayerController.MakeDamageCallBack(...): 攻撃のヒットの処理。この中のエネルギーの増加は EP に足さない
+[HarmonyPatch(typeof(PlayerController), nameof(PlayerController.MakeDamageCallBack))]
+internal static class FieldHitScopePatch
+{
+    private static void Prefix() => FieldSkills.InHit++;
+    private static void Finalizer() => FieldSkills.InHit = Math.Max(0, FieldSkills.InHit - 1);
+}
+
+// void PlayerController.EnergyChange(int changeEng): ゲームがエネルギーを増減する入り口 (バフ・装備・攻撃のヒットなど)
+[HarmonyPatch(typeof(PlayerController), nameof(PlayerController.EnergyChange))]
+internal static class FieldEnergyGainPatch
+{
+    private static void Prefix(PlayerController __instance, int changeEng)
+    {
+        if (Field.Fielded.Count == 0) return;
+        try { FieldSkills.OnEnergyGain(__instance, changeEng); } catch { }
+    }
+}
+
 // void PlayerController.KeyRespond(): 毎フレームのキー入力への反応 (移動・走り)。操作していないキャラは反応しない
 [HarmonyPatch(typeof(PlayerController), nameof(PlayerController.KeyRespond))]
 internal static class FieldKeyPatch

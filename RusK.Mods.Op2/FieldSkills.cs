@@ -46,6 +46,25 @@ internal static class FieldSkills
     /// <summary>パーティの並び (操作中のキャラと置いたキャラ。番号 1〜4)</summary>
     private static List<PlayerController> Slots() => P.Members.Where(m => m != null).Take(SlotCount).ToList();
 
+    /// <summary>攻撃のヒットの処理 (PlayerController.MakeDamageCallBack) の中か (その中のエネルギーの増加は EP に足さない)</summary>
+    public static int InHit;
+
+    /// <summary>
+    /// ゲームがエネルギーを増やした (PlayerController.EnergyChange)。バフ・装備の効果などで増えた分は EP に足す
+    /// (ゲームのエネルギーの最大値に対する割合で換算)。攻撃のヒットで増える分は、EP の 1 ヒット +1 と二重にならないよう足さない
+    /// </summary>
+    public static void OnEnergyGain(PlayerController p, int change)
+    {
+        if (change <= 0 || InHit > 0 || p == null) return;
+        int max = 0;
+        try { max = p.GetMaxEnergy(); } catch { }
+        if (max <= 0) return;
+        float add = change * MaxEp / max;
+        float before = Ep;
+        Ep = Mathf.Min(MaxEp, Ep + add);
+        Log($"{P.Name(p)} のエネルギーが増えた (+{change}) → EP {before:0} → {Ep:0}");
+    }
+
     /// <summary>1〜3 キーから特殊攻撃を撃っている最中 (このときだけ PlayerController.SpecialAttack を通す)</summary>
     public static bool Casting;
 
