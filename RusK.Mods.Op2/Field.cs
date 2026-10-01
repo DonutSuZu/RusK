@@ -45,6 +45,7 @@ internal static class Field
         if (!P.InFight)
         {
             if (Fielded.Count > 0) Stop();
+            FieldSkills.UpdateFade();
             return;
         }
 
@@ -71,6 +72,7 @@ internal static class Field
 
         FieldAi.Tick();
         FieldSkills.Tick();
+        FieldSkills.UpdateFade();
     }
 
     /// <summary>スタイルをやめた・戦闘ステージを出た: 操作していないキャラをしまう</summary>

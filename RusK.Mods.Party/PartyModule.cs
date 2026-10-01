@@ -97,7 +97,7 @@ public sealed class PartyModule : Module
         _hudScale = AddSetting(new FloatSetting("HudScale", 1f, 0.5f, 2f, 0.05f, "0.00", "パーティ HUD の大きさ"));
         AddSetting(new ButtonSetting("SelectMembers", () => select.Visible = true, "仲間の選択画面を開く"));
         _style = AddSetting(new ModeSetting("BattleStyle", new[] { "ゼンゼロ", "エンドフィールド" }, 0,
-            "バトルスタイル。ゼンゼロ: 控えは隠れて交代する。エンドフィールド: 全員がフィールドで戦い、操作していないキャラはオート (Custom Battle System and Ui for Op.2 が必要)"));
+            "バトルスタイル。ゼンゼロ: 控えは隠れて交代する。エンドフィールド: 全員がフィールドで戦い、操作していないキャラはオート (Party Op.2 が必要)"));
         _devTools = AddSetting(new BoolSetting("DevTools", false,
             "開発者向け: Party Lab (調査用のウィンドウ) をメニューに出す。ゲームの再起動で反映"));
         Enabled = true;

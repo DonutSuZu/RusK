@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RusK.API;
+using RusK.Mods.Ui;
 using UnityEngine;
 
 namespace RusK.Mods.Op2;
@@ -170,32 +171,60 @@ internal static class FieldSkills
 
     // ------------------------------------------------------------------ HUD
     // エンドフィールドのレイアウトを参考に、図形とこのゲームの顔アイコンで描く (あちらの画像は使わない)
-    //   左下: パーティの顔 (操作中は大きく縁が光る、上に印)。下に HP、右上に必殺技ゲージの丸。上に「切り替え」の案内
-    //   右下: スキルボタン 1〜3 (丸い顔、下にキー)。EP が足りれば下側が青緑に満ちる。上に必殺技ゲージの輪 (満タンで光る)
+    //   左下: パーティの顔 (操作中は大きく白い縁、上に印)。下に HP、右上に必殺技ゲージ。上に「切り替え」の案内
+    //   右下: スキルボタン 1〜3 (丸い顔、下にキー)。EP がたまると下から水がたまる。上に必殺技ゲージ
     //   右下の上: 共有 EP (100 ごとの 3 区切り)
+    // 丸いゲージはすべて、RusK UI のボタン HUD と同じ「水がたまる」見た目 (LiquidFill)
+    // 表示は Party の HUD と同じ条件 (戦闘ステージで、ロード中・ポーズ中・ウィンドウ表示中・HP バーが隠れた演出中でない)
 
     private static readonly Color Teal = new(0.18f, 0.78f, 0.82f, 1f);
+    private static readonly Color TealDeep = new(0.05f, 0.42f, 0.55f, 1f);
     private static readonly Color TealDim = new(0.18f, 0.78f, 0.82f, 0.25f);
     private static readonly Color UltCol = new(0.75f, 0.95f, 0.25f, 1f);
+    private static readonly Color UltDeep = new(0.32f, 0.6f, 0.08f, 1f);
     private static readonly Color Panel = new(0.05f, 0.06f, 0.08f, 0.72f);
-    private static readonly Color Ring = new(1f, 1f, 1f, 0.85f);
+    private static readonly Color Ring = new(1f, 1f, 1f, 0.9f);
 
     public static bool Active => Enabled && Field.Fielded.Count > 0;
 
+    // 水のゲージ (1 つずつテクスチャを持つので、描く場所ごとに用意する)
+    private static readonly LiquidFill[] SkillFill = { new(), new(), new() };
+    private static readonly LiquidFill[] UltFillTop = { new(), new(), new() };
+    private static readonly LiquidFill[] UltFillParty = { new(), new(), new() };
+
+    // 表示のフェード (Party の HUD と同じく、出すときは少し待ってから)
+    private static float _alpha, _visibleFor;
+
+    /// <summary>毎フレーム (Field.Update から): 出してよい場面かでフェードを進める</summary>
+    public static void UpdateFade()
+    {
+        bool visible = Active && P.OnField;
+        float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+        _visibleFor = visible ? _visibleFor + dt : 0f;
+        bool show = visible && _visibleFor >= 0.4f;
+        _alpha = Mathf.MoveTowards(_alpha, show ? 1f : 0f, dt / (show ? 0.3f : 0.12f));
+    }
+
     public static void DrawHud()
     {
-        if (!Active || !Render.IsRepaint) return;
-        float s = Mathf.Max(0.6f, Screen.height / 1080f);
-        var slots = Slots();
-        var cur = P.Current;
-        DrawParty(slots, cur, s);
-        DrawSkills(slots, s);
+        if (_alpha <= 0.001f || !Active || !Render.IsRepaint) return;
+        var prev = GUI.color;
+        GUI.color = new Color(prev.r, prev.g, prev.b, prev.a * _alpha);
+        try
+        {
+            float s = Mathf.Max(0.6f, Screen.height / 1080f);
+            var slots = Slots();
+            DrawParty(slots, P.Current, s);
+            DrawSkills(slots, s);
+        }
+        finally { GUI.color = prev; }
     }
 
     private static void DrawParty(List<PlayerController> slots, PlayerController cur, float s)
     {
         float x = 40f * s, baseY = Screen.height - 340f * s; // ゲームの HP 表示 (左下) より上
         float small = 64f * s, big = 78f * s, gap = 18f * s;
+        float t = Time.unscaledTime;
 
         // 切り替えの案内
         string keys = $"{P.NextKey.Display} / {P.PrevKey.Display}  F1〜F{SlotCount}";
@@ -212,28 +241,26 @@ internal static class FieldSkills
             float cx = x + size * 0.5f, cy = baseY + big * 0.5f + (on ? 0f : (big - small) * 0.5f);
             float r = size * 0.5f;
 
-            // 縁 → 顔 (丸)
+            // 縁 (操作中は白い縁と上の印) → 顔 (丸)
             if (on)
             {
-                RingArc(cx, cy, r + 6f * s, 2.5f * s, 1f, Ring);
+                float rr = r + 4f * s;
+                Render.Rect(cx - rr, cy - rr, rr * 2f, rr * 2f, Ring, rr);
                 Render.Text(cx - 10f * s, cy - r - 26f * s, 20f * s, 16f * s, "▼", Ring, Mathf.RoundToInt(12f * s), TextAnchor.MiddleCenter, true);
             }
-            Render.Rect(cx - r, cy - r, size, size, new Color(0.1f, 0.1f, 0.12f, 0.9f), r);
+            Render.Rect(cx - r, cy - r, size, size, new Color(0.1f, 0.1f, 0.12f, 1f), r);
             var tex = P.Portrait(p);
             float dim = on ? 1f : 0.8f;
             if (tex != null)
                 GUI.DrawTexture(new Rect(cx - r, cy - r, size, size), tex, ScaleMode.StretchToFill, true, 0f,
-                    new Color(dim, dim, dim, 1f), 0f, r);
+                    new Color(dim, dim, dim, GUI.color.a), 0f, r);
 
             // 番号
             Render.Text(cx - r, cy + r - 18f * s, 26f * s, 16f * s, $"F{i + 1}", Color.white, Mathf.RoundToInt(11f * s), TextAnchor.MiddleLeft, true, true);
 
-            // 必殺技ゲージの丸 (右上)
-            float ux = cx + r - 2f * s, uy = cy - r + 8f * s, ur = 9f * s;
-            float ult = UltOf(p) / (float)UltMax;
-            Render.Rect(ux - ur, uy - ur, ur * 2f, ur * 2f, Panel, ur);
-            RingArc(ux, uy, ur, 2.5f * s, ult, ult >= 1f ? UltCol : Teal);
-            if (ult >= 1f) Render.Rect(ux - 4f * s, uy - 4f * s, 8f * s, 8f * s, UltCol, 4f * s);
+            // 必殺技ゲージ (右上、水がたまる)
+            if (i < UltFillParty.Length)
+                DrawLiquid(UltFillParty[i], cx + r - 2f * s, cy - r + 8f * s, 11f * s, UltOf(p) / (float)UltMax, t, s);
 
             // HP
             float hp = 0f;
@@ -251,6 +278,7 @@ internal static class FieldSkills
         float btn = 72f * s, gap = 26f * s;
         float total = SlotCount * btn + (SlotCount - 1) * gap;
         float x = Screen.width - total - 60f * s, cy = Screen.height - 110f * s; // 右下 (エンドフィールドスタイルでは RusK UI のボタン HUD は隠れる)
+        float t = Time.unscaledTime;
 
         // 共有 EP (3 区切り)
         float ew = total, eh = 8f * s, ey = cy - btn * 0.5f - 86f * s;
@@ -264,44 +292,33 @@ internal static class FieldSkills
         Render.Text(x, ey - 20f * s, ew, 18f * s, $"EP {Ep:0} / {MaxEp:0}", Color.white, Mathf.RoundToInt(12f * s), TextAnchor.MiddleRight, true, true);
 
         bool epReady = Ep >= EpCost;
+        float epLevel = Mathf.Clamp01(Ep / EpCost);
         for (int i = 0; i < SlotCount; i++)
         {
             float cx = x + btn * 0.5f + i * (btn + gap);
             float r = btn * 0.5f;
             var p = i < slots.Count ? slots[i] : null;
 
-            // 必殺技ゲージの輪 (ボタンの上)
-            float ur = 13f * s, uy = cy - r - 30f * s;
+            // 必殺技ゲージ (ボタンの上、水がたまる。満タンで光って「長押し」)
+            float ur = 14f * s, uy = cy - r - 30f * s;
             float ult = p == null ? 0f : UltOf(p) / (float)UltMax;
-            Render.Rect(cx - ur, uy - ur, ur * 2f, ur * 2f, Panel, ur);
-            RingArc(cx, uy, ur, 3f * s, ult, ult >= 1f ? UltCol : Teal);
+            DrawLiquid(UltFillTop[i], cx, uy, ur, ult, t, s);
             if (ult >= 1f)
-            {
-                Render.Rect(cx - ur + 4f * s, uy - ur + 4f * s, ur * 2f - 8f * s, ur * 2f - 8f * s, UltCol, ur);
                 Render.Text(cx - 40f * s, uy - ur - 18f * s, 80f * s, 16f * s, L.T("長押し"), UltCol, Mathf.RoundToInt(11f * s), TextAnchor.MiddleCenter, true, true);
-            }
 
-            // ボタン: 暗い丸 → 顔 → EP が足りれば下側が青緑
-            Render.Rect(cx - r - 3f * s, cy - r - 3f * s, btn + 6f * s, btn + 6f * s, new Color(1f, 1f, 1f, 0.25f), r + 3f * s);
-            Render.Rect(cx - r, cy - r, btn, btn, new Color(0.08f, 0.09f, 0.11f, 0.92f), r);
+            // ボタン: 縁 → 暗い丸 → 顔 → EP の水 (顔が見えるよう、満タンでも下 4 割まで)
+            Render.Rect(cx - r - 3f * s, cy - r - 3f * s, btn + 6f * s, btn + 6f * s,
+                epReady ? new Color(Teal.r, Teal.g, Teal.b, 0.9f) : new Color(1f, 1f, 1f, 0.25f), r + 3f * s);
+            Render.Rect(cx - r, cy - r, btn, btn, new Color(0.08f, 0.09f, 0.11f, 1f), r);
             var tex = p == null ? null : P.Portrait(p);
             if (tex != null)
             {
-                float dim = epReady ? 1f : 0.45f;
-                GUI.DrawTexture(new Rect(cx - r, cy - r, btn, btn), tex, ScaleMode.StretchToFill, true, 0f, new Color(dim, dim, dim, 1f), 0f, r);
+                float dim = epReady ? 1f : 0.5f;
+                GUI.DrawTexture(new Rect(cx - r, cy - r, btn, btn), tex, ScaleMode.StretchToFill, true, 0f, new Color(dim, dim, dim, GUI.color.a), 0f, r);
             }
-            if (epReady)
-            {
-                // 下 3 割を青緑に (丸の下側を細い横帯で塗る)
-                int bands = 10;
-                for (int k = 0; k < bands; k++)
-                {
-                    float yy = cy + r * 0.35f + k * (r * 0.65f / bands);
-                    float dy = yy + r * 0.65f / bands * 0.5f - cy;
-                    float half = Mathf.Sqrt(Mathf.Max(0f, r * r - dy * dy));
-                    Render.Rect(cx - half, yy, half * 2f, r * 0.65f / bands + 0.5f, new Color(Teal.r, Teal.g, Teal.b, 0.85f));
-                }
-            }
+            var water = SkillFill[i].Draw(0.4f * epLevel, t + i * 0.7f, TealDeep, epReady ? Teal : TealDim);
+            GUI.DrawTexture(new Rect(cx - r, cy - r, btn, btn), water, ScaleMode.StretchToFill, true, 0f,
+                new Color(1f, 1f, 1f, GUI.color.a * (epReady ? 0.9f : 0.6f)), 0f, 0f);
 
             // キー
             float kw = 22f * s, kh = 20f * s;
@@ -310,18 +327,21 @@ internal static class FieldSkills
         }
     }
 
-    /// <summary>円弧 (上から時計回りに fraction の割合)。小さな丸を並べて描く</summary>
-    private static void RingArc(float cx, float cy, float radius, float thickness, float fraction, Color color)
+    /// <summary>小さな丸い水のゲージ (下地 → 水 → 縁)。満タンで黄緑に光る</summary>
+    private static void DrawLiquid(LiquidFill fill, float cx, float cy, float radius, float level, float time, float s)
     {
-        fraction = Mathf.Clamp01(fraction);
-        if (fraction <= 0f) return;
-        int n = Mathf.Max(12, Mathf.RoundToInt(radius * 1.6f));
-        int count = Mathf.CeilToInt(n * fraction);
-        for (int k = 0; k < count; k++)
+        level = Mathf.Clamp01(level);
+        bool full = level >= 1f;
+        Render.Rect(cx - radius, cy - radius, radius * 2f, radius * 2f, Panel, radius);
+        var tex = fill.Draw(level, time, full ? UltDeep : TealDeep, full ? UltCol : Teal);
+        GUI.DrawTexture(new Rect(cx - radius, cy - radius, radius * 2f, radius * 2f), tex, ScaleMode.StretchToFill, true, 0f,
+            new Color(1f, 1f, 1f, GUI.color.a), 0f, 0f);
+        if (full)
         {
-            float a = (k / (float)n) * Mathf.PI * 2f - Mathf.PI * 0.5f;
-            float px = cx + Mathf.Cos(a) * radius, py = cy + Mathf.Sin(a) * radius;
-            Render.Rect(px - thickness * 0.5f, py - thickness * 0.5f, thickness, thickness, color, thickness * 0.5f);
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f);
+            float rr = radius + 2f * s;
+            // 光る縁 (少し大きい丸を薄く重ねる)
+            Render.Rect(cx - rr, cy - rr, rr * 2f, rr * 2f, new Color(UltCol.r, UltCol.g, UltCol.b, 0.25f + 0.25f * pulse), rr);
         }
     }
 }

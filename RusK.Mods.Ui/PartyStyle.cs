@@ -7,7 +7,7 @@ namespace RusK.Mods.Ui;
 
 /// <summary>
 /// Party Mod のバトルスタイルを見る (RusK.Mods.Party.PartyBridge.HideButtonHud をリフレクションで読む)。
-/// エンドフィールドスタイルでは、Custom Battle System and Ui for Op.2 がスキルボタンを出すので、ボタン HUD は隠す。
+/// エンドフィールドスタイルでは、Party Op.2 がスキルボタンを出すので、ボタン HUD は隠す。
 /// Party が入っていなければ常に false (Mod は別々の AssemblyLoadContext で読み込まれ、直接は参照できない)
 /// </summary>
 internal static class PartyStyle

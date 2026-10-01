@@ -7,7 +7,7 @@ using UnityEngine;
 namespace RusK.Mods.Party;
 
 /// <summary>
-/// エンドフィールドスタイル (Custom Battle System and Ui for Op.2) とのつなぎ。
+/// エンドフィールドスタイル (Party Op.2) とのつなぎ。
 ///
 /// Op.2 はモジュールを登録しない (メニューに出さない) ので、毎フレームの処理と画面の描画は Party から呼ぶ。
 /// Mod の読み込み順に左右されないよう、Party の側から Op.2 (RusK.Mods.Op2.Op2Entry.Attach) を探して呼び、
@@ -41,7 +41,7 @@ internal static class EndfieldLink
         if (!_warned && Time.unscaledTime > 10f)
         {
             _warned = true;
-            PartyManager.Ctx?.Notify(L.T("エンドフィールドスタイルには Custom Battle System and Ui for Op.2 が必要です (ゼンゼロのまま動きます)"), NotifyLevel.Warning);
+            PartyManager.Ctx?.Notify(L.T("エンドフィールドスタイルには Party Op.2 が必要です (ゼンゼロのまま動きます)"), NotifyLevel.Warning);
         }
     }
 

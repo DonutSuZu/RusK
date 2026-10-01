@@ -24,7 +24,7 @@ internal static class P
     private static Func<List<PlayerController>> _members;
     private static Func<PlayerController> _current;
     private static Func<PlayerController, double> _id;
-    private static Func<bool> _inFight;
+    private static Func<bool> _inFight, _onField;
     private static Func<double, MotionManager> _findCharacter;
     private static Func<PlayerController, bool> _isDown;
     private static Func<PlayerController, string> _name;
@@ -56,6 +56,7 @@ internal static class P
         _current = Method<Func<PlayerController>>("Current");
         _id = Method<Func<PlayerController, double>>("Id", typeof(PlayerController));
         _inFight = Method<Func<bool>>("InFight");
+        _onField = Method<Func<bool>>("OnField");
         _findCharacter = Method<Func<double, MotionManager>>("FindCharacter", typeof(double));
         _isDown = Method<Func<PlayerController, bool>>("IsDown", typeof(PlayerController));
         _name = Method<Func<PlayerController, string>>("Name", typeof(PlayerController));
@@ -81,6 +82,9 @@ internal static class P
     public static PlayerController Current => Bound ? _current() : GameUtil.Instance?.GetPlayer();
     public static double Id(PlayerController p) => Bound && p != null ? _id(p) : -1;
     public static bool InFight => Bound && _inFight();
+
+    /// <summary>戦闘ステージにいて、ロード中・ポーズ中・ウィンドウ表示中でなく、ゲームの HP バーが出ている (HUD を出してよい)</summary>
+    public static bool OnField => Bound && _onField();
     public static MotionManager FindCharacter(double id) => Bound ? _findCharacter(id) : null;
     public static bool IsDown(PlayerController p) => Bound && _isDown(p);
     public static string Name(PlayerController p) => Bound ? _name(p) : p?.name ?? "";

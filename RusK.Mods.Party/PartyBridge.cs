@@ -7,7 +7,7 @@ using UnityEngine;
 namespace RusK.Mods.Party;
 
 /// <summary>
-/// ほかの Mod (Chain Attack・Custom Battle System and Ui for Op.2 など) から Party を使うための入口。
+/// ほかの Mod (Chain Attack・Party Op.2 など) から Party を使うための入口。
 ///
 /// Mod は 1 つずつ別の AssemblyLoadContext で読み込まれ、互いの DLL を直接参照できないので、
 /// 相手側はこのクラスをリフレクションで探して呼ぶ (型の名前・メソッドの形を変えるときは相手側も直すこと)。

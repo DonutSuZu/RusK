@@ -16,6 +16,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- 水がたまるゲージ (RusK UI のボタン HUD と同じもの) -->
+    <Compile Include="..\RusK.Mods.Ui\LiquidFill.cs" Link="Shared\LiquidFill.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
   </ItemGroup>
 </Project>
