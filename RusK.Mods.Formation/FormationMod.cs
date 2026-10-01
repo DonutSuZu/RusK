@@ -100,7 +100,8 @@ public sealed class FormationWindow : RuskWindow
         int max = PartyLink.MaxCompanions;
         int count = 1 + max;
         float gap = 18f * s;
-        float w = (area.width - gap * (count - 1) - area.height * Slant) / count;
+        float lean = area.height * Slant * 0.5f; // 斜めにすると上は右へ、下は左へこれだけずれる
+        float w = (area.width - gap * (count - 1) - lean * 2f) / count;
         var companions = PartyLink.Companions;
         var leader = PartyLink.Leader;
         var members = fight ? PartyLink.Members : new List<PlayerController>();
@@ -108,7 +109,7 @@ public sealed class FormationWindow : RuskWindow
 
         for (int i = 0; i < count; i++)
         {
-            var r = new Rect(area.x + i * (w + gap), area.y, w, area.height);
+            var r = new Rect(area.x + lean + i * (w + gap), area.y, w, area.height);
             MotionManager mm;
             string role;
             if (i == 0)
@@ -141,7 +142,9 @@ public sealed class FormationWindow : RuskWindow
                 // 外すボタン (仲間がいる枠だけ)
                 if (mm != null)
                 {
-                    var rm = new Rect(r.x + r.width - 64f * s, r.y + r.height - 34f * s, 56f * s, 24f * s);
+                    float by = r.y + r.height - 34f * s;
+                    float edge = (r.y + r.height * 0.5f - (by + 12f * s)) * Slant; // 下の方ほど左へずれる (負)
+                    var rm = new Rect(r.x + r.width - 70f * s + edge, by, 56f * s, 24f * s);
                     bool h = Hover(rm);
                     Render.Rect(rm.x, rm.y, rm.width, rm.height, new Color(0f, 0f, 0f, h ? 0.85f : 0.6f), 4f * s);
                     Render.Text(rm.x, rm.y, rm.width, rm.height, L.T("外す"), h ? Accent : TextCol, Mathf.RoundToInt(12f * s), TextAnchor.MiddleCenter, true);
@@ -161,17 +164,19 @@ public sealed class FormationWindow : RuskWindow
     {
         var theme = mm != null ? PartyLink.ThemeOf(mm) : new Color(0.3f, 0.32f, 0.38f, 1f);
 
-        // 斜めのカード: 下地 → テーマカラーの帯
-        Skew(r.x, r.y, r.width, r.height, hover ? CardBgHover : CardBg);
-        Skew(r.x, r.y, r.width, 6f * s, theme);
-        Skew(r.x, r.y + r.height - 4f * s, r.width, 4f * s, Render.WithAlpha(theme, 0.8f));
+        // 斜めのカード: 下地 → テーマカラーの帯 (すべてカードの中心を軸に傾ける)
+        float pivot = r.y + r.height * 0.5f;
+        Skew(r.x, r.y, r.width, r.height, hover ? CardBgHover : CardBg, pivot);
+        Skew(r.x, r.y, r.width, 6f * s, theme, pivot);
+        Skew(r.x, r.y + r.height - 4f * s, r.width, 4f * s, Render.WithAlpha(theme, 0.8f), pivot);
         if (picking) SkewOutline(r, Accent, 3f * s);
 
-        // 役割 (左上)
+        // 役割 (左上の札。文字は傾けずに、札の真ん中に置く)
         int fs = Mathf.RoundToInt(12f * s);
-        float rw = Render.TextWidth(role, fs, true) + 16f * s;
-        Skew(r.x + 10f * s, r.y + 16f * s, rw, 22f * s, Render.WithAlpha(theme, 0.9f));
-        Render.Text(r.x + 10f * s, r.y + 16f * s, rw, 22f * s, role, TextCol, fs, TextAnchor.MiddleCenter, true);
+        float rw = Render.TextWidth(role, fs, true) + 28f * s, ry = r.y + 16f * s, rh = 22f * s;
+        float rx = r.x + 14f * s + (pivot - (ry + rh * 0.5f)) * Slant; // その高さでのカードの左の縁に合わせる
+        Skew(rx, ry, rw, rh, Render.WithAlpha(theme, 0.9f), ry + rh * 0.5f);
+        Render.Text(rx, ry, rw, rh, role, TextCol, fs, TextAnchor.MiddleCenter, true);
 
         if (mm == null)
         {
@@ -183,7 +188,7 @@ public sealed class FormationWindow : RuskWindow
 
         // 顔 (大きく)
         float face = Mathf.Min(r.width * 0.78f, r.height * 0.58f);
-        float fx = r.x + (r.width - face) * 0.5f + r.height * Slant * 0.5f, fy = r.y + 48f * s;
+        float fx = r.x + (r.width - face) * 0.5f, fy = r.y + 48f * s;
         Render.Rect(fx - 3f * s, fy - 3f * s, face + 6f * s, face + 6f * s, Render.WithAlpha(theme, 0.85f), 10f * s);
         var tex = PartyLink.PortraitOf(mm);
         if (tex != null) GUI.DrawTexture(new Rect(fx, fy, face, face), tex, ScaleMode.StretchToFill, true, 0f, GUI.color, 0f, 8f * s);
@@ -279,12 +284,12 @@ public sealed class FormationWindow : RuskWindow
     // ------------------------------------------------------------------ 描画・入力の部品
 
     /// <summary>斜めの四角 (平行四辺形)。GUI.matrix にせん断を掛けて、矩形の縦の中心を軸に傾ける</summary>
-    private static void Skew(float x, float y, float w, float h, Color color)
+    private static void Skew(float x, float y, float w, float h, Color color, float pivotY)
     {
         if (w <= 0f || h <= 0f) return;
         var prev = GUI.matrix;
         var m = Matrix4x4.identity;
-        float cy = y + h * 0.5f;
+        float cy = pivotY;
         m.m01 = -Slant;
         m.m03 = Slant * cy;
         GUI.matrix = prev * m;
