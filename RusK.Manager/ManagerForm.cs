@@ -474,7 +474,8 @@ internal sealed class ManagerForm : Form
             AddText(core == null ? Strings.T("RusK 本体: 入っていません") : Strings.T("RusK 本体: v{0}", core) +
                     (CoreLatest != null ? (CoreUpdate ? Strings.T(" (v{0} があります)", CoreLatest.Version) : Strings.T(" (最新)")) : ""),
                 _font, core == null ? Warn : CoreUpdate ? Warn : Good);
-            var bep = GameLocator.HasBepInEx(_gameDir) ? GameLocator.BepInExVersion(_gameDir) : null;
+            // 版が読めなくても入ってはいる (BepInEx.Core.dll の版が無いなど)
+            var bep = GameLocator.HasBepInEx(_gameDir) ? GameLocator.BepInExVersion(_gameDir) ?? "?" : null;
             AddText(bep == null ? Strings.T("BepInEx: 入っていません") : "BepInEx: " + bep, _font, bep == null ? Warn : Dim);
             int on = _entries.Count(e => e.State == ModState.Enabled), off = _entries.Count(e => e.State == ModState.Disabled);
             AddText(Strings.T("Mod: 有効 {0} / 無効 {1}", on, off), _font, Dim);

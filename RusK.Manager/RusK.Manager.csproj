@@ -18,7 +18,7 @@
     <!-- icon.ico は ..\icon.png から作ったもの (16～256px) -->
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <!-- Mod Manager の版 (リリースのタグ manager-vX.Y.Z と合わせる。RusK 本体の版とは別) -->
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Product>RusK Mod Manager</Product>
     <Company>RusK</Company>
     <Description>RusK Mod Manager</Description>
