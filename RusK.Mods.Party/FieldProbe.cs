@@ -110,6 +110,29 @@ internal static class FieldProbe
             if (cur != null) try { PartyManager.RefreshHud(cur); } catch { }
             PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} 準備 B (SetData) → 動作 {MotionCount(p)} 個");
         }
+        if (MotionCount(p) <= 0)
+        {
+            // C: 準備 (SetData) は操作キャラのときしか働かないらしいので、一瞬だけ操作キャラにして準備させ、すぐ戻す
+            var cur = PartyManager.Current;
+            try
+            {
+                var mm = PartyManager.FindCharacter(PartyManager.Id(p));
+                GameUtil.Instance.ChangePlayer(p);
+                if (mm != null) p.SetData(mm.name, mm.id);
+            }
+            catch (Exception e) { PartyManager.Log?.Info($"Party Lab 場: 準備 C で例外: {e.Message}"); }
+            finally
+            {
+                if (cur != null)
+                {
+                    try { GameUtil.Instance.ChangePlayer(cur); } catch { }
+                    try { PartyManager.RebindCamera(cur); } catch { }
+                    try { cur.SetCamBind(); } catch { }
+                    try { PartyManager.RefreshHud(cur); } catch { }
+                }
+            }
+            PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} 準備 C (一瞬だけ操作キャラにして SetData) → 動作 {MotionCount(p)} 個、操作中 {PartyManager.Name(PartyManager.Current)}");
+        }
         try
         {
             var idle = FindMotion(p, "Idle", "Long", "Show", "Talk", "Near");

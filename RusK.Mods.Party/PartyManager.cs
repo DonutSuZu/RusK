@@ -530,7 +530,7 @@ internal static class PartyManager
     }
 
     /// <summary>カメラの追従を新しいキャラへ付け替える (ChangePlayer だけでは付け替わらないことがある)</summary>
-    private static void RebindCamera(PlayerController p)
+    internal static void RebindCamera(PlayerController p)
     {
         var cc = CameraController.Instance;
         if (cc == null) return;
