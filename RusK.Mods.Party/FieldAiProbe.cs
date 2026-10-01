@@ -30,6 +30,9 @@ internal static class FieldAi
     {
         public float NextAttack;
         public float LastAttack = -999f;
+        // 近づけているかの見張り (2 秒で 0.5m も近づけなければワープ)
+        public float WatchDist = float.MaxValue;
+        public float WatchSince;
         public bool Moving;
         public string LastAction = "";
         public float LastLog;
@@ -111,7 +114,8 @@ internal static class FieldAi
             float d = to.magnitude;
             if (d > AttackRange)
             {
-                if (!busy) MoveToward(p, b, to);
+                if (!busy && !CheckStuck(p, b, d, target.transform.position - to.normalized * (AttackRange * 0.8f)))
+                    MoveToward(p, b, to);
                 Act(p, b, $"敵 '{target.name}' へ走る ({d:0.0}m)");
                 return;
             }
@@ -137,12 +141,13 @@ internal static class FieldAi
         toSlot.y = 0f;
         if (toSlot.magnitude > FollowStop && !busy)
         {
-            MoveToward(p, b, toSlot);
+            if (!CheckStuck(p, b, toSlot.magnitude, slot)) MoveToward(p, b, toSlot);
             Act(p, b, $"ついて歩く ({toSlot.magnitude:0.0}m)");
         }
         else
         {
             Stop(p, b);
+            b.WatchDist = float.MaxValue;
             Act(p, b, "待機");
         }
     }
@@ -167,9 +172,32 @@ internal static class FieldAi
                 b.Moving = true;
             }
             var mc = p.GetMovementController();
+            // 攻撃中に「向きを変えられない」状態にされたまま (コンボを途中で終わらせたとき) だと、
+            // 向いている方へまっすぐ走り続けるので、動ける・向きを変えられる状態に戻して、向きはこちらで回す
+            try { mc?.SetMoveAble(true); mc?.SetTurnAble(true); } catch { }
+            var want = Quaternion.LookRotation(d);
+            p.transform.rotation = Quaternion.RotateTowards(p.transform.rotation, want, 900f * Time.deltaTime);
             mc?.Rotate(d);
             mc?.Move(d);
         });
+    }
+
+    /// <summary>2 秒たっても目標に 0.5m も近づけていなければ (引っかかった・逆に走った)、目標の近くへワープして true</summary>
+    private static bool CheckStuck(PlayerController p, Brain b, float dist, Vector3 goal)
+    {
+        float now = Time.unscaledTime;
+        if (dist < b.WatchDist - 0.5f)
+        {
+            b.WatchDist = dist;
+            b.WatchSince = now;
+            return false;
+        }
+        if (now - b.WatchSince < 2f) return false;
+        PartyManager.Log?.Info($"Party Lab オート: {PartyManager.Name(p)} が 2 秒近づけない (あと {dist:0.0}m、向き {p.transform.forward}) → ワープ");
+        Teleport(p, goal);
+        b.WatchDist = float.MaxValue;
+        b.WatchSince = now;
+        return true;
     }
 
     private static void Stop(PlayerController p, Brain b)
@@ -195,6 +223,13 @@ internal static class FieldAi
         var cc = p.GetComponent<CharacterController>();
         bool had = cc != null && cc.enabled;
         if (had) cc.enabled = false;
+        float best = float.MaxValue;
+        foreach (var hit in Physics.RaycastAll(pos + Vector3.up * 3f, Vector3.down, 10f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            var col = hit.collider;
+            if (col == null || col.GetComponentInParent<PlayerController>() != null || col.GetComponentInParent<EnemyController>() != null) continue;
+            if (hit.distance < best) { best = hit.distance; pos.y = hit.point.y; }
+        }
         p.transform.position = pos;
         if (had) cc.enabled = true;
     }
