@@ -176,7 +176,7 @@ public sealed class FormationWindow : RuskWindow
         float rw = Render.TextWidth(role, fs, true) + 28f * s, ry = r.y + 16f * s, rh = 22f * s;
         float rx = r.x + 14f * s + (pivot - (ry + rh * 0.5f)) * Slant; // その高さでのカードの左の縁に合わせる
         Skew(rx, ry, rw, rh, Render.WithAlpha(theme, 0.9f), ry + rh * 0.5f);
-        Render.Text(rx, ry, rw, rh, role, TextCol, fs, TextAnchor.MiddleCenter, true);
+        Render.Text(rx, ry, rw, rh, role, TextOn(theme), fs, TextAnchor.MiddleCenter, true);
 
         if (mm == null)
         {
@@ -275,7 +275,7 @@ public sealed class FormationWindow : RuskWindow
             if (on) Render.Rect(r.x, r.y + r.height - 3f * s, r.width, 3f * s, RuskStyle.Accent);
             Render.Text(r.x + 10f * s, r.y + 2f * s, r.width - 20f * s, 20f * s, names[i], enabled ? TextCol : DimCol,
                 Mathf.RoundToInt(14f * s), TextAnchor.MiddleLeft, true);
-            Render.Text(r.x + 10f * s, r.y + 20f * s, r.width - 20f * s, 18f * s, notes[i], DimCol,
+            Render.Text(r.x + 10f * s, r.y + 20f * s, r.width - 20f * s, 18f * s, notes[i], on ? Render.WithAlpha(TextCol, 0.85f) : DimCol,
                 Mathf.RoundToInt(11f * s), TextAnchor.MiddleLeft);
             if (enabled && !on && Clicked(r)) PartyLink.SetBattleStyle(i);
         }
@@ -307,6 +307,13 @@ public sealed class FormationWindow : RuskWindow
         GUI.matrix = prev * m;
         Render.Outline(r.x, r.y, r.width, r.height, color, t);
         GUI.matrix = prev;
+    }
+
+    /// <summary>色の上に載せる文字の色 (明るい色なら黒っぽく、暗い色なら白)</summary>
+    private static Color TextOn(Color bg)
+    {
+        float luminance = 0.299f * bg.r + 0.587f * bg.g + 0.114f * bg.b;
+        return luminance > 0.45f ? new Color(0.06f, 0.06f, 0.08f, 1f) : TextCol;
     }
 
     private static bool Hover(Rect r)
