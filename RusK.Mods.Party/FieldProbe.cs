@@ -32,6 +32,36 @@ internal static class FieldProbe
     private static readonly Dictionary<string, int> HitsBy = new();
     private static readonly Dictionary<string, int> HitsOn = new();
     private static readonly Dictionary<string, int> BoxesMade = new();
+    private static readonly Dictionary<string, int> MaxDamage = new();
+
+    /// <summary>敵に与えたダメージ (持ち主ごとの最大値)</summary>
+    public static void OnDamage(Transform atker, int damage)
+    {
+        if (Fielded.Count == 0) return;
+        string who = Who(atker);
+        if (damage > MaxDamage.GetValueOrDefault(who)) MaxDamage[who] = damage;
+    }
+
+    /// <summary>キャラのバフの数 (全部 / 装備を除く) と、いちばん重なっている同じバフ</summary>
+    private static string BuffState(PlayerController p)
+    {
+        try
+        {
+            var all = p.GetPlayerBuff(false);
+            var noEquip = p.GetPlayerBuff(true);
+            var counts = new Dictionary<double, int>();
+            for (int i = 0; all != null && i < all.Count; i++)
+            {
+                var b = all[i];
+                if (b == null) continue;
+                counts[b.buffId] = counts.GetValueOrDefault(b.buffId) + 1;
+            }
+            var worst = counts.OrderByDescending(kv => kv.Value).FirstOrDefault();
+            string dup = worst.Value > 1 ? $" 重なり #{worst.Key:0}×{worst.Value}" : "";
+            return $"バフ {all?.Count ?? 0}/装備除く {noEquip?.Count ?? 0}{dup}";
+        }
+        catch (Exception e) { return $"(バフを読めません: {e.Message})"; }
+    }
     private static readonly Dictionary<string, int> BoxesTouched = new();
 
     private static string Who(Transform owner)
@@ -321,6 +351,13 @@ internal static class FieldProbe
             }
             catch (Exception e) { sb.Append($" | (読めません: {e.Message})"); }
         }
+        try
+        {
+            foreach (var m in PartyManager.Members)
+                if (m != null) sb.Append($" || {PartyManager.Name(m)}{(m.Pointer == PartyManager.Current?.Pointer ? "(操作中)" : "")} {BuffState(m)}");
+        }
+        catch { }
+        if (MaxDamage.Count > 0) sb.Append($" || 最大ダメージ: {string.Join(", ", MaxDamage.Select(kv => $"{kv.Key} {kv.Value}"))}");
         if (HitsBy.Count > 0) sb.Append($" || 敵に当てた: {string.Join(", ", HitsBy.Select(kv => $"{kv.Key} {kv.Value} 回"))}");
         if (HitsOn.Count > 0) sb.Append($" || 敵の攻撃を受けた: {string.Join(", ", HitsOn.Select(kv => $"{kv.Key} {kv.Value} 回"))}");
         if (BoxesMade.Count > 0) sb.Append($" || 当たり判定を作った: {string.Join(", ", BoxesMade.Select(kv => $"{kv.Key} {kv.Value}"))}");
@@ -328,6 +365,7 @@ internal static class FieldProbe
         HitsBy.Clear();
         HitsOn.Clear();
         BoxesMade.Clear();
+        MaxDamage.Clear();
         BoxesTouched.Clear();
         PartyManager.Log?.Info(sb.ToString());
     }
@@ -459,11 +497,12 @@ internal static class FieldProbeKeyPatch
 [HarmonyPatch(typeof(EnemyController), nameof(EnemyController.GetHit))]
 internal static class FieldProbeEnemyHitPatch
 {
-    private static void Postfix(EnemyController __instance, Transform atker)
+    private static void Postfix(EnemyController __instance, Transform atker, int damage)
     {
         try
         {
             FieldProbe.OnEnemyHit(atker);
+            FieldProbe.OnDamage(atker, damage);
             // 操作キャラが殴った敵を、オートの仲間の狙いにする
             var p = atker != null ? atker.GetComponentInParent<PlayerController>(true) : null;
             if (p != null && p.Pointer == PartyManager.Current?.Pointer && !FieldSwap.InSwap) FieldAi.PlayerTarget = __instance;
