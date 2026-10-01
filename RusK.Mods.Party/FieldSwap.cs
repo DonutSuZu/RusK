@@ -19,6 +19,13 @@ internal static class FieldSwap
     public static bool Enabled = true;
 
     private static readonly Stack<PlayerController> Saved = new();
+    private static readonly Stack<double> SavedCrtId = new();
+
+    /// <summary>
+    /// セーブの「今のキャラ」(GameSave.lastCrtId) も差し替えるか。装備の能力値などはこの番号で引くらしく、
+    /// m_curPlayer だけ差し替えると置いたキャラがリーダーの装備でダメージを計算していた (180 → 17000)
+    /// </summary>
+    public static bool SwapCharacterId = true;
     private static readonly Dictionary<IntPtr, PlayerController> Owners = new();
     private static readonly Dictionary<IntPtr, (IntPtr owner, PlayerController player)> BoxOwners = new();
 
@@ -63,6 +70,21 @@ internal static class FieldSwap
         if (cur != null && cur.Pointer == owner.Pointer) return false;
         Saved.Push(cur);
         util.m_curPlayer = owner;
+        double crt = double.NaN;
+        if (SwapCharacterId)
+        {
+            try
+            {
+                var save = util.m_gameSaveCache;
+                if (save != null)
+                {
+                    crt = save.lastCrtId;
+                    save.lastCrtId = PartyManager.Id(owner);
+                }
+            }
+            catch { crt = double.NaN; }
+        }
+        SavedCrtId.Push(crt);
         return true;
     }
 
@@ -70,7 +92,14 @@ internal static class FieldSwap
     {
         if (!swapped || Saved.Count == 0) return;
         var prev = Saved.Pop();
-        try { GameUtil.Instance.m_curPlayer = prev; } catch { }
+        double crt = SavedCrtId.Count > 0 ? SavedCrtId.Pop() : double.NaN;
+        try
+        {
+            var util = GameUtil.Instance;
+            util.m_curPlayer = prev;
+            if (!double.IsNaN(crt) && util.m_gameSaveCache != null) util.m_gameSaveCache.lastCrtId = crt;
+        }
+        catch { }
     }
 
     /// <summary>置いたキャラに何かをさせる間だけ差し替える</summary>

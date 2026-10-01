@@ -60,6 +60,8 @@ internal sealed class PartyLabWindow : RuskWindow
             FieldSwap.Enabled = !FieldSwap.Enabled;
         if (gui.Selectable("置いたキャラをオートで動かす (敵を殴る・ついて歩く)", FieldAi.Enabled))
             FieldAi.Enabled = !FieldAi.Enabled;
+        if (gui.Selectable("差し替えのとき、セーブの「今のキャラ」(lastCrtId) も差し替える", FieldSwap.SwapCharacterId))
+            FieldSwap.SwapCharacterId = !FieldSwap.SwapCharacterId;
         foreach (var m in PartyManager.Members.ToArray())
         {
             if (m == null || (cur != null && m.Pointer == cur.Pointer)) continue;
