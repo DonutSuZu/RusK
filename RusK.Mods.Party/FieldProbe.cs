@@ -182,7 +182,9 @@ internal static class FieldProbe
         FaceNearestEnemy(p);
         try
         {
-            p.ChangeMotion(name, true, 0.05f, default);
+            if (kind == "攻撃") p.Attack();               // 入力と同じ入り口 (コンボを進める)
+            else if (kind == "特殊攻撃") p.SpecialAttack();
+            else p.ChangeMotion(name, true, 0.05f, default);
             PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} に「{kind}」'{name}' をさせた → 今の動作 '{p.GetCurMotion()?.name}'");
         }
         catch (Exception e) { PartyManager.Log?.Warning($"Party Lab 場: 動作をさせられません: {e.Message}"); }
@@ -243,7 +245,7 @@ internal static class FieldProbe
                 float moved = LastPos.TryGetValue(p.Pointer, out var last) ? Vector3.Distance(last, pos) : 0f;
                 LastPos[p.Pointer] = pos;
                 sb.Append($" | {PartyManager.Name(p)} 表示={p.gameObject.activeInHierarchy} 動作='{p.GetCurMotion()?.name}' " +
-                          $"HP {p.GetCurHp():0}/{p.GetMaxHp():0} 1 秒で {moved:0.00}m 動いた");
+                          $"HP {p.GetCurHp():0}/{p.GetMaxHp():0} 1 秒で {moved:0.00}m 動いた {AnimState(p)}");
             }
             catch (Exception e) { sb.Append($" | (読めません: {e.Message})"); }
         }
@@ -252,6 +254,40 @@ internal static class FieldProbe
         HitsBy.Clear();
         HitsOn.Clear();
         PartyManager.Log?.Info(sb.ToString());
+    }
+
+    private static ActionAnimController Anim(PlayerController p)
+    {
+        try { return p.GetComponentInChildren<ActionAnimController>(true); }
+        catch { return null; }
+    }
+
+    private static string AnimState(PlayerController p)
+    {
+        var a = Anim(p);
+        if (a == null) return "(アニメ部品なし)";
+        try
+        {
+            return $"[アニメ 有効={a.enabled} 速さ={a.GetAnimSpeed():0.##} 係数={a.m_animSpeedFactor:0.##} 止め={a.m_freezeAnimCnt} " +
+                   $"'{a.GetCurAnimName()}' 進み={a.GetCurAnimNormalizedTime():0.00}]";
+        }
+        catch (Exception e) { return $"(アニメを読めません: {e.Message})"; }
+    }
+
+    /// <summary>置いたキャラのアニメの速さを 1 にする (止まっているか確かめる用)</summary>
+    public static void ResetAnimSpeed()
+    {
+        foreach (var p in Fielded)
+        {
+            var a = Anim(p);
+            if (a == null) continue;
+            try
+            {
+                a.SetAnimSpeed(1f);
+                PartyManager.Log?.Info($"Party Lab 場: {PartyManager.Name(p)} のアニメの速さを 1 に → {AnimState(p)}");
+            }
+            catch (Exception e) { PartyManager.Log?.Info($"Party Lab 場: 速さを変えられません: {e.Message}"); }
+        }
     }
 
     public static void OnEnemyHit(Transform atker)
