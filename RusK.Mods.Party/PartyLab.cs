@@ -24,7 +24,11 @@ public sealed class PartyLabModule : Module
     public override bool VisibleInArrayList => false;
     public override void OnEnable() => _window.Visible = true;
     public override void OnDisable() => _window.Visible = false;
-    public override void OnUpdate() => QteProbe.Tick();
+    public override void OnUpdate()
+    {
+        QteProbe.Tick();
+        FieldProbe.Tick();
+    }
 }
 
 /// <summary>Party Lab の画面。控えの手動作成・切り替え・状態の記録</summary>
@@ -46,6 +50,30 @@ internal sealed class PartyLabWindow : RuskWindow
         gui.Label($"戦闘ステージ: {(PartyManager.InFight ? "はい" : "いいえ")}  クールタイム残り {PartyManager.CooldownRemaining:0.0} 秒",
             RuskStyle.TextDim, small: true);
         if (gui.Button("状態をログに出す", accent: true)) PartyManager.LogState("手動");
+
+        gui.Space(6f);
+        gui.Header("フィールドに置く (エンドフィールド風の試作)", $"{FieldProbe.Fielded.Count} 人");
+        gui.Label("控えを表示したまま隣に置き、動作をさせます。1 秒ごとの様子・敵に当てた回数・攻撃を受けた回数がログに出ます",
+            RuskStyle.TextDim, small: true);
+        if (gui.Selectable("操作中でないキャラのキー入力 (KeyRespond) を止める", FieldProbe.BlockOthersInput))
+            FieldProbe.BlockOthersInput = !FieldProbe.BlockOthersInput;
+        foreach (var m in PartyManager.Members.ToArray())
+        {
+            if (m == null || (cur != null && m.Pointer == cur.Pointer)) continue;
+            bool placed = FieldProbe.IsFielded(m);
+            gui.BeginRow(2.2f, 1.2f, 1.2f, 1.4f, 1.2f, 1.2f);
+            gui.Label(PartyManager.Name(m) + (placed ? " (置いた)" : ""));
+            if (gui.Button(placed ? "しまう" : "置く", accent: !placed))
+            {
+                if (placed) FieldProbe.Remove(m);
+                else FieldProbe.Place(m);
+            }
+            if (gui.Button("攻撃", enabled: placed)) FieldProbe.Act(m, "攻撃");
+            if (gui.Button("特殊攻撃", enabled: placed)) FieldProbe.Act(m, "特殊攻撃");
+            if (gui.Button("追加攻撃", enabled: placed)) FieldProbe.Act(m, "追加攻撃");
+            if (gui.Button("回避", enabled: placed)) FieldProbe.Act(m, "回避");
+        }
+        if (gui.Button("全員しまう")) FieldProbe.RemoveAll();
 
         gui.Space(6f);
         gui.Header("敵の AI (立ち尽くす問題の調査)");

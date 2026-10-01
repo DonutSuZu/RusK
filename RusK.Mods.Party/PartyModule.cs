@@ -42,6 +42,9 @@ public sealed class PartyMod : RuskMod
         if (party.DevTools)
         {
             Context.RegisterModule(new PartyLabModule(Context));
+            // エンドフィールド風の戦闘の試作 (控えをフィールドに置く) 用
+            Context.Harmony.PatchAll(typeof(FieldProbeKeyPatch));
+            Context.Harmony.PatchAll(typeof(FieldProbeEnemyHitPatch));
             Context.RegisterAction("PartyLabQte", () => QteProbe.Fire(PartyManager.Current, "キー割り当て"), "(調査用) 今のキャラで追加攻撃を撃つ");
             Context.RegisterAction("PartyLabQteSwitch", QteProbe.SwitchAndFire, "(調査用) 次のキャラに切り替えて追加攻撃を撃つ");
         }
