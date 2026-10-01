@@ -169,11 +169,11 @@ public sealed class FormationWindow : RuskWindow
         Skew(r.x, r.y, r.width, r.height, hover ? CardBgHover : CardBg, pivot);
         Skew(r.x, r.y, r.width, 6f * s, theme, pivot);
         Skew(r.x, r.y + r.height - 4f * s, r.width, 4f * s, Render.WithAlpha(theme, 0.8f), pivot);
-        if (picking) SkewOutline(r, Accent, 3f * s);
+        if (picking) SkewOutline(r, Accent, 3f * s, pivot);
 
         // 役割 (左上の札。文字は傾けずに、札の真ん中に置く)
         int fs = Mathf.RoundToInt(12f * s);
-        float rw = Render.TextWidth(role, fs, true) + 28f * s, ry = r.y + 16f * s, rh = 22f * s;
+        float rw = Mathf.Max(Render.TextWidth(role, fs, true) * 1.4f + 28f * s, 96f * s), ry = r.y + 16f * s, rh = 22f * s;
         float rx = r.x + 14f * s + (pivot - (ry + rh * 0.5f)) * Slant; // その高さでのカードの左の縁に合わせる
         Skew(rx, ry, rw, rh, Render.WithAlpha(theme, 0.9f), ry + rh * 0.5f);
         Render.Text(rx, ry, rw, rh, role, TextOn(theme), fs, TextAnchor.MiddleCenter, true);
@@ -283,30 +283,30 @@ public sealed class FormationWindow : RuskWindow
 
     // ------------------------------------------------------------------ 描画・入力の部品
 
-    /// <summary>斜めの四角 (平行四辺形)。GUI.matrix にせん断を掛けて、矩形の縦の中心を軸に傾ける</summary>
+    /// <summary>
+    /// 斜めの四角 (平行四辺形)。pivotY の高さを軸に、上ほど右へ、下ほど左へずらす。
+    /// 細い横帯を少しずつずらして並べて描く (GUI.matrix のせん断は画面全体の座標で効くので、
+    /// ウィンドウの中だとウィンドウの位置の分だけカードがずれてしまった)
+    /// </summary>
     private static void Skew(float x, float y, float w, float h, Color color, float pivotY)
     {
         if (w <= 0f || h <= 0f) return;
-        var prev = GUI.matrix;
-        var m = Matrix4x4.identity;
-        float cy = pivotY;
-        m.m01 = -Slant;
-        m.m03 = Slant * cy;
-        GUI.matrix = prev * m;
-        Render.Rect(x, y, w, h, color);
-        GUI.matrix = prev;
+        float step = Mathf.Max(1f, 2f * RuskStyle.Scale);
+        for (float yy = y; yy < y + h; yy += step)
+        {
+            float sh = Mathf.Min(step, y + h - yy);
+            float shift = (pivotY - (yy + sh * 0.5f)) * Slant;
+            Render.Rect(x + shift, yy, w, sh + 0.3f, color);
+        }
     }
 
-    private static void SkewOutline(Rect r, Color color, float t)
+    /// <summary>斜めの四角の縁取り</summary>
+    private static void SkewOutline(Rect r, Color color, float t, float pivotY)
     {
-        var prev = GUI.matrix;
-        var m = Matrix4x4.identity;
-        float cy = r.y + r.height * 0.5f;
-        m.m01 = -Slant;
-        m.m03 = Slant * cy;
-        GUI.matrix = prev * m;
-        Render.Outline(r.x, r.y, r.width, r.height, color, t);
-        GUI.matrix = prev;
+        Skew(r.x, r.y, r.width, t, color, pivotY);                  // 上
+        Skew(r.x, r.y + r.height - t, r.width, t, color, pivotY);   // 下
+        Skew(r.x, r.y, t, r.height, color, pivotY);                 // 左
+        Skew(r.x + r.width - t, r.y, t, r.height, color, pivotY);   // 右
     }
 
     /// <summary>色の上に載せる文字の色 (明るい色なら黒っぽく、暗い色なら白)</summary>
