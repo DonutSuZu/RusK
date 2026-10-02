@@ -57,6 +57,8 @@ internal static class ItemModels
         public string File;
         public readonly List<Renderer> Originals = new();
         public readonly List<Renderer> Mine = new();
+        /// <summary>置き換えたモデルの材質 (描画部品ごと)。ゲームの材質の管理 (MaterialController) がキャラの下の材質を書き換えるので、毎フレーム戻す</summary>
+        public readonly List<Material[]> MineMaterials = new();
         public int AppliedRevision = -1;
         /// <summary>glb 自身の発光 (発光の設定を OFF にしたときに戻すため)。この装備品用に複製した材質ごと</summary>
         public readonly List<(Material mat, Color color, Texture tex)> OwnEmission = new();
@@ -275,6 +277,18 @@ internal static class ItemModels
             t.AppliedRevision = a.Revision;
         }
 
+        // ゲームが材質を書き換えていたら戻す (元の武器の材質・テクスチャが貼られて模様がおかしくなる)
+        for (int i = 0; i < t.Mine.Count && i < t.MineMaterials.Count; i++)
+        {
+            var r = t.Mine[i];
+            if (r == null) continue;
+            var cur = r.sharedMaterials;
+            var mine = t.MineMaterials[i];
+            bool same = cur.Length == mine.Length;
+            for (int k = 0; same && k < cur.Length; k++) same = cur[k] == mine[k];
+            if (!same) r.sharedMaterials = mine;
+        }
+
         // 元の見た目は描かない (ゲームが表示し直しても映らない forceRenderingOff を使う)。
         // ゲームが武器をしまって元の見た目を消したとき (enabled = false) は、置き換えたモデルも消す
         bool visible = false;
@@ -327,10 +341,12 @@ internal static class ItemModels
 
         // 発光の設定は装備品ごとに違うので、材質をこの装備品用に複製し、glb 自身の発光を覚えておく
         t.OwnEmission.Clear();
+        t.MineMaterials.Clear();
         foreach (var r in t.Mine)
         {
             var mats = r.sharedMaterials.Select(m => m != null ? new Material(m) : null).ToArray();
             r.sharedMaterials = mats;
+            t.MineMaterials.Add(mats);
             foreach (var m in mats)
             {
                 if (m == null) continue;
@@ -370,6 +386,7 @@ internal static class ItemModels
             if (r != null) r.forceRenderingOff = false;
         t.Originals.Clear();
         t.Mine.Clear();
+        t.MineMaterials.Clear();
     }
 
     /// <summary>glb を一度だけ読み込み、非表示の元として取っておく (装備品ごとに複製して付ける)</summary>
@@ -381,10 +398,16 @@ internal static class ItemModels
         {
             if (!System.IO.File.Exists(path)) throw new FileNotFoundException("ファイルがありません", path);
 
-            // 材質の元: 元の武器・装備品の材質 (ゲームのトゥーンシェーダー)
+            // 材質の元: 元の武器・装備品の材質 (ゲームのトゥーンシェーダー)。
+            // 武器を出す瞬間は、溶けて現れる演出の材質 (EasyGameStudio/disslove2 など) に差し替わっているので、
+            // トゥーンシェーダーの材質だけを使う。無ければゲームが読み込んでいる材質から探す
+            static bool Toon(Material m) => m != null && m.shader != null && m.shader.name.Contains("ToonLit");
             var mats = sample.GetComponentsInChildren<Renderer>(true)
                 .Where(r => r.GetIl2CppType().Name != "ParticleSystemRenderer")
-                .SelectMany(r => r.sharedMaterials).Where(m => m != null).ToList();
+                .SelectMany(r => r.sharedMaterials).Where(Toon).ToList();
+            if (mats.Count == 0)
+                mats = Resources.FindObjectsOfTypeAll<Material>().Where(Toon)
+                    .OrderByDescending(m => m.name.IndexOf("weapon", StringComparison.OrdinalIgnoreCase) >= 0).ToList();
             var templates = new VrmLoader.Templates
             {
                 Opaque = mats.FirstOrDefault(m => m.renderQueue < 2500) ?? mats.FirstOrDefault(),
