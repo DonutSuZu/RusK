@@ -39,6 +39,7 @@ internal static class CharacterImages
                 var border = Vector4.zero;
                 if (baseSprite != null)
                 {
+                    tex = Pad(tex, baseSprite);
                     var r = baseSprite.rect;
                     pivot = new Vector2(baseSprite.pivot.x / r.width, baseSprite.pivot.y / r.height);
                     float scale = tex.width / Mathf.Max(1f, r.width);
@@ -51,7 +52,7 @@ internal static class CharacterImages
                 result = sprite;
             }
             Cache[key] = result;
-            CharacterMod.Ctx?.Log.Info($"Character: {def.Key} の画像 {kind}.png を使います ({tex.width}x{tex.height})");
+            CharacterMod.Ctx?.Log.Info($"Character: {def.Key} の画像 {kind}.png を使います ({tex.width}x{tex.height}" + (baseSprite != null ? $", 土台 rect={baseSprite.rect} textureRect={baseSprite.textureRect} ppu={baseSprite.pixelsPerUnit} border={baseSprite.border})" : ")"));
             return result;
         }
         catch (Exception e)
@@ -59,6 +60,29 @@ internal static class CharacterImages
             CharacterMod.Ctx?.Log.Warning($"Character: {file} を読めません: {e.Message}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// 土台の絵は、周りの透明なところを切り詰めて保存されていることがある (表示の枠 rect > 中身 textureRect)。
+    /// お手本 (と差し替えの絵) は中身の部分なので、枠の大きさに広げて、中身のあった位置に置く (そのままだと枠いっぱいに伸びる)
+    /// </summary>
+    private static Texture2D Pad(Texture2D tex, Sprite baseSprite)
+    {
+        var r = baseSprite.rect;
+        var tr = baseSprite.textureRect;
+        if (Mathf.Approximately(r.width, tr.width) && Mathf.Approximately(r.height, tr.height)) return tex;
+        float scale = tex.width / Mathf.Max(1f, tr.width);
+        int w = Mathf.RoundToInt(r.width * scale), h = Mathf.RoundToInt(r.height * scale);
+        var off = baseSprite.textureRectOffset * scale;
+        int ox = Mathf.Clamp(Mathf.RoundToInt(off.x), 0, Mathf.Max(0, w - tex.width));
+        int oy = Mathf.Clamp(Mathf.RoundToInt(off.y), 0, Mathf.Max(0, h - tex.height));
+        var padded = new Texture2D(w, h, TextureFormat.RGBA32, false) { name = tex.name, hideFlags = HideFlags.DontUnloadUnusedAsset };
+        padded.SetPixels32(new Color32[w * h]);
+        padded.SetPixels(ox, oy, Mathf.Min(tex.width, w), Mathf.Min(tex.height, h), tex.GetPixels(0, 0, Mathf.Min(tex.width, w), Mathf.Min(tex.height, h)));
+        padded.Apply();
+        CharacterMod.Ctx?.Log.Info($"Character: {tex.name} は土台の枠 {r.width}x{r.height} (中身 {tr.width}x{tr.height} が {baseSprite.textureRectOffset}) に合わせて広げました");
+        Object.Destroy(tex);
+        return padded;
     }
 
     /// <summary>土台の絵をお手本として書き出す (まだ書き出していなければ)</summary>
