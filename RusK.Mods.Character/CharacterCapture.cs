@@ -9,7 +9,7 @@ namespace RusK.Mods.Character;
 
 /// <summary>
 /// 新しいキャラの絵の素材を撮る: そのキャラを操作しているときに、付いているモデル (Custom VRM Loader の VRM / PMX) を、
-/// 背景を透明にして撮影する (顔・バストアップ・全身)。〈キャラのフォルダ〉/captures に PNG で保存する。
+/// 背景を透明にして撮影する (顔・バストアップ・全身・横顔)。〈キャラのフォルダ〉/captures に PNG で保存する。
 /// まだ撮っていなければ自動で 1 回、メニューの Capture でいつでも撮り直せる
 /// </summary>
 internal static class CharacterCapture
@@ -95,6 +95,9 @@ internal static class CharacterCapture
         Shot(Path.Combine(dir, "face.png"), layer, headPos, fwd, 0.55f, 1024, 1024);
         Shot(Path.Combine(dir, "bust.png"), layer, headPos - Vector3.up * height * 0.22f, fwd, height * 0.42f, 1440, 2160);
         Shot(Path.Combine(dir, "full.png"), layer, bounds.center, fwd, height * 0.56f, 1440, 2880);
+        // 横顔 (キャラの右側から。画面では右を向く): リザルト画面の絵 (Profile・leftFrame) 用
+        var right = Vector3.Cross(Vector3.up, fwd).normalized;
+        Shot(Path.Combine(dir, "side.png"), layer, headPos - Vector3.up * height * 0.22f, right, height * 0.42f, 1440, 2160);
         CharacterMod.Ctx?.Log.Info($"Character: {def.Key} の絵の素材を撮りました → {dir}");
     }
 

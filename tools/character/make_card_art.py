@@ -200,7 +200,124 @@ def main(folder, name_ja, name_en):
     out = Image.new("RGBA", t.size, (0, 0, 0, 0))
     out.alpha_composite(en, (203 - en.width, 3))
     save(out, "roleName_s")
+
+    result_art(folder, name_en, bust, (top, neck, cx), tpl, save)
     print("書き出しました:", out_dir)
+
+
+# ---- リザルト画面・会話の絵
+
+def side_box(im, neck_px):
+    """横顔の位置: 上端 (髪のてっぺん)・鼻先の x (頭の下半分で一番前の点)"""
+    a = im.getchannel("A")
+    w, h = im.size
+    px = a.load()
+    top = a.getbbox()[1]
+    front = 0
+    for y in range(top + int(neck_px * 0.55), top + int(neck_px * 0.80)):
+        xs = [x for x in range(w) if px[x, y] > 128]
+        if xs:
+            front = max(front, xs[-1])
+    return top, front
+
+
+def place_side(src, size, top, front, scale, dst_top, dst_front):
+    big = src.resize((max(1, round(src.width * scale)), max(1, round(src.height * scale))), Image.LANCZOS)
+    out = Image.new("RGBA", size, (0, 0, 0, 0))
+    out.paste(big, (round(dst_front - front * scale), round(dst_top - top * scale)), big)
+    return out
+
+
+def template_head(t):
+    """お手本の、キャラの絵の頭の位置 (上端・首・中心)。お手本の透明でない部分がキャラだけの絵に使う"""
+    return head_box(t)
+
+
+def fill_hole(im, hole):
+    """hole (L、255 = 消す) の部分を、周りの色をぼかして埋める (正規化した畳み込み)"""
+    keep = ImageOps.invert(hole)
+    rgb = im.convert("RGB")
+    num = ImageChops.multiply(rgb, Image.merge("RGB", (keep, keep, keep))).filter(ImageFilter.GaussianBlur(60))
+    den = keep.filter(ImageFilter.GaussianBlur(60))
+    num_px, den_px = num.load(), den.load()
+    out = rgb.copy()
+    o = out.load()
+    hp = hole.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            if hp[x, y] > 0:
+                d = max(1, den_px[x, y])
+                c = num_px[x, y]
+                o[x, y] = tuple(min(255, int(v * 255 / d)) for v in c)
+    res = out.convert("RGBA")
+    res.putalpha(im.getchannel("A"))
+    return res
+
+
+def result_art(folder, name_en, bust, bust_head, tpl, save):
+    side_file = os.path.join(folder, "captures", "side.png")
+    if not os.path.exists(side_file):
+        print("captures/side.png が無いので、リザルト画面の絵は作りません (Capture で撮り直してください)")
+        return
+    side = brighten(Image.open(side_file).convert("RGBA"))
+    top, neck, cx = bust_head
+    s_top, s_front = side_box(side, neck - top)
+    # 横顔 (888x1440): 頭のてっぺん y=194、首 y=1000 くらい、鼻先 x=500 (土台 1006 のお手本に合わせた数字)
+    scale = (1000 - 194) / float(neck - top)
+    t = tpl("Profile")
+    prof = place_side(side, t.size, s_top, s_front, scale, 194, 500)
+    # 色: 灰色に寄せ、少し赤みのある中間の明るさ (お手本の平均くらい)
+    g = prof.convert("L")
+    tint = Image.merge("RGB", (g.point(lambda v: min(255, int(v * 0.62 + 30))), g.point(lambda v: min(255, int(v * 0.57 + 28))),
+                               g.point(lambda v: min(255, int(v * 0.56 + 27)))))
+    prof_c = tint.convert("RGBA")
+    prof_c.putalpha(prof.getchannel("A"))
+    save(prof_c, "Profile")
+
+    # 横顔の形の切り抜き (1360x1440): 黒で、横顔の形だけ透明
+    t = tpl("leftNameMask")
+    mask = Image.new("RGBA", t.size, (0, 0, 0, 255))
+    a = Image.new("L", t.size, 0)
+    a.paste(prof.getchannel("A"), (0, 0))
+    mask.putalpha(ImageOps.invert(a))
+    save(mask, "leftNameMask")
+
+    # リザルト画面の左 (888x1440): お手本から土台のキャラ (Profile の形) を消して周りの色で埋め、横顔を重ねる
+    t = tpl("leftFrame")
+    old = tpl("Profile").getchannel("A").point(lambda v: 255 if v > 8 else 0).filter(ImageFilter.MaxFilter(9))
+    frame = fill_hole(t, old)
+    pc = prof_c.copy()
+    pc.putalpha(ImageChops.multiply(pc.getchannel("A"), t.getchannel("A")))
+    frame.alpha_composite(pc)
+    save(frame, "leftFrame")
+
+    # 名前を縦に重ねた文字 (888x1440): 白抜き (透明度 89) と塗り (38) を交互に 8 段
+    t = tpl("leftName")
+    out = Image.new("RGBA", t.size, (0, 0, 0, 0))
+    for i, y in enumerate((96, 250, 410, 560, 720, 880, 1040, 1190)):
+        if i % 2 == 0:
+            row = text_image(name_en, EN_FONT, 128, fill=(255, 255, 255, 0), stroke=1, stroke_fill=(255, 255, 255, 89),
+                             inner=(255, 255, 255, 0))
+        else:
+            row = text_image(name_en, EN_FONT, 128, fill=(255, 255, 255, 38))
+        out.alpha_composite(row, (0, y))
+    save(out, "leftName")
+
+    # 暗いバストアップ (1645x1440) と会話の顔 (256x256): お手本の頭の位置に合わせる
+    for kind, dark in (("buffResuiltProfile", 0.32), ("dialogBox", None)):
+        t = tpl(kind)
+        # 会話の顔 (バストアップだけの小さな絵) は、自動の位置 (全身の割合から首を探す) が合わないので数字で
+        tt, tn, tc = (60, 160, 182) if kind == "dialogBox" else template_head(t)
+        img = place(bust, t.size, top, neck, cx, tt, tn, tc)
+        img.putalpha(ImageChops.multiply(img.getchannel("A"), t.getchannel("A").point(lambda v: 255 if v > 0 else 0).filter(ImageFilter.MaxFilter(15))) if kind == "dialogBox" else img.getchannel("A"))
+        if dark is not None:
+            rgb = ImageEnhance.Color(img.convert("RGB")).enhance(0.6).point(lambda v: int(v * dark))
+            d = rgb.convert("RGBA")
+            d.putalpha(img.getchannel("A"))
+            img = d
+        else:
+            img = outline(img, 1, (20, 20, 22, 255))
+        save(img, kind)
 
 
 if __name__ == "__main__":
