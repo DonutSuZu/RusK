@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 
 namespace RusK.Mods.Character;
 
@@ -10,6 +11,7 @@ namespace RusK.Mods.Character;
 ///   capture           今のキャラの絵の素材を撮り直す
 ///   motion 〈名前〉    今のキャラにゲームの動作をさせる (攻撃なら攻撃判定・武器を持つのもゲームのまま)
 ///   bones             主な骨の位置・向き (キャラの根元から見て) と、今の動作をログに出す
+///   ui                キャラを並べる画面のカードの並び (親の部品・大きさ・スクロール) をログに出す
 /// </summary>
 internal static class DevCommands
 {
@@ -52,6 +54,50 @@ internal static class DevCommands
         CharacterMod.Ctx.Log.Info(sb.ToString());
     }
 
+    private static void Ui()
+    {
+        var sb = new System.Text.StringBuilder("Character: (画面)");
+        void Walk(UnityEngine.Transform t, int depth, int max)
+        {
+            var rt = t.TryCast<UnityEngine.RectTransform>();
+            var comps = string.Join(",", t.GetComponents<UnityEngine.Component>().Select(c => c.GetIl2CppType().Name).Where(n => n != "RectTransform" && n != "Transform"));
+            sb.Append("\n" + new string(' ', depth * 2) + $"{t.name} [{comps}] on={t.gameObject.activeSelf}" +
+                      (rt != null ? $" size={rt.rect.width:0}x{rt.rect.height:0} pos={rt.anchoredPosition.x:0},{rt.anchoredPosition.y:0}" : ""));
+            if (depth < max) for (int i = 0; i < t.childCount && i < 14; i++) Walk(t.GetChild(i), depth + 1, max);
+        }
+        foreach (var w in UnityEngine.Object.FindObjectsOfType<WindowCharacterShow>())
+        {
+            var cards = w.m_crtCards;
+            if (cards == null || cards.Count == 0) continue;
+            var parent = cards[0].transform.parent;
+            sb.Append($"\n== WindowCharacterShow cards={cards.Count} 親の列:");
+            for (var t = parent; t != null && t != w.transform.parent; t = t.parent)
+            {
+                var rt = t.TryCast<UnityEngine.RectTransform>();
+                sb.Append($"\n  {t.name} [{string.Join(",", t.GetComponents<UnityEngine.Component>().Select(c => c.GetIl2CppType().Name))}]" +
+                          (rt != null ? $" size={rt.rect.width:0}x{rt.rect.height:0}" : ""));
+            }
+            sb.Append("\n== 並び:");
+            Walk(parent, 0, 1);
+        }
+        foreach (var w in UnityEngine.Object.FindObjectsOfType<WindowBattleCharacterChoose>())
+        {
+            var cards = w.m_crtCards;
+            if (cards == null || cards.Count == 0 || cards[0] == null) continue;
+            var parent = cards[0].transform.parent;
+            sb.Append($"\n== WindowBattleCharacterChoose cards={cards.Count} 親の列:");
+            for (var t = parent; t != null && t != w.transform.parent; t = t.parent)
+            {
+                var rt = t.TryCast<UnityEngine.RectTransform>();
+                sb.Append($"\n  {t.name} [{string.Join(",", t.GetComponents<UnityEngine.Component>().Select(c => c.GetIl2CppType().Name))}]" +
+                          (rt != null ? $" size={rt.rect.width:0}x{rt.rect.height:0} pos={rt.anchoredPosition.x:0},{rt.anchoredPosition.y:0}" : ""));
+            }
+            sb.Append("\n== 並び:");
+            Walk(parent, 0, 1);
+        }
+        CharacterMod.Ctx.Log.Info(sb.ToString());
+    }
+
     public static void Tick()
     {
         if (UnityEngine.Time.unscaledTime < _next) return;
@@ -79,6 +125,9 @@ internal static class DevCommands
                     case "motion":
                         var mp = RusK.Mods.Shared.PlayerRef.Current;
                         mp?.GetMotionController()?.ChangeMotion(p[1], true, 0.1f, default);
+                        break;
+                    case "ui":
+                        Ui();
                         break;
                     case "bones":
                         Bones();

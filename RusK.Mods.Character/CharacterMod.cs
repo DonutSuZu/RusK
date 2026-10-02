@@ -10,7 +10,7 @@ namespace RusK.Mods.Character;
 /// Custom Character: 新しいキャラ枠を足す。RusK/characters/〈フォルダ〉/character.json に定義を置く。
 /// 動作・能力値は土台のゲームのキャラを複製する。見た目は Custom VRM Loader、動きは Custom Motion、声は Voice Replacer で付ける
 /// </summary>
-[RuskMod("character", "Custom Character", "1.0.0",
+[RuskMod("character", "Custom Character", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1878",
     Description = "新しいキャラ枠を足す (RusK/characters の character.json。動作・能力は土台のキャラを複製する)")]
@@ -34,6 +34,7 @@ public sealed class CharacterMod : RuskMod
         Context.Harmony.PatchAll(typeof(SetDataPatch));
         Context.Harmony.PatchAll(typeof(UnlockPatch));
         Context.Harmony.PatchAll(typeof(CharacterShowPatch));
+        Context.Harmony.PatchAll(typeof(CharacterChoosePatch));
         Context.RegisterModule(new CharacterModule());
     }
 }
@@ -56,6 +57,8 @@ internal sealed class CharacterModule : Module
         CharacterRegistry.Tick();
         try { CharacterCapture.Tick(); } catch { }
         try { DevCommands.Tick(); } catch { }
+        CardScroll.Tick();
+        CharacterChoose.Tick();
     }
 
     private void SwitchTo()
