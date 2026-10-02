@@ -45,7 +45,8 @@ internal static class CharacterRegistry
                 Register(container);
             }
             var save = GameUtil.GetGameSave();
-            if (save?.characterUnlock != null && (save.Pointer != _save || Defs.Any(d => !save.characterUnlock.ToArray().Any(u => u != null && (long)Math.Round(u.id) == d.Id))))
+            if (save?.characterUnlock != null && (save.Pointer != _save || Defs.Any(d => !save.characterUnlock.ToArray().Any(u => u != null && (long)Math.Round(u.id) == d.Id)
+                    || (save.playerEquips != null && !save.playerEquips.ToArray().Any(e => e != null && (long)Math.Round(e.id) == d.Id)))))
             {
                 _save = save.Pointer;
                 Inject(save);
@@ -82,8 +83,8 @@ internal static class CharacterRegistry
             // ScriptableObject を丸ごと複製する (動作の一覧なども複製される)
             var clone = Object.Instantiate(baseMm.Cast<Object>()).Cast<MotionManager>();
             clone.id = def.Id;
-            // 内部の名前は土台のまま (ゲームはこの名前でキャラ用の部品を探すので、変えると準備 (SetData) が失敗する)。
-            // 画面に出る名前は ID から決まる (ActorName_〈ID〉)
+            // 内部の名前も変える (土台と同じだと、名前から ID を引くところで土台のキャラに戻ってしまう)。画面に出る名前は ActorName_〈ID〉
+            clone.name = def.Key;
             clone.isLock = false;
             clone.hideFlags = HideFlags.DontUnloadUnusedAsset;
             container.characters.Add(clone);
@@ -99,6 +100,16 @@ internal static class CharacterRegistry
         {
             if (!save.characterUnlock.ToArray().Any(u => u != null && (long)Math.Round(u.id) == def.Id))
                 save.characterUnlock.Add(new CharacterUnlock { id = def.Id, notifyBefore = true });
+            // 装備: 土台のキャラの装備をそのまま見せる (キャラの準備は、装備の武器を持たせるところから始まる。
+            // 装備が無いと武器が見つからず「複製する元が null」になって、動作の準備まで届かない)
+            if (save.playerEquips != null && !save.playerEquips.ToArray().Any(e => e != null && (long)Math.Round(e.id) == def.Id))
+            {
+                var baseEquip = save.playerEquips.ToArray().FirstOrDefault(e => e != null && (long)Math.Round(e.id) == def.Base);
+                var equips = new Il2CppSystem.Collections.Generic.List<string>();
+                if (baseEquip?.equips != null)
+                    foreach (var uid in baseEquip.equips) equips.Add(uid);
+                save.playerEquips.Add(new PlayerEquip { id = def.Id, equips = equips });
+            }
             if (save.skills != null && !save.skills.ToArray().Any(s => s != null && (long)Math.Round(s.playerId) == def.Id))
                 foreach (var s in save.skills.ToArray())
                     if (s != null && (long)Math.Round(s.playerId) == def.Base)
@@ -218,3 +229,62 @@ internal static class LocalePatch
         }
     }
 }
+
+/// <summary>
+/// キャラの準備 (PlayerController.SetData) は、キャラの定義をキャラの一覧ではなく、ID の付いたパスで
+/// ゲームのデータ (Resources.Load("〜" + ID)) から読み込んで複製する。新しいキャラのデータはゲームに無いので、
+/// パスの最後が新しいキャラの ID で何も見つからないときは、こちらで作った定義を返す
+/// </summary>
+[HarmonyPatch]
+internal static class ResourcesLoadPatch
+{
+    private static readonly HashSet<string> Logged = new();
+
+    // Load(string) と Load(string, Type) の両方 (ゲームはどちらを直接呼ぶか分からない)。型を指定する版 Load<T> は除く
+    private static IEnumerable<System.Reflection.MethodBase> TargetMethods() =>
+        typeof(Resources).GetMethods().Where(m => m.Name == nameof(Resources.Load) && !m.IsGenericMethod
+            && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType == typeof(string));
+
+    private static void Postfix(string path, ref Object __result)
+    {
+        if (path != null && path.Length > 0 && char.IsDigit(path[path.Length - 1]) && Logged.Add("?" + path))
+            CharacterMod.Ctx?.Log.Info($"Character: (調査) Resources.Load '{path}' → {(__result == null ? "null" : __result.name)}");
+        if (__result != null || path == null || CharacterRegistry.Registered.Count == 0) return;
+        foreach (var (id, mm) in CharacterRegistry.Registered)
+        {
+            var ids = id.ToString();
+            if (!path.EndsWith("_" + ids)) continue;
+            var def = CharacterRegistry.Find(id);
+            if (path.EndsWith("MotionList_" + ids))
+            {
+                // キャラの定義 (動作の一覧): こちらで作ったもの
+                if (mm == null) return;
+                __result = mm;
+            }
+            else if (def != null)
+            {
+                // ほかのキャラごとのデータ (BuffList_〈ID〉 = キャラのバフ など): 土台のキャラのもの
+                __result = Resources.Load(path.Substring(0, path.Length - ids.Length) + def.Base);
+            }
+            if (Logged.Add(path)) CharacterMod.Ctx?.Log.Info($"Character: ゲームのデータ '{path}' の代わりに {(__result == null ? "(見つからない)" : __result.name)} を渡しました");
+            return;
+        }
+    }
+}
+
+/// <summary>
+/// キャラの ID は PlayerController.m_id で、体のモデル (土台のキャラのプレハブ) に土台の ID が書き込まれている。
+/// キャラの準備 (SetData) は ID を変えないので、次のフレームの Start が m_id (土台の ID) で準備し直して土台のキャラに戻ってしまう。
+/// 新しいキャラの ID で準備するときは、m_id も新しい ID にする
+/// </summary>
+[HarmonyPatch(typeof(PlayerController), nameof(PlayerController.SetData))]
+internal static class SetDataPatch
+{
+    private static void Prefix(PlayerController __instance, double id)
+    {
+        // 新しいキャラにするとき・新しいキャラから元のキャラに戻すとき (同じプレハブの体が使い回される)
+        if ((CharacterRegistry.IsCustom(id) || CharacterRegistry.IsCustom(__instance.m_id)) && Math.Abs(__instance.m_id - id) > 0.5)
+            __instance.m_id = id;
+    }
+}
+

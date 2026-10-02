@@ -529,6 +529,15 @@ internal static class VrmSwap
                 Cleanup(e);
                 continue;
             }
+            if (!e.IsShow && Id(e.Player) != e.Id)
+            {
+                // 同じ体が別のキャラに使い回された (Custom Character の新しいキャラと土台のキャラの切り替え)。付け直す
+                Entries.Remove(e.Key);
+                Cleanup(e);
+                Failed.Remove(e.Key);
+                _nextAuto = 0f;
+                continue;
+            }
             // キャラが控えに回って非表示のとき (見せるためのモデルは画面を閉じたとき) は VRM も隠す
             bool active = e.Root.gameObject.activeInHierarchy;
             if (e.Model.Root.activeSelf != active) e.Model.Root.SetActive(active);
