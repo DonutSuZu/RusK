@@ -35,7 +35,18 @@ internal static class RigExport
         return m;
     }
 
-    public static string Export(Transform character, IList<SkinnedMeshRenderer> body, string file, Action<string> log)
+    /// <summary>一緒に書き出す動作 (ゲームのアニメーションのクリップ)。Extras は glTF の animation.extras に入れる</summary>
+    public sealed class Anim
+    {
+        public string Name;
+        public AnimationClip Clip;
+        public Dictionary<string, object> Extras;
+    }
+
+    /// <param name="anims">一緒に書き出す動作 (無ければ骨格だけ)</param>
+    /// <param name="animRoot">クリップを当てはめる物 (Animator の付いた物。クリップの骨の道筋はここから数える)</param>
+    public static string Export(Transform character, IList<SkinnedMeshRenderer> body, string file, Action<string> log,
+        IList<Anim> anims = null, GameObject animRoot = null)
     {
         // ---- 基準の姿勢 (根元の空間)
         var rootW2L = character.worldToLocalMatrix;
@@ -194,6 +205,11 @@ internal static class RigExport
             meshCount++;
         }
 
+        // ---- 動作: クリップを 30 コマ/秒でキャラに当てはめて、骨ごとの位置・向き・大きさを記録する (最後に元の姿勢に戻す)
+        var animations = new List<object>();
+        if (anims != null && anims.Count > 0 && animRoot != null)
+            animations = Animations(nodes, anims, animRoot, w, log);
+
         // 根元 (キャラの名前)
         jsonNodes.Add(new Dictionary<string, object> { ["name"] = character.name, ["children"] = rootChildren });
         var doc = new Dictionary<string, object>
@@ -204,6 +220,7 @@ internal static class RigExport
             ["nodes"] = jsonNodes,
         };
         if (meshes.Count > 0) doc["meshes"] = meshes;
+        if (animations.Count > 0) doc["animations"] = animations;
         if (skins.Count > 0) doc["skins"] = skins;
         if (materials.Count > 0) doc["materials"] = materials;
         if (textures.Count > 0)
@@ -213,8 +230,88 @@ internal static class RigExport
             doc["samplers"] = new[] { new Dictionary<string, object>() };
         }
         w.Write(file, doc);
-        log?.Invoke($"骨格を書き出しました: 骨 {nodes.Count}、メッシュ {meshCount} (読めない {skipped})、テクスチャ {images.Count} → {file}");
+        log?.Invoke($"骨格を書き出しました: 骨 {nodes.Count}、メッシュ {meshCount} (読めない {skipped})、テクスチャ {images.Count}、動作 {animations.Count} → {file}");
         return file;
+    }
+
+    private static List<object> Animations(List<Transform> nodes, IList<Anim> anims, GameObject animRoot, GlbWriter w, Action<string> log)
+    {
+        const float fps = 30f;
+        var result = new List<object>();
+        var saved = nodes.Select(t => (t.localPosition, t.localRotation, t.localScale)).ToArray();
+        void Restore()
+        {
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (nodes[i] == null) continue;
+                nodes[i].localPosition = saved[i].localPosition;
+                nodes[i].localRotation = saved[i].localRotation;
+                nodes[i].localScale = saved[i].localScale;
+            }
+        }
+        try
+        {
+            foreach (var a in anims)
+            {
+                if (a?.Clip == null) continue;
+                try
+                {
+                    int frames = Mathf.Max(1, Mathf.CeilToInt(a.Clip.length * fps));
+                    var times = new float[frames + 1];
+                    var pos = new float[nodes.Count][];
+                    var rot = new float[nodes.Count][];
+                    var scl = new float[nodes.Count][];
+                    for (int i = 0; i < nodes.Count; i++)
+                    {
+                        pos[i] = new float[(frames + 1) * 3];
+                        rot[i] = new float[(frames + 1) * 4];
+                        scl[i] = new float[(frames + 1) * 3];
+                    }
+                    for (int f = 0; f <= frames; f++)
+                    {
+                        float t = Mathf.Min(f / fps, a.Clip.length);
+                        times[f] = t;
+                        // クリップが動かさない骨は元の姿勢のまま (前のコマ・前のクリップの姿勢が残らないように、毎回戻してから当てはめる)
+                        Restore();
+                        a.Clip.SampleAnimation(animRoot, t);
+                        for (int i = 0; i < nodes.Count; i++)
+                        {
+                            var p = P(nodes[i].localPosition);
+                            var q = Q(nodes[i].localRotation);
+                            var sc = nodes[i].localScale;
+                            pos[i][f * 3] = p.x; pos[i][f * 3 + 1] = p.y; pos[i][f * 3 + 2] = p.z;
+                            rot[i][f * 4] = q.x; rot[i][f * 4 + 1] = q.y; rot[i][f * 4 + 2] = q.z; rot[i][f * 4 + 3] = q.w;
+                            scl[i][f * 3] = sc.x; scl[i][f * 3 + 1] = sc.y; scl[i][f * 3 + 2] = sc.z;
+                        }
+                    }
+                    int input = w.Floats(times, 1, true);
+                    var samplers = new List<object>();
+                    var channels = new List<object>();
+                    for (int i = 0; i < nodes.Count; i++)
+                    {
+                        foreach (var (path, data, comps) in new[] { ("translation", pos[i], 3), ("rotation", rot[i], 4), ("scale", scl[i], 3) })
+                        {
+                            // 動かない骨の位置・大きさは書かない (ファイルを小さく)。向きは全部書く
+                            bool moves = path == "rotation";
+                            for (int k = comps; k < data.Length && !moves; k++) moves = Mathf.Abs(data[k] - data[k % comps]) > 1e-5f;
+                            if (!moves) continue;
+                            samplers.Add(new Dictionary<string, object> { ["input"] = input, ["output"] = w.Floats(data, comps, false), ["interpolation"] = "LINEAR" });
+                            channels.Add(new Dictionary<string, object>
+                            {
+                                ["sampler"] = samplers.Count - 1,
+                                ["target"] = new Dictionary<string, object> { ["node"] = i, ["path"] = path },
+                            });
+                        }
+                    }
+                    var anim = new Dictionary<string, object> { ["name"] = a.Name, ["samplers"] = samplers, ["channels"] = channels };
+                    if (a.Extras != null) anim["extras"] = a.Extras;
+                    result.Add(anim);
+                }
+                catch (Exception e) { log?.Invoke($"動作 {a.Name} を書き出せません: {e.Message}"); }
+            }
+        }
+        finally { Restore(); }
+        return result;
     }
 
     private static int Material(UnityEngine.Material mat, List<object> materials, List<object> textures, List<object> images,

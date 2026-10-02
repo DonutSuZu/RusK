@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -92,6 +93,7 @@ public sealed class ModelLabWindow : RuskWindow
         if (gui.Button("調べて書き出す", enabled: p != null, accent: true)) ModelLab.Report();
         if (gui.Button("画面のキャラを調べる (タイトル・キャラ画面など)")) ModelLab.ScanScene();
         if (gui.Button("骨格を glb で書き出す (Blender 用)", enabled: p != null)) ModelLab.ExportRig(p.transform);
+        if (gui.Button("骨格と動作を glb で書き出す (参考用。配らないこと)", enabled: p != null)) ModelLab.ExportRig(p.transform, withMotions: true);
         MotionRecorder.Tick();
         if (gui.Button(MotionRecorder.Recording ? "記録中... (押すと止めて書き出す)" : "キャラの動きと表情を 10 秒記録する"))
         {
@@ -146,13 +148,53 @@ public sealed class ModelLabWindow : RuskWindow
 internal static class ModelLab
 {
     /// <summary>キャラの骨格 (と体のメッシュ) を RusK/data/model/rig_キャラ名.glb に書き出す</summary>
-    public static string ExportRig(Transform character)
+    /// <param name="withMotions">
+    /// キャラの動作 (MotionManager の全部) も、動作の名前のアニメーションとして入れる (rig_キャラ名_motions.glb)。
+    /// ゲームのアニメーションそのものなので、自分で見て調べる用 (配らないこと)。extras に速さ・攻撃判定の位置・イベント・クリップの名前
+    /// </param>
+    public static string ExportRig(Transform character, bool withMotions = false)
     {
         try
         {
             var body = Vrm.VrmSwap.BodyRenderers(character).ToList();
-            var file = Path.Combine(Ctx.DataDirectory, $"rig_{character.name}.glb");
-            LastFile = Vrm.RigExport.Export(character, body, file, s => Ctx.Log.Info("Model Lab: " + s));
+            List<Vrm.RigExport.Anim> anims = null;
+            GameObject animRoot = null;
+            if (withMotions)
+            {
+                var p = character.GetComponent<PlayerController>();
+                var animator = character.GetComponentInChildren<Animator>(true);
+                animRoot = animator != null ? animator.gameObject : character.gameObject;
+                anims = new List<Vrm.RigExport.Anim>();
+                if (p?.m_motionMgr?.motions != null)
+                    foreach (var m in p.m_motionMgr.motions)
+                    {
+                        var clip = m?.bindAnimClip?.Clip;
+                        if (clip == null) continue;
+                        var hits = new List<float>();
+                        var events = new List<string>();
+                        if (m.animEvent != null)
+                            foreach (var e in m.animEvent)
+                                if (e?.callBack != null)
+                                    foreach (var f in e.callBack)
+                                    {
+                                        if (f?.funcName == null) continue;
+                                        events.Add($"{e.playProcess:0.000} {f.funcName}");
+                                        if (f.funcName.EndsWith("AttackBoxOn")) hits.Add(e.playProcess);
+                                    }
+                        anims.Add(new Vrm.RigExport.Anim
+                        {
+                            Name = m.name, Clip = clip,
+                            Extras = new Dictionary<string, object>
+                            {
+                                ["clip"] = clip.name, ["length"] = clip.length, ["playSpeed"] = m.playSpeed, ["loop"] = clip.isLooping,
+                                ["hits"] = hits.OrderBy(h => h).ToArray(), ["events"] = events.OrderBy(e => e).ToArray(),
+                            },
+                        });
+                    }
+                Ctx.Log.Info($"Model Lab: 動作 {anims.Count} 個を当てはめる先: {animRoot.name}");
+            }
+            var file = Path.Combine(Ctx.DataDirectory, withMotions ? $"rig_{character.name}_motions.glb" : $"rig_{character.name}.glb");
+            LastFile = Vrm.RigExport.Export(character, body, file, s => Ctx.Log.Info("Model Lab: " + s), anims, animRoot);
             return LastFile;
         }
         catch (Exception e)
