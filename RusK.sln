@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Op2", "RusK.Mods.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Formation", "RusK.Mods.Formation\RusK.Mods.Formation.csproj", "{628AF68D-66BF-4E5B-BF9C-DF349F8A1A16}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Voice", "RusK.Mods.Voice\RusK.Mods.Voice.csproj", "{EF7FBBCD-22D3-47A6-A939-5011E8DB7184}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,5 +86,9 @@ Global
 		{628AF68D-66BF-4E5B-BF9C-DF349F8A1A16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{628AF68D-66BF-4E5B-BF9C-DF349F8A1A16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{628AF68D-66BF-4E5B-BF9C-DF349F8A1A16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF7FBBCD-22D3-47A6-A939-5011E8DB7184}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF7FBBCD-22D3-47A6-A939-5011E8DB7184}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF7FBBCD-22D3-47A6-A939-5011E8DB7184}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF7FBBCD-22D3-47A6-A939-5011E8DB7184}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

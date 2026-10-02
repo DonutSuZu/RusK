@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RuskVoice</AssemblyName>
+    <RootNamespace>RusK.Mods.Voice</RootNamespace>
+    <Version>1.0.0</Version>
+    <DeployDir>$(RuskGameDir)\mods</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ゲームの音 (AudioPlayer) に割り込む -->
+    <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.AudioModule.dll" Private="false" />
+    <!-- mp3 / ogg / wav の読み込み -->
+    <Reference Include="$(InteropDir)\UnityEngine.UnityWebRequestModule.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.UnityWebRequestAudioModule.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
+  </ItemGroup>
+</Project>

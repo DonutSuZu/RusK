@@ -1,0 +1,9 @@
+# 元の文	英語	中国語 (簡体字)
+ボイスを {0} 個読み込みました	Loaded {0} voice files	已加载 {0} 个语音
+ ({0} 個は読めませんでした)	 ({0} could not be read)	 ({0} 个无法读取)
+キャラのボイス (と効果音) を RusK/voices の音声ファイル (ogg / wav / mp3) に置き換える	Replace character voices (and sound effects) with audio files (ogg / wav / mp3) in RusK/voices	将角色语音 (和音效) 替换为 RusK/voices 中的音频文件 (ogg / wav / mp3)
+ボイスを読み込み直す	Reload voices	重新加载语音
+キャラのボイス (と効果音) を RusK/voices の音声ファイルに置き換える	Replace character voices (and sound effects) with audio files in RusK/voices	将角色语音 (和音效) 替换为 RusK/voices 中的音频文件
+置き換えた音声の音量 (ゲームの音量にさらに掛かる)	Volume of replaced audio (multiplied with the game volume)	替换后音频的音量 (再乘以游戏音量)
+鳴った音声の名前を RusK/voices/_played.txt に書き出す (置き換えるファイルの名前を調べる用)	Write the names of played sounds to RusK/voices/_played.txt (to find which file names to use)	将播放过的声音名称写入 RusK/voices/_played.txt (用于查找替换文件的名称)
+voices フォルダを開く	Open the voices folder	打开 voices 文件夹

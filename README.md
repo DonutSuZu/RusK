@@ -8,7 +8,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 - TabGUI / ClickGUI (Horion 風)、ArrayList・通知・ウォーターマーク
 - Mod の着脱 (AssemblyLoadContext)、アクショントリガー、Config プロファイル
 - Flex Window (Mod 用のドラッグ・リサイズできるウィンドウ)
-- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Camera View** (視点の切り替え) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
+- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
 - **RusK Check**: ゲームの更新で壊れた Mod を教える診断機能
 
 **ゲーム**: [VED:Recure (Steam)](https://store.steampowered.com/app/3255500/Ved/)
@@ -49,6 +49,7 @@ RusK/
 ├─ RusK.Mods.Ui/        同梱Mod: ボタン HUD・攻撃予兆・キー追加 (バランスに影響しない補助)
 ├─ RusK.Mods.Extreme/   同梱Mod: 難易度 EXTREME
 ├─ RusK.Mods.Music/     同梱Mod: 戦闘 BGM の置き換え
+├─ RusK.Mods.Voice/     同梱Mod: ボイス・効果音の置き換え (ゲームの AudioPlayer に割り込む)
 ├─ RusK.Mods.Camera/    同梱Mod: 視点の切り替え
 ├─ RusK.Mods.Party/     同梱Mod: アクティブ3人 (ほかの Mod 用の入口 PartyBridge)
 ├─ RusK.Mods.Chain/     同梱Mod: 連携攻撃 (Party の PartyBridge をリフレクションで使う)
@@ -192,6 +193,15 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 - メニューの **Formation > PartyFormation** (アクション `FormationOpen`) で開く。リーダー + 仲間 2 人の斜めのカード (顔・テーマカラー・役割)
 - 仲間のカードをクリックするとキャラの一覧が出て選べる。下のボタンでバトルスタイル (ゼンゼロ / エンドフィールド) を切り替える
 - 編成は Party の `PartyBridge` (版 3: `Companions` / `SetCompanion` / `SetBattleStyle` など) で読み書きする
+
+### Voice Replacer（ボイス・効果音の置き換え）
+- `RusK\voices` に、ゲームの音声と**同じ名前**の ogg / wav / mp3 を置くと、鳴る瞬間に差し替える (サブフォルダは自由。キャラごとに分けるなど)
+- `名前#1.ogg`・`名前#2.ogg` のように `#` の後ろを変えて複数置くと、鳴るたびにランダムに選ぶ
+- 名前の調べ方: **Music > VoiceReplacer** の **LogPlayed** を ON にすると、鳴った音の名前と種類 (Voice / SFX / UI など) を `RusK\voices\_played.txt` に書き出す
+- 割り込む場所: `AudioPlayer.CreateSFX` (2 つ)・`PlayPersistentVoice`・`PlayUICharacterVoice` (前) と `ResolveVoiceClip` (後)。
+  ボイスはどれも `AudioPlayer` を通る (戦闘 `PlayVoiceFunc`、吹き出し `PlayBubbleVoice`、会話 `ResolveVoiceClip`)。
+  差し替えた音声では、ゲームの言語の選び直し (`PlayPersistentVoice` の resolveLanguage) をしない
+- 音声は起動時に全部読み込んでおく (`HideFlags.DontUnloadUnusedAsset` でシーンの切り替えでも消さない)。Volume で置き換えた音の音量を変えられる
 
 ### Custom Model（VRM）
 - `RusK\models` に `.vrm` (VRM 0.x / 1.0) を置き、**Visual > CustomModel** でキャラごとに選ぶ

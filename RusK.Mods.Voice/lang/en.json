@@ -1,0 +1,10 @@
+{
+  "ボイスを {0} 個読み込みました": "Loaded {0} voice files",
+  " ({0} 個は読めませんでした)": " ({0} could not be read)",
+  "キャラのボイス (と効果音) を RusK/voices の音声ファイル (ogg / wav / mp3) に置き換える": "Replace character voices (and sound effects) with audio files (ogg / wav / mp3) in RusK/voices",
+  "ボイスを読み込み直す": "Reload voices",
+  "キャラのボイス (と効果音) を RusK/voices の音声ファイルに置き換える": "Replace character voices (and sound effects) with audio files in RusK/voices",
+  "置き換えた音声の音量 (ゲームの音量にさらに掛かる)": "Volume of replaced audio (multiplied with the game volume)",
+  "鳴った音声の名前を RusK/voices/_played.txt に書き出す (置き換えるファイルの名前を調べる用)": "Write the names of played sounds to RusK/voices/_played.txt (to find which file names to use)",
+  "voices フォルダを開く": "Open the voices folder"
+}

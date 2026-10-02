@@ -54,6 +54,13 @@ RusK と Mod の導入・更新をするアプリです (RusK-Mod-Manager.exe)�
 - Music Manager: 戦闘中の BGM を好きな曲に置き換えます
                  このフォルダの music に mp3 / ogg / wav を入れてください
                  (music\boss に入れた曲はボス戦で流れます)
+- Voice Replacer: キャラのボイス (と効果音) を、好きな音声に置き換えます
+                1. Music > VoiceReplacer の LogPlayed をオンにして遊ぶと、鳴った音の名前が
+                   このフォルダの voices\_played.txt に書き出されます
+                2. voices に、その名前の ogg / wav / mp3 を置く (例: voices に「名前.ogg」)
+                   サブフォルダに分けても大丈夫です。「名前#1.ogg」「名前#2.ogg」のように複数置くと、ランダムに鳴ります
+                3. ゲームを再起動するか、VoiceReplacer の Rescan を押す
+                置き換えた音の音量は VoiceReplacer の Volume で変えられます
 - Camera View : 視点を切り替えます (Visual > CameraView の View)
                 近い肩越し / 真後ろ / 一人称 / カスタム。一人称の目の高さはキャラごとに覚えます
                 一人称では自分の体を隠して影だけ残します (Custom Model の VRM も同じく隠れます)

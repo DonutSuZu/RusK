@@ -37,6 +37,12 @@
       "zh": "将战斗 BGM 替换为 RusK\\music 中的歌曲 (mp3 / ogg / wav)"
     },
     {
+      "id": "voice", "name": "Voice Replacer", "asset": "RuskVoice.dll", "folders": ["voices"],
+      "ja": "キャラのボイス (と効果音) を RusK\\voices の音声ファイル (ogg / wav / mp3) に置き換える。ファイル名はゲームの音声の名前",
+      "en": "Replaces character voices (and sound effects) with audio files (ogg / wav / mp3) in RusK\\voices, named after the game's sounds",
+      "zh": "将角色语音 (和音效) 替换为 RusK\\voices 中的音频文件 (ogg / wav / mp3), 文件名为游戏中声音的名称"
+    },
+    {
       "id": "camera", "name": "Camera View", "asset": "RuskCamera.dll",
       "ja": "視点の切り替え (近い肩越し / 真後ろ / 一人称 / カスタム)",
       "en": "Camera views (close over-the-shoulder / behind / first person / custom)",
