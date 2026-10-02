@@ -36,7 +36,18 @@ def R(axis, deg):
 
 def load(glb):
     """骨格と動作の glb を読み込む (シーンは空にしてから)。読み込みで NLA に積まれた動作は外す"""
-    bpy.ops.wm.read_factory_settings(use_empty=True)
+    if bpy.app.background:
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+    else:
+        # 画面のある Blender (MCP でつないだ Blender など) では初期化しない (アドオンが止まる)。シーンの中身だけ消す
+        if bpy.context.object and bpy.context.object.mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+        for o in list(bpy.data.objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        for coll in (bpy.data.meshes, bpy.data.armatures, bpy.data.actions, bpy.data.materials, bpy.data.images, bpy.data.cameras):
+            for d in list(coll):
+                if d.users == 0:
+                    coll.remove(d)
     bpy.ops.import_scene.gltf(filepath=glb)
     arm = next(o for o in bpy.data.objects if o.type == "ARMATURE" and "Bip001" in o.data.bones)
     arm.animation_data_create()
