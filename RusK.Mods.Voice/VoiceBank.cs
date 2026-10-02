@@ -12,6 +12,7 @@ namespace RusK.Mods.Voice;
 /// RusK\voices の音声ファイル (ogg / wav / mp3) を読み込んで、ゲームの音声の名前で引けるようにしておく。
 /// - ファイル名 (拡張子なし) = 置き換えるゲームの音声の名前。サブフォルダは自由 (キャラごとに分けるなど)
 /// - "名前#1.ogg"・"名前#2.ogg" のように # の後ろを変えて複数置くと、鳴るたびにランダムに選ぶ
+/// - 〈キャラの番号〉のフォルダ (例 voices\9001\) に置いた音声は、新しいキャラ専用 (CharacterVoices)
 /// ゲームの音は鳴らす瞬間に差し替えるので、起動時に全部読み込んでおく (1 つずつ順番に)
 /// </summary>
 internal sealed class VoiceBank
@@ -43,6 +44,7 @@ internal sealed class VoiceBank
     public void Scan()
     {
         Clear();
+        CharacterVoices.Load(Folder);
         try
         {
             Directory.CreateDirectory(Folder);
@@ -98,6 +100,8 @@ internal sealed class VoiceBank
             if (clip == null) { Fail("clip is null"); return; }
 
             var key = KeyOf(_loading);
+            var owner = OwnerOf(_loading);
+            if (owner > 0) key = owner + "|" + key;
             clip.name = "RusK:" + Path.GetFileNameWithoutExtension(_loading);
             // シーンの切り替えで「使われていないアセット」として消されないようにする
             clip.hideFlags = HideFlags.DontUnloadUnusedAsset;
@@ -129,11 +133,26 @@ internal sealed class VoiceBank
     }
 
     /// <summary>ゲームの音声の名前に対応する、置き換え用の音声 (無ければ null)</summary>
-    public AudioClip Find(string gameClipName)
+    public AudioClip Find(string gameClipName, long owner = -1)
     {
-        if (string.IsNullOrEmpty(gameClipName) || !_clips.TryGetValue(gameClipName, out var list) || list.Count == 0) return null;
+        if (string.IsNullOrEmpty(gameClipName)) return null;
+        if (owner > 0 && _clips.TryGetValue(owner + "|" + gameClipName, out var own) && own.Count > 0)
+            return own.Count == 1 ? own[0] : own[_random.Next(own.Count)];
+        if (!_clips.TryGetValue(gameClipName, out var list) || list.Count == 0) return null;
         var clip = list.Count == 1 ? list[0] : list[_random.Next(list.Count)];
         return clip != null ? clip : null; // Unity 側で壊れていたら null
+    }
+
+    /// <summary>voices の直下が数字のフォルダ (9000 以上 = 新しいキャラの番号) なら、その番号。無ければ -1</summary>
+    private long OwnerOf(string path)
+    {
+        try
+        {
+            var rel = Path.GetRelativePath(Folder, path);
+            var first = rel.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
+            return rel.Contains(Path.DirectorySeparatorChar) && long.TryParse(first, out var id) && id >= 9000 ? id : -1;
+        }
+        catch { return -1; }
     }
 
     /// <summary>"名前#2.ogg" → "名前"</summary>

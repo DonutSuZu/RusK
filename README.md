@@ -23,6 +23,10 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 **対応ゲームバージョン: 0.0.1878 (c9d3e1a)** — ゲーム画面の左下に出る `Version 0.0.1878_c9d3e1a` と同じか確認してください。
 ゲームが更新されたときは、メニューの Mods > Check で動かなくなった Mod を確認できます。
 
+## キャラの Mod Pack を作る
+
+新しいキャラ (見た目・絵・武器・声・動き) を足す Mod Pack の作り方と、必要なファイルの種類・数: [docs/ModPack.md](docs/ModPack.md)
+
 ## インストール (利用者向け)
 1. [最新のリリース](https://github.com/DonutSuZu/RusK/releases/latest) から `RusK-Mod-Manager.exe` をダウンロード (好きな場所に置いてよい)
 2. 起動すると、ゲームフォルダを Steam から自動で探し、GitHub から最新の情報を取得する (表示は日本語 / English / 中文)

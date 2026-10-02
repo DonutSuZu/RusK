@@ -98,6 +98,53 @@ internal static class DevCommands
         CharacterMod.Ctx.Log.Info(sb.ToString());
     }
 
+    /// <summary>
+    /// Mod Pack の資料用: data/character/catalog に、ゲームの全部の声 (日本語・中国語の対、長さ) と、
+    /// 操作できるキャラごとの動作の一覧 (名前・クリップ・秒・攻撃判定) を書き出す
+    /// </summary>
+    private static void Catalog()
+    {
+        var dir = Path.Combine(CharacterMod.Ctx.DataDirectory, "catalog");
+        Directory.CreateDirectory(dir);
+        var sb = new System.Text.StringBuilder("# 日本語の声\t中国語の声\t秒\n");
+        int voices = 0;
+        foreach (var map in UnityEngine.Resources.FindObjectsOfTypeAll<VoiceLanguageClipMap>())
+        {
+            if (map?.pairs == null) continue;
+            foreach (var pr in map.pairs)
+            {
+                if (pr == null) continue;
+                var jp = pr.japaneseClip;
+                var cn = pr.chineseClip;
+                sb.Append($"{(jp != null ? jp.name : "-")}\t{(cn != null ? cn.name : "-")}\t{(jp != null ? jp.length : cn != null ? cn.length : 0f):0.00}\n");
+                voices++;
+            }
+        }
+        File.WriteAllText(Path.Combine(dir, "voices.tsv"), sb.ToString());
+        int chars = 0;
+        foreach (var mm in GameUtil.Instance.GetCharacterContainer().characters)
+        {
+            if (mm == null || mm.id < 1000 || mm.id >= 2000 || mm.motions == null) continue;
+            var m2 = new System.Text.StringBuilder($"# {mm.name} (ID {mm.id}, {GameUtil.GetLocale("ActorName_" + mm.id)})\n# 名前\tクリップ\t秒\t攻撃判定\tループ\n");
+            foreach (var m in mm.motions)
+            {
+                if (m == null) continue;
+                var clip = m.bindAnimClip?.Clip;
+                float sec = clip != null ? clip.length / UnityEngine.Mathf.Max(0.05f, m.playSpeed) : 0f;
+                var hits = new System.Collections.Generic.List<float>();
+                if (m.animEvent != null)
+                    foreach (var e in m.animEvent)
+                        if (e?.callBack != null)
+                            foreach (var f in e.callBack)
+                                if (f?.funcName != null && f.funcName.EndsWith("AttackBoxOn")) hits.Add(e.playProcess);
+                m2.Append($"{m.name}\t{(clip != null ? clip.name : "-")}\t{sec:0.00}\t{(hits.Count > 0 ? string.Join(",", hits.OrderBy(h => h).Select(h => h.ToString("0.00"))) : "-")}\t{(clip != null && clip.isLooping ? "loop" : "")}\n");
+            }
+            File.WriteAllText(Path.Combine(dir, $"motions_{mm.id:0}.txt"), m2.ToString());
+            chars++;
+        }
+        CharacterMod.Ctx.Log.Info($"Character: 資料を書き出しました (声 {voices}、キャラ {chars}) → {dir}");
+    }
+
     public static void Tick()
     {
         if (UnityEngine.Time.unscaledTime < _next) return;
@@ -125,6 +172,9 @@ internal static class DevCommands
                     case "motion":
                         var mp = RusK.Mods.Shared.PlayerRef.Current;
                         mp?.GetMotionController()?.ChangeMotion(p[1], true, 0.1f, default);
+                        break;
+                    case "catalog":
+                        Catalog();
                         break;
                     case "ui":
                         Ui();

@@ -18,6 +18,8 @@
     <Reference Include="$(InteropDir)\Animancer.dll" Private="false" />
     <!-- キャラを並べる画面のスクロール (GridLayoutGroup・ScrollRect) -->
     <Reference Include="$(InteropDir)\UnityEngine.UI.dll" Private="false" />
+    <!-- 資料の書き出し (声の一覧 AudioClip) -->
+    <Reference Include="$(InteropDir)\UnityEngine.AudioModule.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>

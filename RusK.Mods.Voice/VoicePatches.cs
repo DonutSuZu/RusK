@@ -30,8 +30,11 @@ internal static class VoiceSwap
             var name = clip.name;
             if (LogPlayed) Log(name, where);
             if (!Enabled || Bank == null) return false;
-            var replacement = Bank.Find(name);
+            long owner = CharacterVoices.For(name);
+            var replacement = Bank.Find(name, owner);
             if (replacement == null) return false;
+            if (owner > 0 && Logged.Add("owner|" + name))
+                VoiceMod.Ctx?.Log.Info($"Voice: {name} をキャラ {owner} 専用の声に差し替え");
             clip = replacement;
             volume *= VolumeScale;
             return true;

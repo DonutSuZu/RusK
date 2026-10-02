@@ -9,7 +9,7 @@ namespace RusK.Mods.Voice;
 /// Voice Replacer: キャラのボイス (と効果音) を、RusK/voices に置いた音声ファイルに置き換える。
 /// ファイル名をゲームの音声の名前にする。名前は LogPlayed をオンにすると RusK/voices/_played.txt に書き出される
 /// </summary>
-[RuskMod("voice", "Voice Replacer", "1.0.0",
+[RuskMod("voice", "Voice Replacer", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1878",
     Description = "キャラのボイス (と効果音) を RusK/voices の音声ファイル (ogg / wav / mp3) に置き換える")]
