@@ -8,7 +8,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 - TabGUI / ClickGUI (Horion 風)、ArrayList・通知・ウォーターマーク
 - Mod の着脱 (AssemblyLoadContext)、アクショントリガー、Config プロファイル
 - Flex Window (Mod 用のドラッグ・リサイズできるウィンドウ)
-- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Effect Tuner** (エフェクトの色・大きさ) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM / PMX に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
+- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Effect Tuner** (エフェクトの色・大きさ・差し替え・自作エフェクト) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM / PMX に) / **Custom Item Model** (武器・装飾品の見た目を glb に) / **Custom Motion** (Blender・VRMA・Mixamo の動きをキャラの動作に)
 - **RusK Check**: ゲームの更新で壊れた Mod を教える診断機能
 
 **ゲーム**: [VED:Recure (Steam)](https://store.steampowered.com/app/3255500/Ved/)
@@ -58,6 +58,7 @@ RusK/
 ├─ RusK.Mods.Formation/ 同梱Mod: Party Formation (ゼンゼロ風の編成画面。PartyBridge 版 3 を使う)
 ├─ RusK.Mods.Model/     同梱Mod: キャラの見た目を VRM / PMX に (glb・PMX の読み込み・動きの写し・揺れ物・表情)
 ├─ RusK.Mods.ItemModel/ 同梱Mod: 武器・装飾品の見た目を glb に (glb の読み込みは RusK.Mods.Model/Vrm をソースごとリンク)
+├─ RusK.Mods.Motion/    同梱Mod: glb / vrma のアニメーションをキャラの動作に (Glb.cs を RusK.Mods.Model/Vrm からリンク)
 ├─ RusK.Mods.Shared/    ゲーム用 Mod で共有するソース (キャラの表示名など。各 csproj に Compile Include でリンク)
 ├─ EffectKit/           Effect Tuner の自作エフェクトを作る Unity 2022.3.7f1 のプロジェクト (AssetBundle に書き出す)
 ├─ RusK.Manager/        RusK Mod Manager (ランチャー。本体・Mod の導入と更新、ゲームの起動)
@@ -259,6 +260,25 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
   `Equip_<ID>` の下に glb を付け、元の見た目は `forceRenderingOff` で隠す
 - 発光: glb の emissive (KHR_materials_emissive_strength 対応) と、画面の「光らせる」(色・強さ)
 - 設定は `RusK\data\itemmodel\assignments.txt`
+
+### Custom Motion（動き）
+- `RusK\motions` に glb (Blender などで作ったアニメーション) か vrma (VRM のアニメーション) を置き、**Visual > CustomMotion > OpenWindow**
+  - 動きを押すと、その場で再生 (操作キャラと画面に見せるキャラ)。止めるとフェードで戻る
+  - 「このキャラの動作」から動作 (Idle・攻撃など) を選んでから動きを押すと割り当て (`RusK\data\motion\bindings.txt`)。その動作のときに自動で再生
+- 作り方は [tools/blender/README.md](tools/blender/README.md)。ゲームの骨格は **Model > ModelLab** の「骨格を glb で書き出す」(バインドポーズの骨格・メッシュ・テクスチャ)。
+  ゲームのメッシュは読み取り禁止なので、GPU の頂点バッファを `GraphicsBuffer.InternalGetData` で読み戻す (GetData はゲームから削られている)
+- 仕組み:
+  - ゲームの骨格で作った動き: 骨を名前 (パス) で対応させ、glb の骨が基準の姿勢から回った分 (根元の空間) をゲームの骨のバインドポーズに掛ける。
+    上書きするのはキーの値が動いている骨だけで、子はゲームの動きのまま付いていく (一部だけの動きも自然)
+  - ほかの骨格 (VRMA の対応表・Mixamo の `mixamorig:*`・VRoid の `J_Bip_*`): 人型の骨の役割で対応させ、両方を腕を水平にした T ポーズにそろえて写す。
+    背骨の数が違うときは一番先の背骨どうし。腰は上下だけ写す (前後左右の踏み込みはゲームがキャラごと動かす)
+  - お供の骨 (`UpArmTwist` / `ForeTwist` などのねじれの骨、骨の線のすぐ近くの兄弟の枝の骨) も、付いていく骨と同じだけ回す (袖が伸びないように)
+  - 上書きはアニメーションの後・Custom Model が VRM に写す前 (`CameraController` / `CinemachineBrain` の LateUpdate、優先度 First)。始めと終わりは 0.25 秒で混ぜる
+  - 割り当て: ループする動作は自分の時計。1 回きりの動作は `ActionAnimController.GetCurAnimNormalizedTime` に合わせ、
+    攻撃はゲームの攻撃判定の瞬間 (`MotionState.animEvent` の最初の `AttackBoxOn` の進み具合) に動きの当たる瞬間を合わせる
+    (それまでは伸び縮み、その後は実際の速さ)。当たる瞬間は自動 (手が腰から見て一番速く動く時間) か、画面のスライダーで決める
+- ゲームの動作のデータ: `PlayerController.m_motionMgr` (`MotionManager`) の `motions` (`MotionState`: `bindAnimClip` は Animancer の `ClipTransition`、
+  `attackBoxes`・`animEvent`・`comboName`・`playSpeed` など)。再生は Animancer (`ActionAnimController.m_anim`)、切り替えは `MotionController.ChangeMotion`
 
 ### Camera View（視点）
 - **Visual > CameraView** の View で「近い肩越し / 真後ろ / 一人称 / カスタム」を選ぶ

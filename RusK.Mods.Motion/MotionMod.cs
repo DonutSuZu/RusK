@@ -12,13 +12,13 @@ using UnityEngine;
 namespace RusK.Mods.Motion;
 
 /// <summary>
-/// Custom Motion (試作): RusK\motions の glb (Blender などで作ったアニメーション) を、ゲームのキャラの動きとして再生する。
+/// Custom Motion: RusK\motions の glb / vrma (Blender などで作ったアニメーション、VRM のアニメーション) を、ゲームのキャラの動きとして再生する。
 /// 骨は名前で対応させる (Model Lab の「骨格を glb で書き出す」で書き出した骨格で作った動きなら、そのまま使える)
 /// </summary>
-[RuskMod("motion", "Custom Motion", "0.1.0",
+[RuskMod("motion", "Custom Motion", "1.0.0",
     Author = "you",
     GameVersion = "0.0.1878",
-    Description = "Blender などで作ったアニメーション (glb) を、キャラの動きとして再生する (試作)")]
+    Description = "Blender などで作ったアニメーション (glb / vrma) を、キャラの動きとして再生する。待機・攻撃などの動作に割り当てられる")]
 public sealed class MotionMod : RuskMod
 {
     internal static IModContext Ctx;
@@ -79,7 +79,7 @@ public sealed class MotionMod : RuskMod
 
 internal sealed class MotionModule : Module
 {
-    public MotionModule(MotionWindow window) : base("CustomMotion", "Visual", "Blender などで作ったアニメーション (glb) を、キャラの動きとして再生する (試作)")
+    public MotionModule(MotionWindow window) : base("CustomMotion", "Visual", "Blender などで作ったアニメーション (glb / vrma) を、キャラの動きとして再生する。待機・攻撃などの動作に割り当てられる")
     {
         AddSetting(new ButtonSetting("OpenWindow", () => window.Visible = true, "画面を開く"));
         AddSetting(new ButtonSetting("OpenFolder", MotionMod.OpenFolder, "motions フォルダを開く"));
@@ -90,7 +90,7 @@ internal sealed class MotionModule : Module
 }
 
 /// <summary>
-/// 動きの画面 (試作):
+/// 動きの画面:
 /// 1. 動きを押すと、操作キャラと画面に見せるキャラでその場で再生 (試し用)
 /// 2. 「このキャラの動作」から動作を選んでから動きを押すと、その動作に割り当てる (その動作のときに自動で再生)
 /// </summary>

@@ -49,10 +49,10 @@
       "zh": "切换视角 (近距离越肩 / 正后方 / 第一人称 / 自定义)"
     },
     {
-      "id": "effect", "name": "Effect Tuner", "asset": "RuskEffect.dll",
-      "ja": "技やヒットのエフェクトの色・明るさ・大きさを、全体・キャラ・敵・エフェクトごとに変える",
-      "en": "Change the color, brightness and size of skill and hit effects, for everything, per character, for enemies or per effect",
-      "zh": "按全体、角色、敌人或单个特效, 更改技能和命中特效的颜色、亮度和大小"
+      "id": "effect", "name": "Effect Tuner", "asset": "RuskEffect.dll", "folders": ["effects"],
+      "ja": "技やヒットのエフェクトの色・明るさ・大きさを、全体・キャラ・敵・エフェクトごとに変える。ゲームの別のエフェクトや自作エフェクト (RusK\\effects の .bundle) への差し替えも",
+      "en": "Change the color, brightness and size of skill and hit effects (everything, per character, enemies or per effect). Can also swap them for other game effects or custom effects (.bundle in RusK\\effects)",
+      "zh": "按全体、角色、敌人或单个特效, 更改技能和命中特效的颜色、亮度和大小。也可替换为游戏中的其他特效或自制特效 (RusK\\effects 中的 .bundle)"
     },
     {
       "id": "party", "name": "Party", "asset": "RuskParty.dll",
@@ -89,6 +89,12 @@
       "ja": "武器・装飾品の見た目を glb にする (RusK\\props に .glb を置く)。発光も設定できる",
       "en": "Replaces weapons and accessories with glb models (put .glb files in RusK\\props). Glow can be set",
       "zh": "将武器和饰品替换为 glb 模型 (把 .glb 放入 RusK\\props)。可设置发光"
+    },
+    {
+      "id": "motion", "name": "Custom Motion", "asset": "RuskMotion.dll", "folders": ["motions"],
+      "ja": "Blender などで作ったアニメーション (glb) や VRM のアニメーション (vrma) を、キャラの動きとして再生する。待機・攻撃などの動作に割り当てられ、攻撃は当たる瞬間に合わせる",
+      "en": "Plays animations made in Blender etc. (glb) or VRM animations (vrma) as character motions. Assign them to actions such as idle or attacks; attacks are synced to the hit moment",
+      "zh": "将用 Blender 等制作的动画 (glb) 或 VRM 动画 (vrma) 作为角色动作播放。可分配给待机、攻击等动作, 攻击会对齐命中瞬间"
     }
   ]
 }

@@ -47,9 +47,9 @@ internal sealed class VrmModel
     public float ReceiveShadowBase = -1f;
 
     /// <summary>基準の姿勢 (T ポーズ) を読み込み時に決めたもの。null なら読み込み直後の姿勢が基準 (VRM は仕様で T ポーズ)</summary>
-    public Dictionary<HumanBodyBones, (Transform bone, Quaternion rotation, Vector3 position)> RestOverride;
+    public Dictionary<HumanBodyBones, (Transform bone, Quaternion rotation, Vector3 position)> RestOverride = null;
     /// <summary>動きを写した後に毎フレーム呼ぶ (PMX の付与: 回転を別の骨に写す)</summary>
-    public Action AfterPose;
+    public Action AfterPose = null;
 
     public void Destroy()
     {

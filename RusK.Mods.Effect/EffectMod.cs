@@ -12,7 +12,7 @@ namespace RusK.Mods.Effect;
 [RuskMod("effect", "Effect Tuner", "1.0.0",
     Author = "you",
     GameVersion = "0.0.1878",
-    Description = "技やヒットのエフェクトの色・明るさ・大きさを、全体・キャラ・敵・エフェクトごとに変える")]
+    Description = "技やヒットのエフェクトの色・明るさ・大きさを変える。ゲームの別のエフェクトや自作エフェクト (RusK/effects) に差し替えもできる")]
 public sealed class EffectMod : RuskMod
 {
     internal static IModContext Ctx;

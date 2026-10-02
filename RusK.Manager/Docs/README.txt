@@ -122,6 +122,15 @@ RusK と Mod の導入・更新をするアプリです (RusK-Mod-Manager.exe)�
                 2. Visual > CustomItemModel を開き、装備を選んでから glb を選ぶ
                 3. 位置・回転・大きさのずれを、同じ画面で調整する
                 「発光」で光らせることもできます (glb に発光が入っていれば、それも光ります)
+- Custom Motion: Blender などで作った動き (glb) や VRM のアニメーション (vrma) を、キャラの動きとして再生します
+                1. このフォルダの motions に .glb か .vrma を置く
+                   (Mixamo の FBX は Blender で glb に変換してください。手順: https://github.com/DonutSuZu/RusK/tree/main/tools/blender)
+                2. Visual > CustomMotion の OpenWindow を開き、動きを押すとその場で再生します (止めるで戻ります)
+                3. 「このキャラの動作」から動作 (Idle = 待機、攻撃など) を選んでから動きを押すと、その動作に割り当てます
+                   その動作のときに自動で再生されます。攻撃は、当たる瞬間がゲームの攻撃判定に合うように再生します
+                   (ずれるときは、同じ画面の「当たる瞬間」で調整し、「止めて見る」で確認できます)
+                全身の動きは、走る動作などに割り当てると脚が合わないことがあります。待機・攻撃などに向いています
+                動きの素材は、利用規約で使用が許可されたものを使ってください
 
 ■ フォルダ
 - RusK\mods     : Mod の DLL (ここに置くと読み込まれます)
@@ -130,6 +139,9 @@ RusK と Mod の導入・更新をするアプリです (RusK-Mod-Manager.exe)�
 - RusK\music    : Music Manager の曲
 - RusK\models   : Custom Model の VRM・PMX (アンインストールしても消しません)
 - RusK\props    : Custom Item Model の glb (アンインストールしても消しません)
+- RusK\motions  : Custom Motion の動き (glb・vrma。アンインストールしても消しません)
+- RusK\voices   : Voice Replacer の音声
+- RusK\effects  : Effect Tuner の自作エフェクト (.bundle)
 
 ■ 注意
 - 不具合が出たときは BepInEx\LogOutput.log を確認してください
