@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RuskCharacter</AssemblyName>
+    <RootNamespace>RusK.Mods.Character</RootNamespace>
+    <Version>0.1.0</Version>
+    <DeployDir>$(RuskGameDir)\mods</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- キャラの定義 (MotionManager)・セーブ (GameSave)・名前 (GameUtil.GetLocale) -->
+    <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\RusK.Mods.Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
+  </ItemGroup>
+</Project>
