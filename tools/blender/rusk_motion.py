@@ -96,8 +96,8 @@ def animate(arm, frames, fps, pose, name="RusK_Motion"):
     arm.animation_data.action.name = name
 
 
-def preview(arm, path, frames=(0,), camera=(0.0, -2.6, 1.0), size=(420, 600)):
-    """正面から撮った画像を書き出す (path の .png の前に _番号 を付ける)"""
+def preview(arm, path, frames=(0,), camera=(0.0, -2.6, 1.0), size=(420, 600), look_at=None):
+    """画像を書き出す (path の .png の前に _番号 を付ける)。look_at を渡すとその点を向く (斜めから撮るとき)。無ければ正面"""
     scene = bpy.context.scene
     bpy.ops.object.mode_set(mode="OBJECT")
     scene.render.engine = "BLENDER_WORKBENCH"
@@ -108,6 +108,9 @@ def preview(arm, path, frames=(0,), camera=(0.0, -2.6, 1.0), size=(420, 600)):
         scene.collection.objects.link(cam)
     cam.location = camera
     cam.rotation_euler = (math.radians(88), 0, 0)
+    if look_at is not None:
+        d = Vector(look_at) - Vector(camera)
+        cam.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
     scene.camera = cam
     scene.render.resolution_x, scene.render.resolution_y = size
     files = []
