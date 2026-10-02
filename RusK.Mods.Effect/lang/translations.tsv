@@ -1,0 +1,27 @@
+# 元の文	英語	中国語 (簡体字)
+技やヒットのエフェクトの色・明るさ・大きさを、全体・キャラ・敵・エフェクトごとに変える	Change the color, brightness and size of skill and hit effects, for everything, per character, for enemies or per effect	按全体、角色、敌人或单个特效, 更改技能和命中特效的颜色、亮度和大小
+Effect Tuner の画面を開く / 閉じる	Open / close the Effect Tuner window	打开 / 关闭 Effect Tuner 窗口
+技やヒットのエフェクトの色・明るさ・大きさを変える	Change the color, brightness and size of skill and hit effects	更改技能和命中特效的颜色、亮度和大小
+設定画面を開く	Open the settings window	打开设置窗口
+敵	Enemies	敌人
+OFF です (Visual > EffectTuner を ON にすると効きます)	Off (turn on Visual > EffectTuner to apply)	已关闭 (打开 Visual > EffectTuner 后生效)
+設定	Settings	设置
+対象	Target	对象
+最近出たエフェクト	Recent effects	最近出现的特效
+すべて	All	全部
+まだありません。戦闘で技を出すと、ここに出ます	Nothing yet. Use skills in battle and they will show up here	暂无。在战斗中使用技能后会显示在这里
+このエフェクトだけの設定はありません (キャラや全体の設定がかかります)	No settings for this effect only (character or global settings apply)	没有仅针对此特效的设置 (会应用角色或全体的设置)
+この対象の設定はありません	No settings for this target	此对象没有设置
+設定を作る	Create settings	创建设置
+この設定を使う	Use these settings	使用此设置
+色を変える	Change color	更改颜色
+色相	Hue	色相
+白い部分にも色をつける	Also color white parts	白色部分也上色
+彩度	Saturation	饱和度
+明るさ	Brightness	亮度
+不透明度	Opacity	不透明度
+大きさ	Size	大小
+表示しない	Hide	隐藏
+この設定を消す	Delete these settings	删除此设置
+次にエフェクトが出たときから変わります	Changes apply the next time the effect appears	下次特效出现时生效
+全体	Everything	全体

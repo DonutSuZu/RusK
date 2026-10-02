@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RuskEffect</AssemblyName>
+    <RootNamespace>RusK.Mods.Effect</RootNamespace>
+    <Version>1.0.0</Version>
+    <DeployDir>$(RuskGameDir)\mods</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ゲームのエフェクト (GameUtil.LoadEffect) に割り込む -->
+    <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+    <!-- エフェクトはほぼ全部 ParticleSystem -->
+    <Reference Include="$(InteropDir)\UnityEngine.ParticleSystemModule.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- キャラの表示名など -->
+    <Compile Include="..\RusK.Mods.Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
+  </ItemGroup>
+</Project>

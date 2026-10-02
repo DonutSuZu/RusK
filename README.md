@@ -8,7 +8,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 - TabGUI / ClickGUI (Horion 風)、ArrayList・通知・ウォーターマーク
 - Mod の着脱 (AssemblyLoadContext)、アクショントリガー、Config プロファイル
 - Flex Window (Mod 用のドラッグ・リサイズできるウィンドウ)
-- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
+- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Effect Tuner** (エフェクトの色・大きさ) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
 - **RusK Check**: ゲームの更新で壊れた Mod を教える診断機能
 
 **ゲーム**: [VED:Recure (Steam)](https://store.steampowered.com/app/3255500/Ved/)
@@ -51,6 +51,7 @@ RusK/
 ├─ RusK.Mods.Music/     同梱Mod: 戦闘 BGM の置き換え
 ├─ RusK.Mods.Voice/     同梱Mod: ボイス・効果音の置き換え (ゲームの AudioPlayer に割り込む)
 ├─ RusK.Mods.Camera/    同梱Mod: 視点の切り替え
+├─ RusK.Mods.Effect/    同梱Mod: エフェクトの色・明るさ・大きさ (GameUtil.LoadEffect に割り込む)
 ├─ RusK.Mods.Party/     同梱Mod: アクティブ3人 (ほかの Mod 用の入口 PartyBridge)
 ├─ RusK.Mods.Chain/     同梱Mod: 連携攻撃 (Party の PartyBridge をリフレクションで使う)
 ├─ RusK.Mods.Op2/       同梱Mod: Party Op.2 (エンドフィールド風のバトルスタイル。Party から呼ばれる)
@@ -202,6 +203,16 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
   ボイスはどれも `AudioPlayer` を通る (戦闘 `PlayVoiceFunc`、吹き出し `PlayBubbleVoice`、会話 `ResolveVoiceClip`)。
   差し替えた音声では、ゲームの言語の選び直し (`PlayPersistentVoice` の resolveLanguage) をしない
 - 音声は起動時に全部読み込んでおく (`HideFlags.DontUnloadUnusedAsset` でシーンの切り替えでも消さない)。Volume で置き換えた音の音量を変えられる
+
+### Effect Tuner（エフェクトの色・大きさ）
+- **Visual > EffectTuner > OpenWindow** で設定画面を開く。対象 (全体 / キャラ / 敵 / 最近出たエフェクト) を選んで「設定を作る」
+- 変えられるもの: 色相 (色付きの部分の色を変える)・白い部分にも色をつける量・彩度・明るさ・不透明度・大きさ・非表示。細かい対象の設定が優先 (エフェクト → キャラ / 敵 → 全体)
+- 設定は `RusK\data\effect\rules.json` に保存。次にそのエフェクトが出たときから効く
+- 仕組み: エフェクトはどれも `GameUtil.LoadEffect` (3 つ) を通るので、その後に設定をかける。持ち主は呼んだ関数で決める
+  (`PlayerController.CreateEffectOnTrans` / `SetPerfectDefence` / `CreateGroundTrail` = そのキャラ、`EnemyController.GetHitCallback` = 攻撃したキャラ、`EnemyController.CreateEffect` など = 敵)
+- ゲームのエフェクト (`Resources/VFX`、約 400 個) はほぼ全部 ParticleSystem で、シェーダーは色のプロパティを持たない。
+  色はパーティクルの `startColor` / `colorOverLifetime` で付いているので、そこの色相・彩度・明るさを変える (テクスチャ自体の色は変わらない)
+- エフェクトはプールで使い回されるので、最初に見たときの元の値を覚えて毎回そこから計算する (同じ設定がかかっていれば何もしない)
 
 ### Custom Model（VRM）
 - `RusK\models` に `.vrm` (VRM 0.x / 1.0) を置き、**Visual > CustomModel** でキャラごとに選ぶ

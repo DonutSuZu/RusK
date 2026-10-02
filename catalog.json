@@ -49,6 +49,12 @@
       "zh": "切换视角 (近距离越肩 / 正后方 / 第一人称 / 自定义)"
     },
     {
+      "id": "effect", "name": "Effect Tuner", "asset": "RuskEffect.dll",
+      "ja": "技やヒットのエフェクトの色・明るさ・大きさを、全体・キャラ・敵・エフェクトごとに変える",
+      "en": "Change the color, brightness and size of skill and hit effects, for everything, per character, for enemies or per effect",
+      "zh": "按全体、角色、敌人或单个特效, 更改技能和命中特效的颜色、亮度和大小"
+    },
+    {
       "id": "party", "name": "Party", "asset": "RuskParty.dll",
       "ja": "アクティブ3人。仲間 2 人と戦闘中にキーで交代。切り替えパリィ・戦闘不能時の自動交代・パッシブバフの共有",
       "en": "Three active characters. Switch between you and two companions in battle; switch parries; auto-switch when knocked out; shared passive buffs",
