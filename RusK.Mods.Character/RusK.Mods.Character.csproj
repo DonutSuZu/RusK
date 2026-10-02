@@ -11,6 +11,8 @@
   <ItemGroup>
     <!-- キャラの定義 (MotionManager)・セーブ (GameSave)・名前 (GameUtil.GetLocale) -->
     <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+    <!-- キャラの絵 (PNG の読み書き) -->
+    <Reference Include="$(InteropDir)\UnityEngine.ImageConversionModule.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>

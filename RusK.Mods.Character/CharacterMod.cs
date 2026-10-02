@@ -46,6 +46,8 @@ internal sealed class CharacterModule : Module
     {
         AddSetting(new ButtonSetting("SwitchTo", SwitchTo, "新しいキャラに切り替える (押すたびに次のキャラ)"));
         AddSetting(new ButtonSetting("OpenFolder", OpenFolder, "characters フォルダを開く"));
+        AddSetting(new ButtonSetting("Capture", () => { var p = RusK.Mods.Shared.PlayerRef.Current; if (p != null) CharacterCapture.Request((long)Math.Round(p.GetPlayerId())); },
+            "今のキャラ (新しいキャラ) の絵の素材を撮り直す (captures フォルダ)"));
         AddSetting(new ButtonSetting("DumpChoose", DumpChoose, "(調査) 開いているキャラ選択の画面をログに書き出す"));
         Enabled = true;
     }
@@ -56,6 +58,7 @@ internal sealed class CharacterModule : Module
     public override void OnUpdate()
     {
         CharacterRegistry.Tick();
+        try { CharacterCapture.Tick(); } catch { }
         // (調査) キャラ選択の画面が開いたら、一度だけ自動で書き出す
         if (UnityEngine.Time.unscaledTime < _nextDump) return;
         _nextDump = UnityEngine.Time.unscaledTime + 1f;

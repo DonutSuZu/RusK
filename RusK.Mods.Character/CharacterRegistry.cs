@@ -319,9 +319,14 @@ internal static class ResourcesLoadPatch
                 // ほかのキャラごとのデータ (BuffList_〈ID〉 = キャラのバフ、RoleChoose の絵など): 土台のキャラのもの。
                 // 型を指定して読んでいるときは同じ型で (Sprite で読むところに Texture2D を渡すと、画面を作る処理が止まる)
                 var basePath = path.Substring(0, path.Length - ids.Length) + def.Base;
-                __result = __args.Length > 1 && __args[1] is Il2CppSystem.Type type
-                    ? Resources.Load(basePath, type)
-                    : Resources.Load(basePath);
+                var type = __args.Length > 1 ? __args[1] as Il2CppSystem.Type : null;
+                __result = type != null ? Resources.Load(basePath, type) : Resources.Load(basePath);
+                // 絵: 土台の絵をお手本として書き出し、キャラのフォルダの images/〈種類〉.png があればそれを使う
+                int slash = path.LastIndexOf('/');
+                var kind = path.Substring(slash + 1, path.Length - slash - 1 - ids.Length - 1);
+                CharacterImages.ExportTemplate(def, kind, __result);
+                var custom = CharacterImages.Load(def, kind, type, __result);
+                if (custom != null) __result = custom;
             }
             if (Logged.Add(path)) CharacterMod.Ctx?.Log.Info($"Character: ゲームのデータ '{path}' の代わりに {(__result == null ? "(見つからない)" : __result.name)} を渡しました");
             return;
