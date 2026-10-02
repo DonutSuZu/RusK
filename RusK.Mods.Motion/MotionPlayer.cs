@@ -42,6 +42,8 @@ internal sealed class MotionPlayer
     public float Time;
     /// <summary>画面から手で再生した (割り当ての自動の出し入れで止めない)</summary>
     public bool Manual;
+    /// <summary>この時間 (秒) で止めて見せる (当たる瞬間の確認用)。null なら再生</summary>
+    public float? Hold;
 
     /// <summary>今の混ざり具合 (0 = ゲームの動き、1 = glb の動き)。Target に向かって FadeTime 秒で変わる</summary>
     public float Weight;
@@ -371,7 +373,8 @@ internal sealed class MotionPlayer
     public void Apply(float dt)
     {
         if (Root == null) return;
-        Time += dt;
+        if (Hold is float hold) Time = hold;
+        else Time += dt;
         Weight = Mathf.MoveTowards(Weight, Target, FadeTime > 0f ? dt / FadeTime : 1f);
         if (Weight <= 0f) return;
         // ゆっくり始まりゆっくり終わる混ぜ方
@@ -392,7 +395,11 @@ internal sealed class MotionPlayer
             p.Bone.rotation = w >= 1f ? rot : Quaternion.Slerp(_oldRot[i], rot, w);
             if (p.Move)
             {
-                var pos = Root.TransformPoint(p.DstRestPos + (_wp[p.Node] - _srcRestPos[p.Node]) * _moveScale);
+                var move = (_wp[p.Node] - _srcRestPos[p.Node]) * _moveScale;
+                // 人型の載せ替えでは腰の上下 (しゃがむ・跳ぶ) だけ写す。前後左右の移動 (踏み込みなど) はゲームがキャラごと動かすので、
+                // 写すと見た目だけ二重に進む
+                if (Humanoid) move.x = move.z = 0f;
+                var pos = Root.TransformPoint(p.DstRestPos + move);
                 p.Bone.position = w >= 1f ? pos : Vector3.Lerp(_oldPos[i], pos, w);
             }
         }

@@ -264,6 +264,48 @@ internal sealed class GltfMotion
         }
     }
 
+    /// <summary>
+    /// 当たる瞬間の見当: 手 (右・左) が一番速く動く時間 (秒)。振り抜きの瞬間に近い。
+    /// 人型の対応が無ければ、ゲームの骨格の手 (Bip001 R Hand など)
+    /// </summary>
+    public float AutoHit => _autoHit ??= SuggestHit();
+    private float? _autoHit;
+
+    public float SuggestHit()
+    {
+        var hands = new List<int>();
+        foreach (var hb in new[] { HumanBodyBones.RightHand, HumanBodyBones.LeftHand })
+            if (Human.TryGetValue(hb, out var i)) hands.Add(i);
+        if (hands.Count == 0)
+            for (int i = 0; i < Names.Length; i++)
+                if (Names[i] == "Bip001 R Hand" || Names[i] == "Bip001 L Hand") hands.Add(i);
+        if (hands.Count == 0 || Length <= 0f) return Length * 0.3f;
+
+        int n = Names.Length;
+        var lp = new Vector3[n]; var lr = new Quaternion[n]; var wp = new Vector3[n]; var wr = new Quaternion[n];
+        // 腰からの位置で比べる (体ごと動く分は除く)
+        Human.TryGetValue(HumanBodyBones.Hips, out var hips);
+        const float step = 1f / 60f;
+        float best = -1f, bestT = Length * 0.3f;
+        var prev = new Vector3[hands.Count];
+        for (float t = 0f; t <= Length; t += step)
+        {
+            Sample(t, lp, lr);
+            World(lp, lr, wp, wr);
+            for (int k = 0; k < hands.Count; k++)
+            {
+                var pos = wp[hands[k]] - (Human.ContainsKey(HumanBodyBones.Hips) ? wp[hips] : Vector3.zero);
+                if (t > 0f)
+                {
+                    float speed = (pos - prev[k]).magnitude; // 位置は大きさを掛けた後なので、どの骨格でもメートル
+                    if (speed > best) { best = speed; bestT = t; }
+                }
+                prev[k] = pos;
+            }
+        }
+        return bestT;
+    }
+
     /// <summary>各骨の根元の空間での位置・回転 (親から順に掛ける)</summary>
     public void World(Vector3[] localPos, Quaternion[] localRot, Vector3[] worldPos, Quaternion[] worldRot)
     {

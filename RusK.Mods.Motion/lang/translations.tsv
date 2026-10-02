@@ -16,3 +16,10 @@ motions フォルダを開く	Open the motions folder	打开 motions 文件夹
 割り当てを外す	Remove assignment	取消分配
 選ぶのをやめる	Cancel	取消选择
 (今)	(now)	(当前)
+この動作には攻撃判定がありません (動き全体を動作の長さに合わせます)	This action has no attack hit (the whole motion is fitted to the action length)	此动作没有攻击判定 (会把整个动作对齐到动作长度)
+ゲームの攻撃判定: 進み具合 {0} ({1} 秒目)	Game attack hit: progress {0} (at {1} s)	游戏的攻击判定: 进度 {0} (第 {1} 秒)
+当たる瞬間 (自動)	Hit moment (auto)	命中瞬间 (自动)
+当たる瞬間	Hit moment	命中瞬间
+止めて見る	Pause and look	暂停查看
+自動に戻す	Back to auto	恢复自动
+見るのをやめる	Stop looking	停止查看

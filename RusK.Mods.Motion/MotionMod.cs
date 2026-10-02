@@ -147,6 +147,7 @@ internal sealed class MotionWindow : RuskWindow
                 _selected = null;
             }
             if (gui.Button(L.T("選ぶのをやめる"))) _selected = null;
+            if (_selected != null) DrawHit(gui, p);
         }
         var current = p.m_animController?.m_animMotion?.name;
         var seen = new HashSet<string>();
@@ -157,6 +158,55 @@ internal sealed class MotionWindow : RuskWindow
             string right = (bound != null ? "★ " + bound.Substring(bound.IndexOf('#') + 1) : "") + (m.name == current ? "  " + L.T("(今)") : "");
             if (gui.Selectable(m.name, _selected == m.name, right, bound != null ? RuskStyle.Accent : null))
                 _selected = _selected == m.name ? null : m.name;
+        }
+    }
+
+    /// <summary>選んだ動作の割り当ての、当たる瞬間の調整 (攻撃の動作だけ)</summary>
+    private void DrawHit(WindowGui gui, PlayerController p)
+    {
+        long id = CharId(p);
+        var bound = MotionBinder.Get(id, _selected);
+        if (bound == null) return;
+        var (key, hit) = MotionBinder.Parse(bound);
+        var glb = MotionLibrary.Find(key);
+        MotionState state = null;
+        foreach (var m in p.m_motionMgr.motions)
+            if (m != null && m.name == _selected) { state = m; break; }
+        var gameHit = MotionBinder.GameHit(state);
+        if (gameHit == null)
+        {
+            gui.Label(L.T("この動作には攻撃判定がありません (動き全体を動作の長さに合わせます)"), RuskStyle.TextDim, small: true);
+            return;
+        }
+        string progress = gameHit.Value.ToString("0.00"), seconds = (gameHit.Value * MotionBinder.ClipSeconds(state)).ToString("0.00");
+        gui.Label(L.T("ゲームの攻撃判定: 進み具合 {0} ({1} 秒目)", progress, seconds), RuskStyle.TextDim, small: true);
+        if (glb == null) return;
+        float cur = hit ?? glb.AutoHit;
+        float v = gui.Slider("hit", hit == null ? L.T("当たる瞬間 (自動)") : L.T("当たる瞬間"), cur, 0f, glb.Length, "0.00s");
+        if (Mathf.Abs(v - cur) > 0.005f)
+        {
+            MotionBinder.SetHit(id, _selected, v);
+            Preview(p, glb, v);
+        }
+        gui.BeginRow(1f, 1f, 1f);
+        if (gui.Button(L.T("止めて見る"))) Preview(p, glb, cur);
+        if (gui.Button(L.T("自動に戻す"), enabled: hit != null)) MotionBinder.SetHit(id, _selected, null);
+        if (gui.Button(L.T("見るのをやめる"))) MotionPlayers.StopAll();
+    }
+
+    /// <summary>動きを time 秒で止めて、操作キャラと画面に見せるキャラで見せる (当たる瞬間の確認)</summary>
+    private static void Preview(PlayerController p, GltfMotion m, float time)
+    {
+        foreach (var root in MotionMod.ShowModels().Prepend(p.transform))
+        {
+            if (MotionPlayers.Active.TryGetValue(root.Pointer, out var list))
+            {
+                var ex = list.LastOrDefault(x => x.Manual && x.Motion == m && x.Target > 0f);
+                if (ex != null) { ex.Hold = time; continue; }
+            }
+            var player = MotionPlayers.Play(root, m);
+            player.Manual = true;
+            player.Hold = time;
         }
     }
 
