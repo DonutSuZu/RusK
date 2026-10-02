@@ -31,8 +31,8 @@ WEAPON = ["BN_weapon_01", "WeaponHolder_0"]
 # ---- 基準: 立ち姿勢 (Idle の最初) + 1 段目の握り (刀の骨・右手の指)
 base = rr.sample(arm, "Idle", 0.0)
 grip_bones = WEAPON + [n for n in BODY if n.startswith("Bip001 R Finger")]
-grip = rr.sample(arm, "RedLightCombo0", 0.1, grip_bones)
-base.update(grip)
+base = rr.graft(arm, base, rr.sample(arm, "RedLightCombo0", 0.1), grip_bones)
+rr.fix_chains(arm, base)
 rr.apply(arm, base)
 
 shoulder_r = rr.world(arm, "Bip001 R UpperArm")
@@ -136,10 +136,10 @@ for f in range(frames + 1):
 
 # ---- IK (肘・膝) と足の固定
 scene.frame_set(0)
-rr.ik(arm, "Bip001 R Forearm", hand_r, pole_r)
-rr.ik(arm, "Bip001 L Forearm", hand_l, pole_l)
-rr.ik(arm, "Bip001 R Calf", ft_r, knee_r)
-rr.ik(arm, "Bip001 L Calf", ft_l, knee_l)
+rr.ik(arm, "Bip001 R Hand", hand_r, pole_r)
+rr.ik(arm, "Bip001 L Hand", hand_l, pole_l)
+rr.ik(arm, "Bip001 R Foot", ft_r, knee_r)
+rr.ik(arm, "Bip001 L Foot", ft_l, knee_l)
 rr.copy_rot(arm, "Bip001 R Foot", ft_r)
 rr.copy_rot(arm, "Bip001 L Foot", ft_l)
 c = rr.copy_rot(arm, "Bip001 R Hand", hand_r_rot)
@@ -161,4 +161,7 @@ rr.follow_twists(arm, base, 0, frames)
 if preview_path:
     shots = [0, round(0.18 * FPS), round(0.25 * FPS), round(HIT * FPS), round(0.38 * FPS), round(0.8 * FPS), round(1.4 * FPS)]
     rr.sheet(arm, preview_path, shots, labels=[f"{s / FPS:.2f}s" for s in shots])
+for f in (0, round(HIT * FPS), round(1.0 * FPS)):
+    scene.frame_set(f)
+    print(f"[rusk] 確認 {f / FPS:.2f}s 左足 {tuple(round(v, 2) for v in rr.world(arm, 'Bip001 L Foot'))} 左すね {tuple(round(v, 2) for v in rr.world(arm, 'Bip001 L Calf'))}")
 rr.export(arm, out_path, "RusK_SwordSweep")

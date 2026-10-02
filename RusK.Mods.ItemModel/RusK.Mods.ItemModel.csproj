@@ -25,6 +25,8 @@
     <Compile Include="..\RusK.Mods.Model\Vrm\Expressions.cs" Link="Gltf\Expressions.cs" />
     <Compile Include="..\RusK.Mods.Model\Vrm\SkirtFollow.cs" Link="Gltf\SkirtFollow.cs" />
     <Compile Include="..\RusK.Mods.Model\Vrm\SkirtTuning.cs" Link="Gltf\SkirtTuning.cs" />
+    <!-- PMX (MMD のモデル) の読み込み -->
+    <Compile Include="..\RusK.Mods.Model\Vrm\Pmx\*.cs" Link="Gltf\Pmx\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

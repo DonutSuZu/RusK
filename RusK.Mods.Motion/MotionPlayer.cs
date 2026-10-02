@@ -26,9 +26,15 @@ internal sealed class MotionPlayer
         public readonly Vector3 DstRestPos;
         public readonly bool Move;
 
-        public Pair(Transform bone, int node, Quaternion dstRest, Vector3 dstRestPos, bool move)
+        /// <summary>
+        /// 親から見た値 (glb の位置・向き) をそのまま写す。メッシュに付いていない骨 (根元の Bip001・武器の骨など) は、
+        /// ゲーム側の基準の姿勢がはっきりしない (再生し始めたときの姿勢になる) ので、差分ではなくこちらで写す
+        /// </summary>
+        public readonly bool Local;
+
+        public Pair(Transform bone, int node, Quaternion dstRest, Vector3 dstRestPos, bool move, bool local = false)
         {
-            Bone = bone; Node = node; DstRest = dstRest; DstRestPos = dstRestPos; Move = move;
+            Bone = bone; Node = node; DstRest = dstRest; DstRestPos = dstRestPos; Move = move; Local = local;
         }
     }
 
@@ -89,6 +95,8 @@ internal sealed class MotionPlayer
             if (!byName.ContainsKey(t.name)) byName[t.name] = t;
         }
         var rest = GameRest(root);
+        // メッシュに付いている骨 (Rest() が途中で、付いていない骨の値も rest に書き足すので、先に覚えておく)
+        var bound = new HashSet<IntPtr>(rest.Keys);
 
         var pairs = new List<(Pair pair, int depth)>();
         int direct = 0;
@@ -104,8 +112,12 @@ internal sealed class MotionPlayer
         {
             if (!motion.Keyed[i]) continue;
             if (!byPath.TryGetValue(SrcPath(i), out var bone) && !byName.TryGetValue(motion.Names[i], out bone)) continue;
+            bool bind = bound.Contains(bone.Pointer);
             var r = Rest(bone, root, rest);
-            pairs.Add((new Pair(bone, i, r.rotation, new Vector3(r.m03, r.m13, r.m23), motion.Moves[i]), Depth(bone, root)));
+            var restPos = new Vector3(r.m03, r.m13, r.m23);
+            // 基準の位置が glb とゲームで食い違う骨 (glb を書き出したときと、ゲームのメッシュの基準が違う武器の骨など) も、親から見た値をそのまま写す
+            bool local = !bind || (restPos - _srcRestPos[i]).magnitude > 0.02f;
+            pairs.Add((new Pair(bone, i, r.rotation, restPos, motion.Moves[i], local), Depth(bone, root)));
         }
         // 親から順に写す (子の向きは親を動かした後に決める)
         _pairs = pairs.OrderBy(p => p.depth).Select(p => p.pair).ToArray();
@@ -390,6 +402,15 @@ internal sealed class MotionPlayer
             if (p.Bone == null) continue;
             _oldRot[i] = p.Bone.rotation;
             _oldPos[i] = p.Bone.position;
+            if (p.Local && p.Bone.parent != null)
+            {
+                var parent = p.Bone.parent;
+                var lrot = parent.rotation * _lr[p.Node];
+                p.Bone.rotation = w >= 1f ? lrot : Quaternion.Slerp(_oldRot[i], lrot, w);
+                var lpos = parent.TransformPoint(_lp[p.Node]);
+                p.Bone.position = w >= 1f ? lpos : Vector3.Lerp(_oldPos[i], lpos, w);
+                continue;
+            }
             var delta = _wr[p.Node] * _srcRestInv[p.Node];
             var rot = rootRot * delta * p.DstRest;
             p.Bone.rotation = w >= 1f ? rot : Quaternion.Slerp(_oldRot[i], rot, w);

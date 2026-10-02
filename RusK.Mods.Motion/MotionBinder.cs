@@ -22,6 +22,9 @@ internal static class MotionBinder
     /// <summary>"キャラの ID/動作の名前" → "ファイル#アニメーション"</summary>
     private static readonly Dictionary<string, string> Bindings = new();
     private static bool _loaded;
+    private static float _nextWatch;
+    private static long _stamp;
+    private static readonly HashSet<string> Warned = new();
 
     // 再生中の割り当て (キャラの根元ごと)
     private sealed class Current
@@ -100,6 +103,32 @@ internal static class MotionBinder
     /// <summary>bindings.txt を次に使うときに読み直す (手で書き換えたとき用)</summary>
     public static void ReloadBindings() => _loaded = false;
 
+    /// <summary>
+    /// motions フォルダの動き・bindings.txt が書き換わったら (Blender で書き出し直したなど)、自動で読み込み直す (1 秒ごとに見る)
+    /// </summary>
+    private static void Watch()
+    {
+        if (Time.unscaledTime < _nextWatch) return;
+        _nextWatch = Time.unscaledTime + 1f;
+        long stamp = 0;
+        try
+        {
+            if (File.Exists(FilePath)) stamp = File.GetLastWriteTimeUtc(FilePath).Ticks;
+            if (Directory.Exists(MotionMod.Folder))
+                foreach (var f in Directory.GetFiles(MotionMod.Folder, "*.*", SearchOption.AllDirectories))
+                    stamp = stamp * 31 + File.GetLastWriteTimeUtc(f).Ticks + f.Length;
+        }
+        catch { return; }
+        if (_stamp != 0 && stamp != _stamp)
+        {
+            MotionLibrary.Reload();
+            _loaded = false;
+            Warned.Clear();
+            MotionMod.Ctx.Log.Info("Motion: motions フォルダか bindings.txt が変わったので読み込み直しました");
+        }
+        _stamp = stamp;
+    }
+
     private static void Load()
     {
         if (_loaded) return;
@@ -130,6 +159,7 @@ internal static class MotionBinder
     /// <summary>毎フレーム (動きを写す前に): 操作キャラの今の動作に合わせて、割り当てた動きを出し入れする</summary>
     public static void Update()
     {
+        Watch();
         Load();
         if (Bindings.Count == 0 && Playing.Count == 0) return;
         var p = PlayerRef.Current;
@@ -153,6 +183,8 @@ internal static class MotionBinder
                 Playing.Remove(root.Pointer);
                 var (glbKey, hit) = Parse(want);
                 var glb = glbKey != null ? MotionLibrary.Find(glbKey) : null;
+                if (glbKey != null && glb == null && Warned.Add(glbKey))
+                    MotionMod.Ctx.Log.Warning($"Motion: 割り当て {Key(id, name)} の動き '{glbKey}' が見つかりません (ファイル名#アニメーションの名前 を確かめてください)");
                 if (glb != null)
                 {
                     var player = MotionPlayers.Play(root, glb, 0.15f);

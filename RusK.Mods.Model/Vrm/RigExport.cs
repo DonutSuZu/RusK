@@ -48,7 +48,7 @@ internal static class RigExport
     /// <summary>キャラの下に無いが、骨に付けて書き出したい固いメッシュ (しまってある武器など)。BoneName の骨に、Local の位置関係で付ける</summary>
     public sealed class Attach
     {
-        public MeshRenderer Renderer;
+        public Renderer Renderer;
         public string BoneName;
         public Matrix4x4 Local; // メッシュ → 骨
     }
@@ -214,9 +214,15 @@ internal static class RigExport
         }
 
         // ---- 武器など、骨に付いた固いメッシュ (MeshRenderer)。一番近い骨 1 本だけに付ける (Blender で刃の向きを見ながら動きを作るため)
-        var rigid = new List<(MeshRenderer mr, Transform bone, Matrix4x4 local)>();
-        foreach (var mr in character.GetComponentsInChildren<MeshRenderer>(true)) // しまっている武器 (非表示) も
+        // 置き換えた武器 (Custom Item Model の RusK_ItemModel の下) は、骨付きのメッシュでも、今の形のまま固いメッシュとして書く。
+        // 置き換えで隠した元の見た目 (forceRenderingOff) は書かない
+        var rigid = new List<(Renderer mr, Transform bone, Matrix4x4 local)>();
+        foreach (var mr in character.GetComponentsInChildren<Renderer>(true)) // しまっている武器 (非表示) も
         {
+            if (mr.forceRenderingOff) continue;
+            bool item = false;
+            for (var c = mr.transform; c != null && c != character; c = c.parent) if (c.name == "RusK_ItemModel") item = true;
+            if (mr.TryCast<MeshRenderer>() == null && !(item && mr.TryCast<SkinnedMeshRenderer>() != null)) continue;
             var bone = mr.transform.parent;
             while (bone != null && bone != character && !index.ContainsKey(bone.Pointer)) bone = bone.parent;
             if (bone == null || bone == character) continue;
@@ -230,7 +236,7 @@ internal static class RigExport
             }
         foreach (var (mr, bone, local) in rigid)
         {
-            var mesh = mr.GetComponent<MeshFilter>()?.sharedMesh;
+            var mesh = mr.TryCast<SkinnedMeshRenderer>()?.sharedMesh ?? mr.GetComponent<MeshFilter>()?.sharedMesh;
             if (mesh == null) continue;
             MeshData md;
             try { md = MeshData.Read(mesh); }
@@ -379,8 +385,9 @@ internal static class RigExport
                     {
                         foreach (var (path, data, comps) in new[] { ("translation", pos[i], 3), ("rotation", rot[i], 4), ("scale", scl[i], 3) })
                         {
-                            // 動かない骨の位置・大きさは書かない (ファイルを小さく)。向きは全部書く
-                            bool moves = path == "rotation";
+                            // 動かない骨の大きさは書かない (ファイルを小さく)。向き・位置は全部書く
+                            // (位置を省くと、glb の基準の位置 (メッシュに付いていない骨は書き出したときの姿勢) になり、ゲームの値とずれる)
+                            bool moves = path != "scale";
                             for (int k = comps; k < data.Length && !moves; k++) moves = Mathf.Abs(data[k] - data[k % comps]) > 1e-5f;
                             if (!moves) continue;
                             samplers.Add(new Dictionary<string, object> { ["input"] = input, ["output"] = w.Floats(data, comps, false), ["interpolation"] = "LINEAR" });

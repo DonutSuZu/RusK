@@ -55,25 +55,88 @@ def action(name):
     return bpy.data.actions.get(name) or next((a for a in bpy.data.actions if a.name.startswith(name)), None)
 
 
-def sample(arm, action_name, nt, bones=None):
-    """ゲームの動作の、進み具合 nt (0〜1) の姿勢 {骨: matrix_basis}"""
+# 姿勢は「骨組みの中の位置と向き」(pose bone の matrix) で持つ。骨の基準の向き (fix_chains で変える) に左右されない
+
+def sample(arm, action_name, nt):
+    """ゲームの動作の、進み具合 nt (0〜1) の姿勢 {骨: 骨組みの中の行列}"""
     act = action(action_name)
     arm.animation_data.action = act
     if hasattr(act, "slots") and len(act.slots) > 0:
         arm.animation_data.action_slot = act.slots[0]
     f0, f1 = act.frame_range
     bpy.context.scene.frame_set(round(f0 + (f1 - f0) * nt))
-    result = {pb.name: pb.matrix_basis.copy() for pb in arm.pose.bones if bones is None or pb.name in bones}
+    result = {pb.name: pb.matrix.copy() for pb in arm.pose.bones}
     arm.animation_data.action = None
     return result
 
 
-def apply(arm, basis):
-    for name, m in basis.items():
-        pb = arm.pose.bones.get(name)
-        if pb:
-            pb.matrix_basis = m
+def graft(arm, base, src, bones):
+    """base の姿勢に、src の姿勢の bones の骨を「親から見た形」のまま付け替える (握り・指を別の動作から借りるとき)"""
+    out = dict(base)
+    for pb in sorted((arm.pose.bones[b] for b in bones if b in arm.pose.bones), key=lambda b: len(b.parent_recursive)):
+        if pb.parent is None:
+            out[pb.name] = src[pb.name]
+            continue
+        rel = src[pb.parent.name].inverted() @ src[pb.name]
+        out[pb.name] = out[pb.parent.name] @ rel
+    return out
+
+
+def apply(arm, mats):
+    """骨組みの中の行列の姿勢にする (親から順に、基準の姿勢との差 matrix_basis を計算して入れる)"""
+    for pb in sorted(arm.pose.bones, key=lambda b: len(b.parent_recursive)):
+        m = mats.get(pb.name)
+        if m is None:
+            continue
+        rest = pb.bone.matrix_local
+        if pb.parent is not None:
+            pm = mats.get(pb.parent.name, pb.parent.matrix)
+            parent_part = pm @ pb.parent.bone.matrix_local.inverted() @ rest
+        else:
+            parent_part = rest
+        pb.matrix_basis = parent_part.inverted() @ m
     bpy.context.view_layer.update()
+
+
+# IK で曲げる骨 → その先の骨 (骨の先端をそろえる)
+CHAINS = [("Bip001 L Thigh", "Bip001 L Calf"), ("Bip001 L Calf", "Bip001 L Foot"),
+          ("Bip001 R Thigh", "Bip001 R Calf"), ("Bip001 R Calf", "Bip001 R Foot"),
+          ("Bip001 L UpperArm", "Bip001 L Forearm"), ("Bip001 L Forearm", "Bip001 L Hand"),
+          ("Bip001 R UpperArm", "Bip001 R Forearm"), ("Bip001 R Forearm", "Bip001 R Hand")]
+
+
+def fix_chains(arm, *poses):
+    """
+    IK で曲げる骨の先端 (tail) を、次の骨の根元 (膝・足首・肘・手首) にそろえる。
+    glTF から読み込んだ骨の先端は Blender の推測で、すねの先が前を向いているなどして IK が届かない。
+    骨の基準の向き (軸) が変わるので、先に sample で取っておいた姿勢 (poses) は、その分を補正する (同じ形のまま)。
+    手・刀の骨は変えない (Custom Motion が親から見た形でそのまま写す骨なので)。
+    ゲームには差分で写すので、もも・すねなどの基準の向きが変わっても結果は同じ
+    """
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == arm)
+    bpy.context.view_layer.objects.active = arm
+    old = {a: arm.data.bones[a].matrix_local.copy() for a, _ in CHAINS if a in arm.data.bones}
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = arm.data.edit_bones
+    n = 0
+    for a, b in CHAINS:
+        if a in eb and b in eb:
+            eb[a].use_connect = False
+            eb[b].use_connect = False
+            eb[a].tail = eb[b].head.copy()
+            n += 1
+    bpy.ops.object.mode_set(mode="POSE")
+    # 姿勢の補正: 骨の行列 = 形 × 軸の取り方。軸の取り方の差 (古い基準 → 新しい基準) を右からかける
+    for name, m_old in old.items():
+        c = m_old.inverted() @ arm.data.bones[name].matrix_local
+        for pose in poses:
+            if name in pose:
+                pose[name] = pose[name] @ c
+    print(f"[rusk] 骨の先端をそろえました: {n} 本")
+    for pb in arm.pose.bones:
+        pb.rotation_mode = "QUATERNION"
 
 
 def world(arm, bone, tail=False):
@@ -119,21 +182,26 @@ def empty(name, loc=(0, 0, 0)):
 
 
 def ik(arm, bone, target, pole, chain=2):
-    """bone (前腕・すね) の先を target に届かせる。肘・膝は pole の方へ曲げる (pole の角度は自動で合わせる)"""
+    """
+    bone (手・足の骨) の根元 (手首・足首) を target に届かせる。肘・膝は pole の方へ曲げる (pole の角度は自動で合わせる)。
+    骨の先端 (tail) ではなく根元を使う: glTF から読み込んだ骨の先端は Blender が推測した位置で、次の骨の根元とずれていることがある
+    """
     pb = arm.pose.bones[bone]
     c = pb.constraints.new("IK")
     c.target = target
     c.pole_target = pole
-    c.chain_count = chain
-    # pole の角度: 曲がる関節が pole の方を向く角度を、何通りか試して選ぶ
+    c.use_tail = False
+    c.chain_count = chain + 1  # 根元を使うときは、IK を付けた骨自身も数に入る (曲げるのはその親 chain 本)
+    mid = pb.parent          # 前腕・すね
+    top = mid.parent         # 上腕・もも
+    # pole の角度: 曲がる関節 (肘・膝) が pole の方を向く角度を、何通りか試して選ぶ
     best, best_angle = None, 0.0
     for deg in range(-180, 180, 15):
         c.pole_angle = math.radians(deg)
         bpy.context.view_layer.update()
-        joint = world(arm, bone)  # 肘・膝 (前腕・すねの根元)
-        parent = arm.pose.bones[bone].parent
-        root = arm.matrix_world @ parent.head
-        tip = arm.matrix_world @ pb.tail
+        joint = arm.matrix_world @ mid.head
+        root = arm.matrix_world @ top.head
+        tip = arm.matrix_world @ pb.head
         axis = (tip - root).normalized()
         bend = joint - root - axis * (joint - root).dot(axis)
         want = pole.location - root - axis * (pole.location - root).dot(axis)
@@ -207,7 +275,8 @@ def sheet(arm, path, frames, labels=None, size=(300, 420), views=(("front", (0, 
     if bpy.context.object and bpy.context.object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
     scene.render.engine = "BLENDER_WORKBENCH"
-    scene.display.shading.color_type = "TEXTURE"
+    # 素材の色で塗る (テクスチャだと、半透明の刃 (光る剣など) が映らない)
+    scene.display.shading.color_type = "MATERIAL"
     scene.render.resolution_x, scene.render.resolution_y = size
     scene.render.film_transparent = False
     cam = bpy.data.objects.get("rusk_cam") or bpy.data.objects.new("rusk_cam", bpy.data.cameras.new("rusk_cam"))
@@ -263,5 +332,5 @@ def export(arm, path, name):
         o.select_set(o == arm)
     bpy.context.view_layer.objects.active = arm
     bpy.ops.export_scene.gltf(filepath=path, use_selection=True, export_animations=True,
-                              export_skins=False, export_format="GLB", export_animation_mode="ACTIVE_ACTIONS")
+                              export_skins=False, export_format="GLB", export_animation_mode="ACTIONS")  # 動作の名前のまま (ACTIVE_ACTIONS だと "Animation" になる)
     print(f"[rusk] 書き出しました: {path}")

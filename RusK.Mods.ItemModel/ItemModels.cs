@@ -33,7 +33,10 @@ internal sealed class Assignment
 }
 
 /// <summary>
-/// 武器・装備品の見た目を glb に置き換える。
+/// 武器・装備品の見た目を glb / PMX に置き換える。
+///
+/// 割り当ては装備 ID ごと (assignments.txt の「1041|...」)。キャラ ID も付けると (「9001:1041|...」)、
+/// そのキャラが持っているときだけ置き換える (新しいキャラが土台のキャラの武器を借りているときに、自分の武器にする)。
 ///
 /// ゲームの武器・装備品は、どれも装備 ID ごとの Equip_&lt;ID&gt; (WeaponController) で、手や頭・胸・腰の差し込み口
 /// (WeaponHolder_0～4) に付く。しまった武器はゲームの置き場 (ResourceManager) に戻される。
@@ -47,6 +50,9 @@ internal static class ItemModels
         /// <summary>武器・装飾品のモデル (Equip_&lt;ID&gt;)</summary>
         public GameObject Target;
         public long Id;
+        /// <summary>今持っているキャラの ID (しまってある間は、最後に持っていたキャラ)</summary>
+        public long Owner = -1;
+        public IntPtr OwnerParent;
         public GameObject Attached;
         public string File;
         public readonly List<Renderer> Originals = new();
@@ -56,7 +62,8 @@ internal static class ItemModels
         public readonly List<(Material mat, Color color, Texture tex)> OwnEmission = new();
     }
 
-    private static readonly Dictionary<long, Assignment> Assignments = new();
+    /// <summary>"装備 ID" または "キャラ ID:装備 ID" → 置き換え</summary>
+    private static readonly Dictionary<string, Assignment> Assignments = new();
     private static readonly Dictionary<IntPtr, Tracked> TrackedWeapons = new();
     private static readonly Dictionary<string, GameObject> Prototypes = new();
     private static readonly HashSet<string> FailedFiles = new();
@@ -71,12 +78,18 @@ internal static class ItemModels
         try
         {
             Directory.CreateDirectory(PropsDir);
-            return Directory.GetFiles(PropsDir, "*.glb", SearchOption.AllDirectories).OrderBy(f => f).ToList();
+            return Directory.GetFiles(PropsDir, "*.*", SearchOption.AllDirectories)
+                .Where(f => f.EndsWith(".glb", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".pmx", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(f => f).ToList();
         }
         catch { return Array.Empty<string>(); }
     }
 
-    public static Assignment Get(long id) => Assignments.TryGetValue(id, out var a) ? a : null;
+    public static Assignment Get(long id) => Assignments.TryGetValue(id.ToString(), out var a) ? a : null;
+
+    /// <summary>キャラ owner が持っている装備 id の置き換え (キャラ専用があればそちら)</summary>
+    public static Assignment GetFor(long owner, long id) =>
+        owner >= 0 && Assignments.TryGetValue($"{owner}:{id}", out var a) ? a : Get(id);
 
     /// <summary>今シーンに出ている武器・装備品の ID (画面で「装備中」を先に並べるため)</summary>
     public static HashSet<long> InScene() => TrackedWeapons.Values.Where(t => t.Target != null).Select(t => t.Id).ToHashSet();
@@ -85,11 +98,12 @@ internal static class ItemModels
 
     public static void Assign(long id, string file)
     {
-        if (file == null) Assignments.Remove(id);
+        var key = id.ToString();
+        if (file == null) Assignments.Remove(key);
         else
         {
             var rel = Path.GetRelativePath(PropsDir, file);
-            if (!Assignments.TryGetValue(id, out var a)) Assignments[id] = a = new Assignment();
+            if (!Assignments.TryGetValue(key, out var a)) Assignments[key] = a = new Assignment();
             a.File = rel;
             FailedFiles.Remove(rel);
         }
@@ -105,7 +119,10 @@ internal static class ItemModels
             foreach (var line in System.IO.File.ReadAllLines(AssignFile))
             {
                 var p = line.Split('|');
-                if (p.Length < 5 || !long.TryParse(p[0], out var id)) continue;
+                if (p.Length < 5) continue;
+                var key = p[0].Trim();
+                var ids = key.Split(':');
+                if (ids.Length > 2 || ids.Any(x => !long.TryParse(x, out _))) continue;
                 var a = new Assignment
                 {
                     File = p[1], Position = Vec(p[2]), Rotation = Vec(p[3]),
@@ -117,7 +134,7 @@ internal static class ItemModels
                     int.TryParse(p[6], out a.GlowColor);
                     if (float.TryParse(p[7], NumberStyles.Float, CultureInfo.InvariantCulture, out var gs)) a.GlowStrength = gs;
                 }
-                Assignments[id] = a;
+                Assignments[key] = a;
             }
         }
         catch (Exception e) { VrmEnv.Ctx?.Log.Warning($"ItemModel: assignments.txt を読めません: {e.Message}"); }
@@ -210,7 +227,8 @@ internal static class ItemModels
 
     private static void Apply(Tracked t)
     {
-        var a = Get(t.Id);
+        UpdateOwner(t);
+        var a = GetFor(t.Owner, t.Id);
         if (a == null || string.IsNullOrEmpty(a.File) || FailedFiles.Contains(a.File))
         {
             if (t.Attached != null) Detach(t);
@@ -248,6 +266,21 @@ internal static class ItemModels
         if (t.Originals.Count == 0) visible = true;
         foreach (var r in t.Mine)
             if (r != null && r.enabled != visible) r.enabled = visible;
+    }
+
+    /// <summary>武器の親が変わったら (手に持った・しまった)、持っているキャラを調べ直す。しまってある間は前の持ち主のまま</summary>
+    private static void UpdateOwner(Tracked t)
+    {
+        var parent = t.Target.transform.parent;
+        var ptr = parent != null ? parent.Pointer : IntPtr.Zero;
+        if (ptr == t.OwnerParent) return;
+        t.OwnerParent = ptr;
+        try
+        {
+            var p = t.Target.GetComponentInParent<PlayerController>();
+            if (p != null) t.Owner = (long)Math.Round(p.GetPlayerId());
+        }
+        catch { }
     }
 
     private static void Attach(Tracked t, string file)
@@ -289,7 +322,7 @@ internal static class ItemModels
         t.AppliedRevision = -1;
         t.Attached = go;
         t.File = file;
-        VrmEnv.Ctx?.Log.Info($"ItemModel: 装備 {t.Id} ('{t.Target.name}') を '{file}' に置き換え");
+        VrmEnv.Ctx?.Log.Info($"ItemModel: 装備 {t.Id} ('{t.Target.name}'、持ち主 {t.Owner}) を '{file}' に置き換え");
     }
 
     /// <summary>発光の設定を当てる。OFF なら glb 自身の発光に戻す</summary>
@@ -338,7 +371,10 @@ internal static class ItemModels
             };
             if (templates.Opaque == null) throw new InvalidOperationException("元の武器・装備品の材質が見つかりません");
 
-            var model = VrmLoader.Load(path, templates, s => VrmEnv.Ctx?.Log.Info("ItemModel: " + s), plainGltf: true);
+            Action<string> log = s => VrmEnv.Ctx?.Log.Info("ItemModel: " + s);
+            var model = path.EndsWith(".pmx", StringComparison.OrdinalIgnoreCase)
+                ? RusK.Mods.Model.Vrm.Pmx.PmxLoader.Load(path, templates, log, prop: true)
+                : VrmLoader.Load(path, templates, log, plainGltf: true);
             if (_protoHolder == null)
             {
                 _protoHolder = new GameObject("RusK_ItemModelPrototypes");

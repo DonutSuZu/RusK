@@ -59,6 +59,7 @@ internal sealed class CharacterModule : Module
     {
         CharacterRegistry.Tick();
         try { CharacterCapture.Tick(); } catch { }
+        try { DevCommands.Tick(); } catch { }
         // (調査) キャラ選択の画面が開いたら、一度だけ自動で書き出す
         if (UnityEngine.Time.unscaledTime < _nextDump) return;
         _nextDump = UnityEngine.Time.unscaledTime + 1f;

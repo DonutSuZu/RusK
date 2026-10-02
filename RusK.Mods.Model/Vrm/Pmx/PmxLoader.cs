@@ -27,7 +27,8 @@ internal static class PmxLoader
     private static Vector3 P(Vector3 v) => new Vector3(-v.x, v.y, -v.z) * Unit;
     private static Vector3 Dir(Vector3 v) => new(-v.x, v.y, -v.z);
 
-    public static VrmModel Load(string path, VrmLoader.Templates templates, Action<string> log)
+    /// <param name="prop">小物 (武器など、人の形でないもの): 人型の骨・基準の姿勢・揺れ物を作らない</param>
+    public static VrmModel Load(string path, VrmLoader.Templates templates, Action<string> log, bool prop = false)
     {
         var pmx = PmxFile.Load(path);
         var dir = Path.GetDirectoryName(path)!;
@@ -38,7 +39,7 @@ internal static class PmxLoader
         {
             var bones = BuildBones(pmx, model);
             model.Nodes = bones;
-            MapHumanoid(pmx, bones, model, log);
+            if (!prop) MapHumanoid(pmx, bones, model, log);
 
             // ---- 材質 (テクスチャは使うものだけ読む)
             var textures = new Dictionary<int, (Texture2D tex, bool alpha)>();
@@ -58,6 +59,12 @@ internal static class PmxLoader
             var smr = BuildMesh(pmx, bones, materials, masks, model, out var dupSource);
             VrmLoader.FinishMasks(model, log);
             model.Expressions = BuildExpressions(pmx, smr, dupSource, log);
+
+            if (prop)
+            {
+                log?.Invoke($"PMX {pmx.Version:0.0} '{model.Title}' ({pmx.Name}) を小物として: 頂点 {pmx.Vertices.Count}、骨 {bones.Length}、材質 {materials.Count}");
+                return model;
+            }
 
             // ---- 基準の姿勢・付与・揺れ物 (読み込み直後の、根元が原点の姿勢で)
             model.RestOverride = TPoseRest(model);

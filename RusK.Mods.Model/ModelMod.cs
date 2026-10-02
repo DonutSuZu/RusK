@@ -67,7 +67,11 @@ public sealed class ModelRuntimeModule : Module
     }
 
     public override bool VisibleInArrayList => false;
-    public override void OnUpdate() => ModelSwap.Tick();
+    public override void OnUpdate()
+    {
+        ModelSwap.Tick();
+        try { ModelLab.DevTick(); } catch { }
+    }
 }
 
 public sealed class ModelLabWindow : RuskWindow
@@ -207,6 +211,30 @@ internal static class ModelLab
 
     public static IModContext Ctx;
     public static string LastFile;
+    private static float _nextDev;
+
+    /// <summary>
+    /// 開発用の指示ファイル RusK/data/model/dev.txt (画面を操作せずに書き出すため)。読んだら消す。
+    ///   rig          骨格を書き出す
+    ///   rigmotions   骨格と動作を書き出す
+    /// </summary>
+    public static void DevTick()
+    {
+        if (Ctx == null || Time.unscaledTime < _nextDev) return;
+        _nextDev = Time.unscaledTime + 0.5f;
+        var file = Path.Combine(Ctx.DataDirectory, "dev.txt");
+        if (!File.Exists(file)) return;
+        string[] lines;
+        try { lines = File.ReadAllLines(file); File.Delete(file); }
+        catch { return; }
+        var p = PlayerRef.Current;
+        if (p == null) return;
+        foreach (var line in lines.Select(l => l.Trim()))
+        {
+            if (line == "rig") ExportRig(p.transform);
+            else if (line == "rigmotions") ExportRig(p.transform, withMotions: true);
+        }
+    }
 
     /// <summary>
     /// 手に持っていない武器: 武器は攻撃するときだけ手の骨に付き、それ以外はしまっておく場所 (ResourceManager の下) にある。
@@ -235,7 +263,7 @@ internal static class ModelLab
                 if (es == null || !equips.Contains(es.equipId.ToString())) continue;
                 var holder = holders.FirstOrDefault(h => h.name == "WeaponHolder_" + es.holderIndex);
                 if (holder == null) continue;
-                foreach (var mr in w.GetComponentsInChildren<MeshRenderer>(true))
+                foreach (var mr in w.GetComponentsInChildren<Renderer>(true).Where(r => r.TryCast<MeshRenderer>() != null && !r.forceRenderingOff))
                     result.Add(new Vrm.RigExport.Attach
                     {
                         Renderer = mr, BoneName = holder.name,

@@ -18,3 +18,5 @@ EffectKit/[Uu]serSettings/
 EffectKit/Build/
 EffectKit/*.csproj
 EffectKit/*.sln
+
+__pycache__/
