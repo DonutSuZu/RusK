@@ -193,8 +193,9 @@ internal static class ModelLab
                     }
                 Ctx.Log.Info($"Model Lab: 動作 {anims.Count} 個を当てはめる先: {animRoot.name}");
             }
+            var attach = withMotions ? StoredWeapons(character) : null;
             var file = Path.Combine(Ctx.DataDirectory, withMotions ? $"rig_{character.name}_motions.glb" : $"rig_{character.name}.glb");
-            LastFile = Vrm.RigExport.Export(character, body, file, s => Ctx.Log.Info("Model Lab: " + s), anims, animRoot);
+            LastFile = Vrm.RigExport.Export(character, body, file, s => Ctx.Log.Info("Model Lab: " + s), anims, animRoot, attach);
             return LastFile;
         }
         catch (Exception e)
@@ -206,6 +207,49 @@ internal static class ModelLab
 
     public static IModContext Ctx;
     public static string LastFile;
+
+    /// <summary>
+    /// 手に持っていない武器: 武器は攻撃するときだけ手の骨に付き、それ以外はしまっておく場所 (ResourceManager の下) にある。
+    /// そのキャラの装備 (セーブの playerEquips) と同じ ID の武器を探し、付く骨 (枠 0 = BN_weapon_01 の下の WeaponHolder_0) に付けて書き出す
+    /// </summary>
+    private static List<Vrm.RigExport.Attach> StoredWeapons(Transform character)
+    {
+        var result = new List<Vrm.RigExport.Attach>();
+        try
+        {
+            // もう手に付いていれば要らない
+            if (character.GetComponentsInChildren<WeaponController>(true).Length > 0) return result;
+            var p = character.GetComponent<PlayerController>();
+            long id = p != null ? (long)Math.Round(p.GetPlayerId()) : -1;
+            var equips = new HashSet<string>();
+            var save = GameUtil.GetGameSave();
+            if (save?.playerEquips != null)
+                foreach (var pe in save.playerEquips)
+                    if (pe != null && (long)Math.Round(pe.id) == id && pe.equips != null)
+                        foreach (var e in pe.equips) equips.Add(e);
+            var holders = character.GetComponentsInChildren<Transform>(true).Where(t => t.name.StartsWith("WeaponHolder_")).ToList();
+            foreach (var w in Resources.FindObjectsOfTypeAll<WeaponController>())
+            {
+                if (w == null || w.gameObject.scene.name == null) continue;
+                var es = w.GetEquipSetting();
+                if (es == null || !equips.Contains(es.equipId.ToString())) continue;
+                var holder = holders.FirstOrDefault(h => h.name == "WeaponHolder_" + es.holderIndex);
+                if (holder == null) continue;
+                foreach (var mr in w.GetComponentsInChildren<MeshRenderer>(true))
+                    result.Add(new Vrm.RigExport.Attach
+                    {
+                        Renderer = mr, BoneName = holder.name,
+                        // 武器の根元は枠にそのまま (位置・回転 0) 付くので、根元から見たメッシュの位置関係
+                        Local = w.transform.worldToLocalMatrix * mr.transform.localToWorldMatrix,
+                    });
+                Ctx.Log.Info($"Model Lab: しまってある武器 '{es.name}' (id {es.equipId}) を {holder.name} に付けて書き出します");
+                break;
+            }
+            if (result.Count == 0) Ctx.Log.Info($"Model Lab: 武器が見つかりません (装備 {string.Join(",", equips)})");
+        }
+        catch (Exception e) { Ctx.Log.Warning($"Model Lab: 武器を探せません: {e.Message}"); }
+        return result;
+    }
 
     public static void Report()
     {

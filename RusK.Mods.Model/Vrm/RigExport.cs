@@ -45,8 +45,16 @@ internal static class RigExport
 
     /// <param name="anims">一緒に書き出す動作 (無ければ骨格だけ)</param>
     /// <param name="animRoot">クリップを当てはめる物 (Animator の付いた物。クリップの骨の道筋はここから数える)</param>
+    /// <summary>キャラの下に無いが、骨に付けて書き出したい固いメッシュ (しまってある武器など)。BoneName の骨に、Local の位置関係で付ける</summary>
+    public sealed class Attach
+    {
+        public MeshRenderer Renderer;
+        public string BoneName;
+        public Matrix4x4 Local; // メッシュ → 骨
+    }
+
     public static string Export(Transform character, IList<SkinnedMeshRenderer> body, string file, Action<string> log,
-        IList<Anim> anims = null, GameObject animRoot = null)
+        IList<Anim> anims = null, GameObject animRoot = null, IList<Attach> attach = null)
     {
         // ---- 基準の姿勢 (根元の空間)
         var rootW2L = character.worldToLocalMatrix;
@@ -203,6 +211,86 @@ internal static class RigExport
             jsonNodes.Add(meshNode);
             rootChildren.Add(jsonNodes.Count - 1);
             meshCount++;
+        }
+
+        // ---- 武器など、骨に付いた固いメッシュ (MeshRenderer)。一番近い骨 1 本だけに付ける (Blender で刃の向きを見ながら動きを作るため)
+        var rigid = new List<(MeshRenderer mr, Transform bone, Matrix4x4 local)>();
+        foreach (var mr in character.GetComponentsInChildren<MeshRenderer>(true)) // しまっている武器 (非表示) も
+        {
+            var bone = mr.transform.parent;
+            while (bone != null && bone != character && !index.ContainsKey(bone.Pointer)) bone = bone.parent;
+            if (bone == null || bone == character) continue;
+            rigid.Add((mr, bone, bone.worldToLocalMatrix * mr.transform.localToWorldMatrix));
+        }
+        if (attach != null)
+            foreach (var a in attach)
+            {
+                var bone = nodes.FirstOrDefault(t => t.name == a.BoneName);
+                if (a.Renderer != null && bone != null) rigid.Add((a.Renderer, bone, a.Local));
+            }
+        foreach (var (mr, bone, local) in rigid)
+        {
+            var mesh = mr.GetComponent<MeshFilter>()?.sharedMesh;
+            if (mesh == null) continue;
+            MeshData md;
+            try { md = MeshData.Read(mesh); }
+            catch (Exception e) { skipped++; log?.Invoke($"メッシュ {mesh.name} を読めません: {e.Message}"); continue; }
+            int bi = index[bone.Pointer];
+            // 骨の基準の姿勢に、骨との位置関係のまま付ける
+            var toRoot = rest[bi] * local;
+            int n = md.Vertices.Length;
+            var pos = new float[n * 3];
+            var nor = md.Normals.Length == n ? new float[n * 3] : null;
+            for (int i = 0; i < n; i++)
+            {
+                var v = P(toRoot.MultiplyPoint3x4(md.Vertices[i]));
+                pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z;
+                if (nor != null)
+                {
+                    var nn = P(toRoot.MultiplyVector(md.Normals[i]).normalized);
+                    nor[i * 3] = nn.x; nor[i * 3 + 1] = nn.y; nor[i * 3 + 2] = nn.z;
+                }
+            }
+            var attrs = new Dictionary<string, object> { ["POSITION"] = w.Floats(pos, 3, true) };
+            if (nor != null) attrs["NORMAL"] = w.Floats(nor, 3, false);
+            if (md.Uv.Length == n)
+            {
+                var tc = new float[n * 2];
+                for (int i = 0; i < n; i++) { tc[i * 2] = md.Uv[i].x; tc[i * 2 + 1] = 1f - md.Uv[i].y; }
+                attrs["TEXCOORD_0"] = w.Floats(tc, 2, false);
+            }
+            // スキンの骨は、一番上の骨からこの骨までの道筋全部にする (この骨だけだと、Blender が体とは別の骨組みにしてしまう)
+            var chain = new List<int>();
+            for (var c = bone; c != null && index.TryGetValue(c.Pointer, out var ci); c = c.parent) chain.Insert(0, ci);
+            var joints = new ushort[n * 4];
+            var wts = new float[n * 4];
+            for (int i = 0; i < n; i++) { joints[i * 4] = (ushort)(chain.Count - 1); wts[i * 4] = 1f; }
+            attrs["JOINTS_0"] = w.UShorts(joints, 4);
+            attrs["WEIGHTS_0"] = w.Floats(wts, 4, false);
+            var ibm = new float[chain.Count * 16];
+            for (int j = 0; j < chain.Count; j++)
+            {
+                var inv = M(rest[chain[j]].inverse);
+                for (int c = 0; c < 4; c++)
+                    for (int r = 0; r < 4; r++) ibm[j * 16 + c * 4 + r] = inv[r, c];
+            }
+            skins.Add(new Dictionary<string, object> { ["joints"] = chain.ToArray(), ["inverseBindMatrices"] = w.Floats(ibm, 16, false, "MAT4") });
+
+            var prims = new List<object>();
+            var mats = mr.sharedMaterials;
+            for (int sub = 0; sub < md.Triangles.Length; sub++)
+            {
+                var tris = md.Triangles[sub];
+                for (int i = 0; i + 2 < tris.Length; i += 3) (tris[i + 1], tris[i + 2]) = (tris[i + 2], tris[i + 1]);
+                var prim = new Dictionary<string, object> { ["attributes"] = attrs, ["indices"] = w.UInts(tris) };
+                prim["material"] = Material(sub < mats.Length ? mats[sub] : null, materials, textures, images, texCache, w);
+                prims.Add(prim);
+            }
+            meshes.Add(new Dictionary<string, object> { ["name"] = mesh.name, ["primitives"] = prims });
+            jsonNodes.Add(new Dictionary<string, object> { ["name"] = mr.name + "_mesh", ["mesh"] = meshes.Count - 1, ["skin"] = skins.Count - 1 });
+            rootChildren.Add(jsonNodes.Count - 1);
+            meshCount++;
+            log?.Invoke($"固いメッシュ {mr.name} ({mesh.name}) を骨 {bone.name} に付けました");
         }
 
         // ---- 動作: クリップを 30 コマ/秒でキャラに当てはめて、骨ごとの位置・向き・大きさを記録する (最後に元の姿勢に戻す)
