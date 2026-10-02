@@ -42,6 +42,7 @@ internal static class CharacterRegistry
             var util = GameUtil.Instance;
             if (util == null) return;
             EnsureContainer(util.GetCharacterContainer());
+            EnsureResourceTags();
             if (Time.unscaledTime < _next) return;
             _next = Time.unscaledTime + 1f;
             EnsureSave(GameUtil.GetGameSave());
@@ -50,6 +51,23 @@ internal static class CharacterRegistry
     }
 
     private static bool _busy;
+
+    /// <summary>
+    /// ステージを読み込むとき、ゲームは「そのキャラのために先に読んでおくデータ」(リソースのタグ Character_〈ID〉) を
+    /// ResourceManager.CharacterIdToTag (キャラの ID → タグ) で引く。新しいキャラの ID が無いと KeyNotFoundException で
+    /// 読み込みが止まり、無限ロードになる (ホムラがリーダーで戦闘へ)。土台のキャラのタグを入れておく
+    /// </summary>
+    private static void EnsureResourceTags()
+    {
+        var map = ResourceManager.CharacterIdToTag;
+        if (map == null) return;
+        foreach (var def in Defs)
+        {
+            if (map.ContainsKey(def.Id) || !map.ContainsKey(def.Base)) continue;
+            map[def.Id] = map[def.Base];
+            CharacterMod.Ctx?.Log.Info($"Character: {def.Key} の読み込みのタグを土台 ({def.Base}) と同じにしました");
+        }
+    }
 
     /// <summary>キャラの一覧に新しいキャラが無ければ足す (ゲームが一覧を取り出した瞬間にも呼ぶ)</summary>
     public static void EnsureContainer(CharacterContainer container)
