@@ -81,15 +81,6 @@ def gray(im, k=1.0, offset=0):
     return out
 
 
-def cut_bottom(im, mask_src):
-    """お手本の下の端と同じところで切る (お手本で不透明な一番下の行より下は消す)"""
-    bb = mask_src.getchannel("A").getbbox()
-    if bb and bb[3] < im.height:
-        im = im.copy()
-        ImageDraw.Draw(im).rectangle((0, bb[3], im.width, im.height), fill=(0, 0, 0, 0))
-    return im
-
-
 # ---- 文字 ----
 
 def text_image(text, font_file, height, fill=(255, 255, 255, 255), italic=0.0, stroke=0, stroke_fill=None, inner=None):
@@ -151,24 +142,26 @@ def main(folder, name_ja, name_en):
     top, neck, cx = head_box(bust)
     print("bust: head top=%d neck=%d cx=%.0f" % (top, neck, cx))
 
-    # 立ち絵 (365x1148): 頭のてっぺん y=297、首 y=780、中心 x=190。黒の細い縁取り
+    # 位置の数字は、紅光 (赤悠, 1006) を土台にしたときのお手本 (表示の枠全体) に合わせたもの
+    # 立ち絵 (365x1440): 頭のてっぺん y=297、首 y=780、中心 x=190。黒の細い縁取り
     t = tpl("character_s")
     cs = place(bust, t.size, top, neck, cx, 297, 780, 190)
-    cs = cut_bottom(outline(cs, 2, (20, 20, 22, 255)), t)
+    cs = outline(cs, 2, (20, 20, 22, 255))
     save(cs, "character_s")
     # 灰色の立ち絵
     save(gray(cs, 0.82), "choose_n")
 
-    # 背景の大きな絵 (1107x1381): 灰色で暗め、明るい灰色の太い縁取り
+    # 背景の大きな絵 (1200x1440): 灰色で暗め、明るい灰色の太い縁取り
     t = tpl("BGrole")
-    bg = place(bust, t.size, top, neck, cx, 97, 640, 570)
+    bg = place(bust, t.size, top, neck, cx, 97, 640, 663)
     bg = gray(bg, 0.35, 30)
-    bg = cut_bottom(outline(bg, 9, (105, 106, 105, 255)), t)
+    bg = outline(bg, 9, (105, 106, 105, 255))
     save(bg, "BGrole")
 
-    # 顔のアイコン (117x100)
+    # 顔のアイコン (210x100、絵があるのは x=35 から右)
     t = tpl("rolechoose")
-    rc = place(bust, t.size, top, neck, cx, 3, 64, 58)
+    rc = place(bust, t.size, top, neck, cx, 3, 64, 93)
+    ImageDraw.Draw(rc).rectangle((0, 0, 34, t.height), fill=(0, 0, 0, 0))
     save(outline(rc, 1, (20, 20, 22, 255)), "rolechoose")
 
     # カード (204x106): 背景は blackBar_h (土台のキャラの顔が無い、同じ赤の帯) を使い、形は blackBar_n に合わせる
@@ -184,11 +177,11 @@ def main(folder, name_ja, name_en):
     back.alpha_composite(en, (196 - en.width, 60))
     save(back, "blackBar_n")
 
-    # 名前 (379x171): 白の太字
+    # 名前 (449x173、文字があるのは x=27 から右): 白の太字
     t = tpl("name_s")
-    nm = fit(text_image(name_ja, JP_FONT, 130, stroke=4, stroke_fill=(255, 255, 255, 255)), 375, 150)
+    nm = fit(text_image(name_ja, JP_FONT, 130, stroke=4, stroke_fill=(255, 255, 255, 255)), 415, 165)
     out = Image.new("RGBA", t.size, (0, 0, 0, 0))
-    out.alpha_composite(nm, (2, (t.height - nm.height) // 2))
+    out.alpha_composite(nm, (27, (t.height - nm.height) // 2))
     save(out, "name_s")
 
     # 名前の帯 (451x67): 帯の文字を消して、白の縁取りの斜体で書き直す

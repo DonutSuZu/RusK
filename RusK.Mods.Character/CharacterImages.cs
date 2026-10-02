@@ -64,18 +64,21 @@ internal static class CharacterImages
 
     /// <summary>
     /// 土台の絵は、周りの透明なところを切り詰めて保存されていることがある (表示の枠 rect > 中身 textureRect)。
-    /// お手本 (と差し替えの絵) は中身の部分なので、枠の大きさに広げて、中身のあった位置に置く (そのままだと枠いっぱいに伸びる)
+    /// お手本は枠全体で書き出すので、差し替えの絵も枠全体の形で作ればそのまま使う。
+    /// 中身だけの形 (古いお手本から作った絵) なら、枠の大きさに広げて中身の位置に置く (そのままだと枠いっぱいに伸びる)
     /// </summary>
     private static Texture2D Pad(Texture2D tex, Sprite baseSprite)
     {
         var r = baseSprite.rect;
         var tr = baseSprite.textureRect;
         if (Mathf.Approximately(r.width, tr.width) && Mathf.Approximately(r.height, tr.height)) return tex;
+        if (Mathf.Abs(tex.width / (float)tex.height - r.width / r.height) < 0.02f) return tex; // 枠全体の形
         float scale = tex.width / Mathf.Max(1f, tr.width);
         int w = Mathf.RoundToInt(r.width * scale), h = Mathf.RoundToInt(r.height * scale);
         var off = baseSprite.textureRectOffset * scale;
+        // 古いお手本は、上下を逆に読んでいた (中身の位置を上から数えていた) ので、それに合わせる
         int ox = Mathf.Clamp(Mathf.RoundToInt(off.x), 0, Mathf.Max(0, w - tex.width));
-        int oy = Mathf.Clamp(Mathf.RoundToInt(off.y), 0, Mathf.Max(0, h - tex.height));
+        int oy = Mathf.Clamp(h - tex.height - Mathf.RoundToInt(off.y), 0, Mathf.Max(0, h - tex.height));
         var padded = new Texture2D(w, h, TextureFormat.RGBA32, false) { name = tex.name, hideFlags = HideFlags.DontUnloadUnusedAsset };
         padded.SetPixels32(new Color32[w * h]);
         padded.SetPixels(ox, oy, Mathf.Min(tex.width, w), Mathf.Min(tex.height, h), tex.GetPixels(0, 0, Mathf.Min(tex.width, w), Mathf.Min(tex.height, h)));
@@ -96,7 +99,13 @@ internal static class CharacterImages
             if (File.Exists(file)) return;
             byte[] png = null;
             var sprite = baseAsset.TryCast<Sprite>();
-            if (sprite != null) png = Png(sprite.texture, sprite.textureRect);
+            // 中身 (textureRect) だけでなく、表示の枠 (rect) 全体を書き出す
+            if (sprite != null)
+            {
+                var tr = sprite.textureRect;
+                var off = sprite.textureRectOffset;
+                png = Png(sprite.texture, new Rect(tr.x - off.x, tr.y - off.y, sprite.rect.width, sprite.rect.height));
+            }
             else if (baseAsset.TryCast<Texture2D>() is Texture2D tex) png = Png(tex, new Rect(0, 0, tex.width, tex.height));
             if (png == null) return;
             Directory.CreateDirectory(dir);
@@ -105,7 +114,10 @@ internal static class CharacterImages
         catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: お手本の {kind} を書き出せません: {e.Message}"); }
     }
 
-    /// <summary>テクスチャの一部を PNG にする (読み取り禁止のテクスチャも、描き写して読む)</summary>
+    /// <summary>
+    /// テクスチャの一部 (rect は下から数える) を PNG にする (読み取り禁止のテクスチャも、描き写して読む)。
+    /// 描き写した先の ReadPixels は上から数えて読むので、上下を合わせる。テクスチャの外にはみ出たところは透明
+    /// </summary>
     private static byte[] Png(Texture tex, Rect rect)
     {
         if (tex == null) return null;
@@ -119,7 +131,12 @@ internal static class CharacterImages
             RenderTexture.active = rt;
             int w = Mathf.Max(1, Mathf.RoundToInt(rect.width)), h = Mathf.Max(1, Mathf.RoundToInt(rect.height));
             copy = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            copy.ReadPixels(new Rect(rect.x, rect.y, w, h), 0, 0);
+            copy.SetPixels32(new Color32[w * h]);
+            int x0 = Mathf.RoundToInt(rect.x), y0 = Mathf.RoundToInt(rect.y);
+            int rx = Mathf.Max(0, x0), ry = Mathf.Max(0, y0);
+            int rw = Mathf.Min(tex.width, x0 + w) - rx, rh = Mathf.Min(tex.height, y0 + h) - ry;
+            if (rw > 0 && rh > 0)
+                copy.ReadPixels(new Rect(rx, tex.height - ry - rh, rw, rh), rx - x0, ry - y0);
             copy.Apply();
             return ImageConversion.EncodeToPNG(copy);
         }
