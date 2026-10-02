@@ -140,6 +140,25 @@ internal static class ItemModels
         catch (Exception e) { VrmEnv.Ctx?.Log.Warning($"ItemModel: assignments.txt を読めません: {e.Message}"); }
     }
 
+    private static DateTime _stamp;
+
+    /// <summary>assignments.txt を手で書き換えたら読み直す (位置・回転・大きさの微調整をゲームを起動し直さずに試せる)</summary>
+    private static void Watch()
+    {
+        try
+        {
+            var stamp = System.IO.File.Exists(AssignFile) ? System.IO.File.GetLastWriteTimeUtc(AssignFile) : default;
+            if (_stamp != default && stamp != _stamp)
+            {
+                Load();
+                foreach (var a in Assignments.Values) a.Revision++;
+                VrmEnv.Ctx?.Log.Info("ItemModel: assignments.txt が変わったので読み直しました");
+            }
+            _stamp = stamp;
+        }
+        catch { }
+    }
+
     public static void Save()
     {
         try
@@ -151,6 +170,7 @@ internal static class ItemModels
                 kv.Value.Scale.ToString("0.###", CultureInfo.InvariantCulture) +
                 $"|{(kv.Value.Glow ? 1 : 0)}|{kv.Value.GlowColor}|" +
                 kv.Value.GlowStrength.ToString("0.##", CultureInfo.InvariantCulture)), new UTF8Encoding(false));
+            _stamp = System.IO.File.GetLastWriteTimeUtc(AssignFile);
         }
         catch (Exception e) { VrmEnv.Ctx?.Log.Warning($"ItemModel: assignments.txt を保存できません: {e.Message}"); }
     }
@@ -169,6 +189,7 @@ internal static class ItemModels
         {
             _nextScan = Time.unscaledTime + 0.5f;
             Scan();
+            Watch();
         }
 
         foreach (var t in TrackedWeapons.Values.ToList())
