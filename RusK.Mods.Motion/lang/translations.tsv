@@ -8,3 +8,11 @@ RusK/motions にアニメーション入りの glb がありません	No glb fil
 Blender などで作ったアニメーション (glb) を、キャラの動きとして再生する (試作)	Plays animations made in Blender etc. (glb) as character motions (prototype)	将用 Blender 等制作的动画 (glb) 作为角色动作播放 (试作)
 画面を開く	Open window	打开窗口
 motions フォルダを開く	Open the motions folder	打开 motions 文件夹
+押すと「{0}」に割り当て	Click to assign to "{0}"	点击分配给「{0}」
+押すとその場で再生	Click to play now	点击立即播放
+このキャラの動作	This character's actions	此角色的动作
+ゲームに入ってから開いてください	Open this after entering the game	请进入游戏后再打开
+動作を選んでから、上の動きを押すと割り当てます。その動作のときに自動で再生します	Pick an action, then click a motion above to assign it. It plays automatically during that action	先选择动作, 再点击上方的动作文件进行分配。执行该动作时会自动播放
+割り当てを外す	Remove assignment	取消分配
+選ぶのをやめる	Cancel	取消选择
+(今)	(now)	(当前)

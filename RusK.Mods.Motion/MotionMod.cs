@@ -33,7 +33,7 @@ public sealed class MotionMod : RuskMod
         Context.Harmony.PatchAll(typeof(MotionBrainPatch));
     }
 
-    protected override void OnUnload() => MotionPlayers.StopAll();
+    protected override void OnUnload() => MotionPlayers.StopAll(immediately: true);
 
     /// <summary>動きを置くフォルダ (RusK\motions)</summary>
     internal static string Folder =>
@@ -86,36 +86,78 @@ internal sealed class MotionModule : Module
     public override void OnDisable() => MotionPlayers.StopAll();
 }
 
-/// <summary>動きを選んで再生する画面 (試作)</summary>
+/// <summary>
+/// 動きの画面 (試作):
+/// 1. 動きを押すと、操作キャラと画面に見せるキャラでその場で再生 (試し用)
+/// 2. 「このキャラの動作」から動作を選んでから動きを押すと、その動作に割り当てる (その動作のときに自動で再生)
+/// </summary>
 internal sealed class MotionWindow : RuskWindow
 {
-    private List<GltfMotion> _motions;
+    private string _selected; // 割り当てる先のゲームの動作の名前
 
-    public MotionWindow() : base("motion", "Custom Motion", 380f, 460f)
+    public MotionWindow() : base("motion", "Custom Motion", 400f, 560f)
     {
-        MinWidth = 300f;
-        MinHeight = 240f;
+        MinWidth = 320f;
+        MinHeight = 260f;
     }
 
     public override void Draw(WindowGui gui)
     {
-        _motions ??= MotionMod.LoadAll();
-        gui.Label(L.T("RusK/motions の glb の動きを再生します (試作)。押すと、操作キャラと画面に見せるキャラで再生します"), RuskStyle.TextDim, small: true);
+        var motions = MotionLibrary.All;
+        var p = PlayerRef.Current;
         gui.BeginRow(1f, 1f, 1f);
         if (gui.Button(L.T("止める"), enabled: MotionPlayers.Active.Count > 0)) MotionPlayers.StopAll();
-        if (gui.Button(L.T("読み込み直す"))) _motions = MotionMod.LoadAll();
+        if (gui.Button(L.T("読み込み直す"))) MotionLibrary.Reload();
         if (gui.Button(L.T("フォルダを開く"))) MotionMod.OpenFolder();
 
-        gui.Header(L.T("動き"));
-        if (_motions.Count == 0) gui.Label(L.T("RusK/motions にアニメーション入りの glb がありません"), RuskStyle.TextDim, small: true);
-        foreach (var m in _motions)
+        // glb の動き
+        gui.Header(L.T("動き"), _selected != null ? L.T("押すと「{0}」に割り当て", _selected) : L.T("押すとその場で再生"));
+        if (motions.Count == 0) gui.Label(L.T("RusK/motions にアニメーション入りの glb がありません"), RuskStyle.TextDim, small: true);
+        foreach (var m in motions)
         {
-            if (!gui.Selectable($"{m.Name}", false, $"{Path.GetFileName(m.File)}  {m.Length:0.0}s")) continue;
-            var p = PlayerRef.Current;
-            if (p != null) MotionPlayers.Play(p.transform, m);
-            foreach (var show in MotionMod.ShowModels()) MotionPlayers.Play(show, m);
+            if (!gui.Selectable(m.Name, false, $"{Path.GetFileName(m.File)}  {m.Length:0.0}s")) continue;
+            if (_selected != null && p != null)
+            {
+                MotionBinder.Set(CharId(p), _selected, m);
+                _selected = null;
+                continue;
+            }
+            if (p != null) MotionPlayers.Play(p.transform, m).Manual = true;
+            foreach (var show in MotionMod.ShowModels()) MotionPlayers.Play(show, m).Manual = true;
+        }
+
+        // 操作キャラの動作と、割り当て
+        gui.Space(6f);
+        gui.Header(L.T("このキャラの動作"), p != null ? CharacterNames.Get(p.GetPlayerId()) : null);
+        if (p == null || p.m_motionMgr?.motions == null)
+        {
+            gui.Label(L.T("ゲームに入ってから開いてください"), RuskStyle.TextDim, small: true);
+            return;
+        }
+        gui.Label(L.T("動作を選んでから、上の動きを押すと割り当てます。その動作のときに自動で再生します"), RuskStyle.TextDim, small: true);
+        if (_selected != null)
+        {
+            gui.BeginRow(1f, 1f);
+            if (gui.Button(L.T("割り当てを外す"), enabled: MotionBinder.Get(CharId(p), _selected) != null))
+            {
+                MotionBinder.Set(CharId(p), _selected, null);
+                _selected = null;
+            }
+            if (gui.Button(L.T("選ぶのをやめる"))) _selected = null;
+        }
+        var current = p.m_animController?.m_animMotion?.name;
+        var seen = new HashSet<string>();
+        foreach (var m in p.m_motionMgr.motions)
+        {
+            if (m == null || string.IsNullOrEmpty(m.name) || !seen.Add(m.name)) continue;
+            var bound = MotionBinder.Get(CharId(p), m.name);
+            string right = (bound != null ? "★ " + bound.Substring(bound.IndexOf('#') + 1) : "") + (m.name == current ? "  " + L.T("(今)") : "");
+            if (gui.Selectable(m.name, _selected == m.name, right, bound != null ? RuskStyle.Accent : null))
+                _selected = _selected == m.name ? null : m.name;
         }
     }
+
+    private static long CharId(PlayerController p) => (long)System.Math.Round(p.GetPlayerId());
 }
 
 // アニメーションの後、VRM に動きを写す前 (Custom Model のパッチより先) に上書きする

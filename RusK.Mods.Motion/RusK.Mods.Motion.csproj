@@ -13,6 +13,8 @@
     <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
     <Reference Include="$(InteropDir)\Cinemachine.dll" Private="false" />
     <Reference Include="$(InteropDir)\UnityEngine.AnimationModule.dll" Private="false" />
+    <!-- ゲームの動作のクリップ (Animancer.ClipTransition) -->
+    <Reference Include="$(InteropDir)\Animancer.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>

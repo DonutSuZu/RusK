@@ -1,11 +1,19 @@
 {
-  "RusK/motions の glb の動きを再生します (試作)。押すと、操作キャラと画面に見せるキャラで再生します": "Plays the animations in the glb files in RusK/motions (prototype). Click one to play it on your character and on characters shown on screen",
   "止める": "Stop",
   "読み込み直す": "Reload",
   "フォルダを開く": "Open folder",
   "動き": "Motions",
+  "押すと「{0}」に割り当て": "Click to assign to \"{0}\"",
+  "押すとその場で再生": "Click to play now",
   "RusK/motions にアニメーション入りの glb がありません": "No glb files with animations in RusK/motions",
+  "このキャラの動作": "This character's actions",
+  "ゲームに入ってから開いてください": "Open this after entering the game",
+  "動作を選んでから、上の動きを押すと割り当てます。その動作のときに自動で再生します": "Pick an action, then click a motion above to assign it. It plays automatically during that action",
+  "割り当てを外す": "Remove assignment",
+  "選ぶのをやめる": "Cancel",
+  "(今)": "(now)",
   "Blender などで作ったアニメーション (glb) を、キャラの動きとして再生する (試作)": "Plays animations made in Blender etc. (glb) as character motions (prototype)",
   "画面を開く": "Open window",
-  "motions フォルダを開く": "Open the motions folder"
+  "motions フォルダを開く": "Open the motions folder",
+  "RusK/motions の glb の動きを再生します (試作)。押すと、操作キャラと画面に見せるキャラで再生します": "Plays the animations in the glb files in RusK/motions (prototype). Click one to play it on your character and on characters shown on screen"
 }

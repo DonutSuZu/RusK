@@ -36,6 +36,15 @@ internal sealed class MotionPlayer
     public readonly GltfMotion Motion;
     public bool Loop = true;
     public float Time;
+    /// <summary>画面から手で再生した (割り当ての自動の出し入れで止めない)</summary>
+    public bool Manual;
+
+    /// <summary>今の混ざり具合 (0 = ゲームの動き、1 = glb の動き)。Target に向かって FadeTime 秒で変わる</summary>
+    public float Weight;
+    public float Target = 1f;
+    public float FadeTime = 0.25f;
+    /// <summary>消えきった (止めて、フェードが終わった)</summary>
+    public bool Finished => Target <= 0f && Weight <= 0f;
 
     private readonly Pair[] _pairs;
     /// <summary>お供の骨と、付いていく相手 (_pairs の番号)</summary>
@@ -229,6 +238,10 @@ internal sealed class MotionPlayer
     {
         if (Root == null) return;
         Time += dt;
+        Weight = Mathf.MoveTowards(Weight, Target, FadeTime > 0f ? dt / FadeTime : 1f);
+        if (Weight <= 0f) return;
+        // ゆっくり始まりゆっくり終わる混ぜ方
+        float w = Weight * Weight * (3f - 2f * Weight);
         float len = Mathf.Max(Motion.Length, 1e-3f);
         float t = Loop ? Time % len : Mathf.Min(Time, len);
         Motion.Sample(t, _lp, _lr);
@@ -241,8 +254,13 @@ internal sealed class MotionPlayer
             _oldRot[i] = p.Bone.rotation;
             _oldPos[i] = p.Bone.position;
             var delta = _wr[p.Node] * _srcRestInv[p.Node];
-            p.Bone.rotation = rootRot * delta * p.DstRest;
-            if (p.Move) p.Bone.position = Root.TransformPoint(p.DstRestPos + (_wp[p.Node] - _srcRestPos[p.Node]));
+            var rot = rootRot * delta * p.DstRest;
+            p.Bone.rotation = w >= 1f ? rot : Quaternion.Slerp(_oldRot[i], rot, w);
+            if (p.Move)
+            {
+                var pos = Root.TransformPoint(p.DstRestPos + (_wp[p.Node] - _srcRestPos[p.Node]));
+                p.Bone.position = w >= 1f ? pos : Vector3.Lerp(_oldPos[i], pos, w);
+            }
         }
         // お供の骨: 付いていく骨を動かした分 (ゲームの姿勢から上書きした姿勢へ) だけ、同じ点を中心に動かす
         foreach (var (bone, driver) in _followers)
@@ -259,37 +277,59 @@ internal sealed class MotionPlayer
 /// <summary>再生中の動き (キャラの根元ごと)。毎フレーム、ゲームのアニメーションの後・VRM に写す前に呼ぶ</summary>
 internal static class MotionPlayers
 {
-    public static readonly Dictionary<IntPtr, MotionPlayer> Active = new();
+    /// <summary>キャラの根元 → 再生中の動き (古い順。前の動きを消しながら次の動きを出すので、切り替えの間は 2 つ)</summary>
+    public static readonly Dictionary<IntPtr, List<MotionPlayer>> Active = new();
     private static int _lastFrame = -1;
 
-    public static MotionPlayer Play(Transform root, GltfMotion motion)
+    public static bool IsPlaying(Transform root) =>
+        root != null && Active.TryGetValue(root.Pointer, out var list) && list.Any(p => p.Target > 0f);
+
+    /// <summary>画面から手で再生している動きがある</summary>
+    public static bool IsManual(Transform root) =>
+        root != null && Active.TryGetValue(root.Pointer, out var list) && list.Any(p => p.Manual && p.Target > 0f);
+
+    public static MotionPlayer Play(Transform root, GltfMotion motion, float fade = 0.25f)
     {
-        var player = new MotionPlayer(root, motion);
-        Active[root.Pointer] = player;
+        var player = new MotionPlayer(root, motion) { FadeTime = fade };
+        if (!Active.TryGetValue(root.Pointer, out var list)) Active[root.Pointer] = list = new List<MotionPlayer>();
+        foreach (var old in list) { old.Target = 0f; old.FadeTime = fade; }
+        list.Add(player);
         MotionMod.Ctx?.Log.Info($"Motion: {root.name} で '{motion.Name}' を再生 (動かす骨 {player.PairCount}、お供の骨 {player.FollowerCount}、長さ {motion.Length:0.00} 秒) お供: {player.FollowerNames}");
         return player;
     }
 
-    public static void Stop(Transform root)
+    /// <summary>止める (フェードで消す)</summary>
+    public static void Stop(Transform root, float fade = 0.25f)
     {
-        if (root != null) Active.Remove(root.Pointer);
+        if (root == null || !Active.TryGetValue(root.Pointer, out var list)) return;
+        foreach (var p in list) { p.Target = 0f; p.FadeTime = fade; }
     }
 
-    public static void StopAll() => Active.Clear();
+    public static void StopAll(bool immediately = false)
+    {
+        if (immediately) { Active.Clear(); return; }
+        foreach (var list in Active.Values)
+            foreach (var p in list) p.Target = 0f;
+    }
 
     public static void Tick()
     {
-        if (UnityEngine.Time.frameCount == _lastFrame || Active.Count == 0) return;
+        if (UnityEngine.Time.frameCount == _lastFrame) return;
         _lastFrame = UnityEngine.Time.frameCount;
+        MotionBinder.Update();
+        if (Active.Count == 0) return;
         float dt = UnityEngine.Time.deltaTime;
         foreach (var key in Active.Keys.ToList())
         {
-            var p = Active[key];
+            var list = Active[key];
             try
             {
-                if (p.Root == null) { Active.Remove(key); continue; }
-                if (!p.Root.gameObject.activeInHierarchy) continue;
-                p.Apply(dt);
+                if (list.Count == 0 || list[0].Root == null) { Active.Remove(key); continue; }
+                if (!list[0].Root.gameObject.activeInHierarchy) continue;
+                // 古い順に重ねる (前の動きを薄めた姿勢から、次の動きへ混ぜる)
+                foreach (var p in list) p.Apply(dt);
+                list.RemoveAll(p => p.Finished);
+                if (list.Count == 0) Active.Remove(key);
             }
             catch (Exception e)
             {
