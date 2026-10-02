@@ -206,13 +206,15 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 
 ### Effect Tuner（エフェクトの色・大きさ）
 - **Visual > EffectTuner > OpenWindow** で設定画面を開く。対象 (全体 / キャラ / 敵 / 最近出たエフェクト) を選んで「設定を作る」
-- 変えられるもの: 色相 (色付きの部分の色を変える)・白い部分にも色をつける量・彩度・明るさ・不透明度・大きさ・非表示。細かい対象の設定が優先 (エフェクト → キャラ / 敵 → 全体)
+- 変えられるもの: 色相 (色付きの部分の色を変える)・白い部分にも色をつける量・彩度・明るさ・不透明度・大きさ・非表示・**差し替え** (ゲームの別のエフェクトに)。細かい対象の設定が優先 (エフェクト → キャラ / 敵 → 全体)
 - 設定は `RusK\data\effect\rules.json` に保存。次にそのエフェクトが出たときから効く
 - 仕組み: エフェクトはどれも `GameUtil.LoadEffect` (3 つ) を通るので、その後に設定をかける。持ち主は呼んだ関数で決める
   (`PlayerController.CreateEffectOnTrans` / `SetPerfectDefence` / `CreateGroundTrail` = そのキャラ、`EnemyController.GetHitCallback` = 攻撃したキャラ、`EnemyController.CreateEffect` など = 敵)
 - ゲームのエフェクト (`Resources/VFX`、約 400 個) はほぼ全部 ParticleSystem で、シェーダーは色のプロパティを持たない。
   色はパーティクルの `startColor` / `colorOverLifetime` で付いているので、そこの色相・彩度・明るさを変える (テクスチャ自体の色は変わらない)
 - エフェクトはプールで使い回されるので、最初に見たときの元の値を覚えて毎回そこから計算する (同じ設定がかかっていれば何もしない)
+- 差し替え (`EffectReplacer`): 元のエフェクトの表示を消し、差し替え先 (`Resources/VFX` のプレハブ) を元の子 (`RusK:名前`) として出す。
+  元 1 つにつき 1 つ作って使い回し、出るたびに頭から再生する。差し替え先のゲームのスクリプト (時間で隠す・プールに戻すなど) は止める
 
 ### Custom Model（VRM）
 - `RusK\models` に `.vrm` (VRM 0.x / 1.0) を置き、**Visual > CustomModel** でキャラごとに選ぶ

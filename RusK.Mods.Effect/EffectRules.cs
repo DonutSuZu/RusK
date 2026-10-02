@@ -22,15 +22,20 @@ internal sealed class EffectRule
     public float Opacity { get; set; } = 1f;
     public float Size { get; set; } = 1f;
     public bool Hide { get; set; }
+    /// <summary>差し替え先のゲームのエフェクトの名前 (無ければ null)。元のエフェクトは隠す</summary>
+    public string Replace { get; set; }
+
+    /// <summary>元のエフェクトを隠すか (表示しない・差し替え)</summary>
+    public bool HidesOriginal => Hide || !string.IsNullOrEmpty(Replace);
 
     /// <summary>見た目を何も変えないか</summary>
     public bool IsIdentity =>
-        !UseHue && !Hide && Mathf.Approximately(Saturation, 1f) && Mathf.Approximately(Brightness, 1f) &&
+        !UseHue && !HidesOriginal && Mathf.Approximately(Saturation, 1f) && Mathf.Approximately(Brightness, 1f) &&
         Mathf.Approximately(Opacity, 1f) && Mathf.Approximately(Size, 1f);
 
     /// <summary>同じ見た目かを比べる用の文字列 (かけ直すかの判断に使う)</summary>
     public string Signature =>
-        $"{UseHue}|{Hue:0.#}|{TintWhite:0.##}|{Saturation:0.##}|{Brightness:0.##}|{Opacity:0.##}|{Size:0.##}|{Hide}";
+        $"{UseHue}|{Hue:0.#}|{TintWhite:0.##}|{Saturation:0.##}|{Brightness:0.##}|{Opacity:0.##}|{Size:0.##}|{HidesOriginal}";
 
     /// <summary>パーティクルの色 1 つを変える</summary>
     public Color Apply(Color c)

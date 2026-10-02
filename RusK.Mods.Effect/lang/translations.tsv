@@ -25,3 +25,12 @@ OFF です (Visual > EffectTuner を ON にすると効きます)	Off (turn on V
 この設定を消す	Delete these settings	删除此设置
 次にエフェクトが出たときから変わります	Changes apply the next time the effect appears	下次特效出现时生效
 全体	Everything	全体
+差し替え: {0}	Replace with: {0}	替换为: {0}
+なし	None	无
+閉じる	Close	关闭
+選ぶ	Choose	选择
+外す	Remove	移除
+最近出たもの	Recent	最近出现
+エフェクトの一覧を読めませんでした	Could not read the effect list	无法读取特效列表
+グループ	Group	分组
+ページ	Page	页

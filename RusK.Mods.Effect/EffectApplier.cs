@@ -116,10 +116,19 @@ internal static class EffectApplier
 
         foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
         {
+            if (InReplacement(ps.transform, root.transform)) continue; // 差し替え先 (子) は別にかける
             try { ApplyOne(ps, signature == "" ? null : rule); }
             catch (Exception e) { EffectMod.Ctx?.Log.Warning($"Effect: {root.name}/{ps.name}: {e.Message}"); }
         }
         Applied[rootId] = signature;
+    }
+
+    /// <summary>root の下の、差し替え先のエフェクト (名前が "RusK:" で始まる子) の中か</summary>
+    private static bool InReplacement(Transform t, Transform root)
+    {
+        for (; t != null && t != root; t = t.parent)
+            if (t.name.StartsWith("RusK:")) return true;
+        return false;
     }
 
     private static void ApplyOne(ParticleSystem ps, EffectRule rule)
@@ -160,6 +169,6 @@ internal static class EffectApplier
             main.startSizeMultiplier = o.Size * size;
         }
 
-        if (renderer != null) renderer.enabled = o.RendererEnabled && !(rule?.Hide ?? false);
+        if (renderer != null) renderer.enabled = o.RendererEnabled && !(rule?.HidesOriginal ?? false);
     }
 }

@@ -47,7 +47,9 @@ internal static class EffectHook
         {
             if (string.IsNullOrEmpty(name)) name = go.name.Replace("(Clone)", "").Trim();
             Remember(Owner ?? "", name);
-            EffectApplier.Apply(go, Enabled && Rules != null ? Rules.Resolve(Owner, name) : null);
+            var rule = Enabled && Rules != null ? Rules.Resolve(Owner, name) : null;
+            EffectApplier.Apply(go, rule);
+            EffectReplacer.Handle(go, rule);
         }
         catch (Exception e)
         {

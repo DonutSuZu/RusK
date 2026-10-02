@@ -22,7 +22,16 @@
   "不透明度": "Opacity",
   "大きさ": "Size",
   "表示しない": "Hide",
+  "差し替え: {0}": "Replace with: {0}",
+  "なし": "None",
+  "閉じる": "Close",
+  "選ぶ": "Choose",
+  "外す": "Remove",
   "この設定を消す": "Delete these settings",
   "次にエフェクトが出たときから変わります": "Changes apply the next time the effect appears",
+  "最近出たもの": "Recent",
+  "エフェクトの一覧を読めませんでした": "Could not read the effect list",
+  "グループ": "Group",
+  "ページ": "Page",
   "全体": "Everything"
 }
