@@ -32,6 +32,7 @@ public sealed class CharacterMod : RuskMod
         Context.Harmony.PatchAll(typeof(LocalePatch));
         Context.Harmony.PatchAll(typeof(ResourcesLoadPatch));
         Context.Harmony.PatchAll(typeof(SetDataPatch));
+        Context.Harmony.PatchAll(typeof(UnlockPatch));
         Context.RegisterModule(new CharacterModule());
     }
 }

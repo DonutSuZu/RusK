@@ -29,30 +29,60 @@ internal static class CharacterRegistry
 
     public static bool IsCustom(double id) => Find(id) != null;
 
-    /// <summary>毎フレーム: キャラの一覧とセーブが新しくなっていたら足し直す (1 秒ごとに確かめる)</summary>
+    /// <summary>
+    /// 毎フレーム: キャラの一覧が新しくなっていたら足し直す (選択画面などが一覧を使う前に間に合うよう毎フレーム。確かめるのは一覧が前と同じかだけ)。
+    /// セーブは 1 秒ごと。ゲームの関数 (GetCharacterContainer / GetGameSave) には割り込まない: ゲームは別のスレッドからも呼んでいて、
+    /// そこで Mod の処理が動くとゲームごと落ちる (拠点の「キャラクター」メニューやタイトルで落ちていた)
+    /// </summary>
     public static void Tick()
     {
-        if (Defs.Count == 0 || Time.unscaledTime < _next) return;
-        _next = Time.unscaledTime + 1f;
+        if (Defs.Count == 0) return;
         try
         {
             var util = GameUtil.Instance;
             if (util == null) return;
-            var container = util.GetCharacterContainer();
-            if (container?.characters != null && (container.Pointer != _container || Defs.Any(d => !Contains(container, d.Id))))
+            EnsureContainer(util.GetCharacterContainer());
+            if (Time.unscaledTime < _next) return;
+            _next = Time.unscaledTime + 1f;
+            EnsureSave(GameUtil.GetGameSave());
+        }
+        catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: 準備に失敗: {e.Message}"); }
+    }
+
+    private static bool _busy;
+
+    /// <summary>キャラの一覧に新しいキャラが無ければ足す (ゲームが一覧を取り出した瞬間にも呼ぶ)</summary>
+    public static void EnsureContainer(CharacterContainer container)
+    {
+        if (_busy || Defs.Count == 0 || container?.characters == null) return;
+        if (container.Pointer == _container && Registered.Count == Defs.Count && Registered.Values.All(m => m != null)) return;
+        _busy = true;
+        try
+        {
+            if (container.Pointer != _container || Defs.Any(d => !Contains(container, d.Id)))
             {
                 _container = container.Pointer;
                 Register(container);
             }
-            var save = GameUtil.GetGameSave();
-            if (save?.characterUnlock != null && (save.Pointer != _save || Defs.Any(d => !save.characterUnlock.ToArray().Any(u => u != null && (long)Math.Round(u.id) == d.Id)
+        }
+        finally { _busy = false; }
+    }
+
+    /// <summary>セーブに新しいキャラの解放などが無ければ足す (1 秒ごとと、新しいキャラの準備の直前)</summary>
+    public static void EnsureSave(GameSave save)
+    {
+        if (_busy || Defs.Count == 0 || save == null || _stripping) return;
+        _busy = true;
+        try
+        {
+            if (save.characterUnlock != null && (save.Pointer != _save || Defs.Any(d => !save.characterUnlock.ToArray().Any(u => u != null && (long)Math.Round(u.id) == d.Id)
                     || (save.playerEquips != null && !save.playerEquips.ToArray().Any(e => e != null && (long)Math.Round(e.id) == d.Id)))))
             {
                 _save = save.Pointer;
                 Inject(save);
             }
         }
-        catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: 準備に失敗: {e.Message}"); }
+        finally { _busy = false; }
     }
 
     private static bool Contains(CharacterContainer c, long id)
@@ -127,11 +157,14 @@ internal static class CharacterRegistry
         public double? LastCrtId;
     }
 
+    private static bool _stripping;
+
     public static Stripped Strip()
     {
         if (Defs.Count == 0) return null;
+        _stripping = true;
         var save = GameUtil.GetGameSave();
-        if (save == null) return null;
+        if (save == null) { _stripping = false; return null; }
         var st = new Stripped();
         if (save.characterUnlock != null)
             foreach (var u in save.characterUnlock.ToArray())
@@ -154,13 +187,17 @@ internal static class CharacterRegistry
 
     public static void Restore(Stripped st)
     {
-        if (st == null) return;
-        var save = GameUtil.GetGameSave();
-        if (save == null) return;
-        foreach (var u in st.Unlocks) save.characterUnlock.Add(u);
-        foreach (var s in st.Skills) save.skills.Add(s);
-        foreach (var e in st.Equips) save.playerEquips.Add(e);
-        if (st.LastCrtId is double id) save.lastCrtId = id;
+        try
+        {
+            if (st == null) return;
+            var save = GameUtil.GetGameSave();
+            if (save == null) return;
+            foreach (var u in st.Unlocks) save.characterUnlock.Add(u);
+            foreach (var s in st.Skills) save.skills.Add(s);
+            foreach (var e in st.Equips) save.playerEquips.Add(e);
+            if (st.LastCrtId is double id) save.lastCrtId = id;
+        }
+        finally { _stripping = false; } // 戻し終わるまでは足し直さない (二重に入らないように)
     }
 
     // ---- 名前
@@ -247,8 +284,6 @@ internal static class ResourcesLoadPatch
 
     private static void Postfix(string path, ref Object __result)
     {
-        if (path != null && path.Length > 0 && char.IsDigit(path[path.Length - 1]) && Logged.Add("?" + path))
-            CharacterMod.Ctx?.Log.Info($"Character: (調査) Resources.Load '{path}' → {(__result == null ? "null" : __result.name)}");
         if (__result != null || path == null || CharacterRegistry.Registered.Count == 0) return;
         foreach (var (id, mm) in CharacterRegistry.Registered)
         {
@@ -282,9 +317,22 @@ internal static class SetDataPatch
 {
     private static void Prefix(PlayerController __instance, double id)
     {
+        // 準備の直前に、セーブに新しいキャラの装備・スキルがあることを確かめる (準備はそれを使う)
+        if (CharacterRegistry.IsCustom(id)) CharacterRegistry.EnsureSave(GameUtil.GetGameSave());
         // 新しいキャラにするとき・新しいキャラから元のキャラに戻すとき (同じプレハブの体が使い回される)
         if ((CharacterRegistry.IsCustom(id) || CharacterRegistry.IsCustom(__instance.m_id)) && Math.Abs(__instance.m_id - id) > 0.5)
             __instance.m_id = id;
     }
 }
+
+/// <summary>新しいキャラはいつでも解放済み (選択画面などは、作った瞬間の解放の状態で並べるので、セーブに足すのが間に合わないことがある)</summary>
+[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.IsCharacterUnlock))]
+internal static class UnlockPatch
+{
+    private static void Postfix(double id, ref bool __result)
+    {
+        if (!__result && CharacterRegistry.IsCustom(id)) __result = true;
+    }
+}
+
 
