@@ -26,6 +26,8 @@ internal static class KeyBindWatcher
         for (var k = KeyCode.A; k <= KeyCode.Z; k++) list.Add(k);
         for (var k = KeyCode.Alpha0; k <= KeyCode.Alpha9; k++) list.Add(k);
         for (var k = KeyCode.Keypad0; k <= KeyCode.Keypad9; k++) list.Add(k);
+        // ゲームパッドのボタン (PadButton)
+        for (int i = 0; i < PadButton.Count; i++) list.Add(KeyCode.JoystickButton0 + i);
         list.AddRange(new[]
         {
             KeyCode.Insert, KeyCode.Home, KeyCode.End, KeyCode.PageUp, KeyCode.PageDown,
@@ -39,7 +41,7 @@ internal static class KeyBindWatcher
 
 /// <summary>
 /// 「次に押したキーを割り当てる」状態の管理。GUI の Hotkey 行から Begin される。
-/// Esc でキャンセル、Delete / Backspace で割り当て解除 (None)。
+/// Esc でキャンセル、Delete / Backspace で割り当て解除 (None)。ゲームパッドのボタンも割り当てられる。
 /// 押したときに Ctrl / Shift / Alt を押していれば、それも含めて記録する。
 /// </summary>
 internal static class HotkeyCapture
@@ -83,7 +85,8 @@ internal static class HotkeyCapture
 
         foreach (var key in KeyBindWatcher.Pressed())
         {
-            Finish(new Hotkey(key, NewInput.Ctrl, NewInput.Shift, NewInput.Alt));
+            // パッドのボタンには Ctrl などを付けない
+            Finish(Hotkey.IsPad(key) ? new Hotkey(key) : new Hotkey(key, NewInput.Ctrl, NewInput.Shift, NewInput.Alt));
             return;
         }
     }
@@ -103,9 +106,10 @@ internal static class HotkeyCapture
 /// </summary>
 internal static class HotkeyDispatcher
 {
-    public static void Dispatch()
+    /// <param name="skipPad">パッドのボタンは配らない (パッドでメニューを操作している間)</param>
+    public static void Dispatch(bool skipPad = false)
     {
-        var pressed = KeyBindWatcher.Pressed().ToList();
+        var pressed = KeyBindWatcher.Pressed().Where(k => !skipPad || !Hotkey.IsPad(k)).ToList();
         if (pressed.Count == 0) return;
 
         bool ctrl = NewInput.Ctrl, shift = NewInput.Shift, alt = NewInput.Alt;

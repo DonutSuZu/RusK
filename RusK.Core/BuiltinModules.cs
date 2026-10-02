@@ -60,12 +60,15 @@ internal sealed class LanguageModule : Module
 internal sealed class MenuSettingsModule : Module
 {
     public static readonly string[] GuiModes = { "Tab", "Click" };
+    public static readonly string[] PadMenuModes = { "LS+RS", "View+Menu", "Off" };
     public static readonly string[] LightingModes = { "Static", "Rainbow", "Breathing", "Wave" };
 
     public MenuSettingsModule() : base("Menu", Categories.Visual, "RusK のメニューと HUD の見た目")
     {
         GuiMode = AddSetting(new ModeSetting("GUI", GuiModes, 0, "メニューの種類 (Tab: キーボード操作 / Click: マウス操作)"));
         MenuKey = AddSetting(new HotkeySetting("MenuKey", KeyCode.Insert, "メニューを開閉するキー"));
+        PadMenu = AddSetting(new ModeSetting("PadMenu", PadMenuModes, 0,
+            "ゲームパッドでメニューを開閉するボタン (2 つ同時押し)。開いている間はゲームの操作を止め、十字キーで選択・A で決定・B で戻る"));
         Opacity = AddSetting(new FloatSetting("Opacity", 0.85f, 0.2f, 1f, 0.05f, "0.00", "背景の不透明度"));
         Accent = AddSetting(new ColorSetting("Color", "#5C9EFF", "アクセントカラー"));
         Lighting = AddSetting(new ModeSetting("Lighting", LightingModes, 0,
@@ -82,6 +85,7 @@ internal sealed class MenuSettingsModule : Module
 
     public ModeSetting GuiMode { get; }
     public HotkeySetting MenuKey { get; }
+    public ModeSetting PadMenu { get; }
     public FloatSetting Opacity { get; }
     public ColorSetting Accent { get; }
     public ModeSetting Lighting { get; }
@@ -92,6 +96,14 @@ internal sealed class MenuSettingsModule : Module
     public BoolSetting Notifications { get; }
 
     public bool IsClickGui => GuiMode.Value == 1;
+
+    /// <summary>ゲームパッドでメニューを開閉する 2 つのボタン (Off なら None)</summary>
+    public (KeyCode a, KeyCode b) PadMenuButtons => PadMenu.Value switch
+    {
+        0 => (PadButton.LS, PadButton.RS),
+        1 => (PadButton.View, PadButton.Menu),
+        _ => (KeyCode.None, KeyCode.None),
+    };
 
     /// <summary>メニューキー。None にされてもメニューを開けなくならないよう Insert に戻す</summary>
     public Hotkey EffectiveMenuKey => MenuKey.Value.IsNone ? KeyCode.Insert : MenuKey.Value;

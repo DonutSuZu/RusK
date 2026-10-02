@@ -14,6 +14,7 @@ internal sealed class RuskUi
     private readonly Hud _hud;
 
     private bool _menuOpen;
+    private bool _padMenu; // ゲームパッドで開いた (開いている間はゲームの操作を止める)
 
     // ClickGUI やウィンドウの表示中にカーソルを出すため、元の状態を覚えておく
     private bool _cursorForced;
@@ -34,7 +35,8 @@ internal sealed class RuskUi
 
     public WindowManager Windows { get; }
 
-    private static bool ClickMode => Rusk.MenuSettings?.IsClickGui ?? false;
+    /// <summary>ClickGUI (マウス操作) で出すか。ゲームパッドで開いたときは、パッドで操作できる TabGUI で出す</summary>
+    private bool ClickMode => (Rusk.MenuSettings?.IsClickGui ?? false) && !_padMenu;
 
     /// <summary>ウィンドウの数値入力欄を編集している最中か</summary>
     private static bool Typing => WindowGui.IsEditing;
@@ -73,7 +75,7 @@ internal sealed class RuskUi
         Rusk.Notifications.Prune();
 
         // キー割り当て中・入力欄の編集中・ClickGUI を開いている間は、Mod 用のキー入力も止める
-        RuskInput.SetBlocked(HotkeyCapture.Active || Typing || (_menuOpen && ClickMode));
+        RuskInput.SetBlocked(HotkeyCapture.Active || Typing || (_menuOpen && (ClickMode || _padMenu)));
 
         // カーソル: ClickGUI かウィンドウが出ている間は表示する
         if ((_menuOpen && ClickMode) || Windows.AnyVisible) ForceCursor();
@@ -107,6 +109,15 @@ internal sealed class RuskUi
             ToggleMenu();
             return;
         }
+        // ゲームパッド: 2 つのボタンの同時押し (片方を押している間にもう片方を押す)
+        var (padA, padB) = Rusk.MenuSettings.PadMenuButtons;
+        if (padA != KeyCode.None &&
+            ((NewInput.WasPressedThisFrame(padA) && NewInput.IsPressed(padB)) ||
+             (NewInput.WasPressedThisFrame(padB) && NewInput.IsPressed(padA))))
+        {
+            ToggleMenu(viaPad: true);
+            return;
+        }
 
         if (_menuOpen && ClickMode)
         {
@@ -115,18 +126,29 @@ internal sealed class RuskUi
             return;
         }
 
-        if (_menuOpen)
-            _tabGui.HandleInput();
+        if (_menuOpen && _tabGui.HandleInput())
+        {
+            ToggleMenu(); // パッドの B でいちばん上から戻った
+            return;
+        }
 
-        HotkeyDispatcher.Dispatch();
+        // パッドでメニューを操作している間は、パッドのボタンをホットキーに配らない
+        HotkeyDispatcher.Dispatch(skipPad: _menuOpen && _padMenu);
         Rusk.Triggers.UpdateHolds(NewInput.Ctrl, NewInput.Shift, NewInput.Alt);
     }
 
-    public void ToggleMenu()
+    public void ToggleMenu(bool viaPad = false)
     {
         _menuOpen = !_menuOpen;
+        if (_menuOpen && viaPad)
+        {
+            _padMenu = true;
+            GameInputLock.Lock();
+        }
         if (!_menuOpen)
         {
+            _padMenu = false;
+            GameInputLock.Unlock();
             _clickGui.OnClose();
             HotkeyCapture.Cancel();
             Rusk.Config.Save();

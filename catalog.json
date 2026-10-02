@@ -1,7 +1,13 @@
 {
   "schema": 1,
-  "gameVersion": "0.0.1876 (a46bc78)",
+  "gameVersion": "0.0.1878 (c9d3e1a)",
   "news": [
+    {
+      "date": "2026-10-02",
+      "ja": "ゲームパッドに対応しました (RusK v1.1.5)。LS + RS でメニューを開き、キーの割り当てにパッドのボタンも使えます。ゲーム 0.0.1878 に対応しています。",
+      "en": "Gamepads are now supported (RusK v1.1.5). Press LS + RS to open the menu, and you can bind gamepad buttons. Supports game version 0.0.1878.",
+      "zh": "已支持手柄 (RusK v1.1.5)。按 LS + RS 打开菜单, 按键分配中也可以使用手柄按键。支持游戏版本 0.0.1878。"
+    },
     {
       "date": "2026-10-02",
       "ja": "RusK Mod Manager を公開しました。これからはこのアプリで RusK 本体と Mod を更新できます。",

@@ -32,6 +32,7 @@ internal static class P
     private static Action<PlayerController> _rebindCamera, _refreshHud;
     private static Func<PlayerController, bool> _switchTo;
     private static PropertyInfo _nextKey, _prevKey;
+    private static Func<int, Hotkey> _fieldSkillKey, _fieldSwitchKey; // Party 1.5.0 から (無ければ 1〜3 / F1〜F3)
 
     public static bool Bound => Bridge != null;
 
@@ -66,6 +67,11 @@ internal static class P
         _switchTo = Method<Func<PlayerController, bool>>("SwitchTo", typeof(PlayerController));
         _nextKey = t.GetProperty("NextKey", st);
         _prevKey = t.GetProperty("PrevKey", st);
+        if (t.GetMethod("FieldSkillKey", st, null, new[] { typeof(int) }, null) != null)
+        {
+            _fieldSkillKey = Method<Func<int, Hotkey>>("FieldSkillKey", typeof(int));
+            _fieldSwitchKey = Method<Func<int, Hotkey>>("FieldSwitchKey", typeof(int));
+        }
         Bridge = t;
         return true;
     }
@@ -94,4 +100,10 @@ internal static class P
     public static bool SwitchTo(PlayerController p) => Bound && _switchTo(p);
     public static Hotkey NextKey => Bound ? (Hotkey)_nextKey.GetValue(null) : new Hotkey(KeyCode.C);
     public static Hotkey PrevKey => Bound ? (Hotkey)_prevKey.GetValue(null) : new Hotkey(KeyCode.Z);
+
+    /// <summary>slot 番 (0〜2) のキャラのスキルのキー (Party の設定。古い Party なら 1〜3)</summary>
+    public static Hotkey FieldSkillKey(int slot) => _fieldSkillKey?.Invoke(slot) ?? new Hotkey(KeyCode.Alpha1 + slot);
+
+    /// <summary>slot 番 (0〜2) のキャラに切り替えるキー (Party の設定。古い Party なら F1〜F3)</summary>
+    public static Hotkey FieldSwitchKey(int slot) => _fieldSwitchKey?.Invoke(slot) ?? new Hotkey(KeyCode.F1 + slot);
 }

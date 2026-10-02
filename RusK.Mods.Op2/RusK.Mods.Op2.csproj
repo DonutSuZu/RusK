@@ -5,7 +5,7 @@
     <!-- RuskParty.dll の後に読み込まれる名前 (読み込み順に頼らない作りだが、念のため) -->
     <AssemblyName>RuskPartyOp2</AssemblyName>
     <RootNamespace>RusK.Mods.Op2</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <DeployDir>$(RuskGameDir)\mods</DeployDir>
   </PropertyGroup>
 

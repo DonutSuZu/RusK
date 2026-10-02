@@ -91,3 +91,4 @@ Mod の検査で問題は見つかりませんでした	the mod check found no p
 全 Mod を検査して、ゲームの変更による問題は見つかりませんでした	All mods were checked and no problems from the game changes were found	已检查所有 Mod, 未发现游戏变更导致的问题
 今のゲーム (v{0}) では、ゲームの変更で動かない部分があります	On the current game (v{0}), some parts no longer work because of game changes	在当前游戏 (v{0}) 中, 有部分功能因游戏变更而无法运行
 今のゲーム (v{0}) でも、使っているゲームの関数・パッチ先はすべてそろっています	On the current game (v{0}) too, every game function and patch target it uses is present	在当前游戏 (v{0}) 中, 所使用的游戏函数和补丁目标也全部存在
+ゲームパッドでメニューを開閉するボタン (2 つ同時押し)。開いている間はゲームの操作を止め、十字キーで選択・A で決定・B で戻る	Gamepad buttons that open / close the menu (press both together). While it is open, the game's controls are paused: D-pad to select, A to confirm, B to go back	用手柄打开 / 关闭菜单的按键 (同时按下两个)。打开期间会暂停游戏操作: 十字键选择、A 确定、B 返回

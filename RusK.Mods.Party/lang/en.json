@@ -71,5 +71,11 @@
   "ガード": "guard",
   "連携攻撃: 1500 ヒットためるか敵のシールドを割って追加攻撃を当てると、時間が止まり、次のキャラを選んで追加攻撃を繋げる": "Chain attack: land a follow-up attack after 1500 hits or on an enemy whose shield is broken; time stops and you pick the next character to continue the follow-up attacks",
   "この敵のシールド割れでは一度発動済み": "already triggered by this shield break",
-  "ポイントが足りず、シールドも割れていない": "not enough points and the shield is not broken"
+  "ポイントが足りず、シールドも割れていない": "not enough points and the shield is not broken",
+  "エンドフィールドスタイル: 1 番のキャラの特殊攻撃 (短押し) / 必殺技 (長押し) のキー": "Endfield style: key for character 1's special attack (tap) / ultimate (hold)",
+  "エンドフィールドスタイル: 2 番のキャラの特殊攻撃 (短押し) / 必殺技 (長押し) のキー": "Endfield style: key for character 2's special attack (tap) / ultimate (hold)",
+  "エンドフィールドスタイル: 3 番のキャラの特殊攻撃 (短押し) / 必殺技 (長押し) のキー": "Endfield style: key for character 3's special attack (tap) / ultimate (hold)",
+  "エンドフィールドスタイル: 1 番のキャラに切り替えるキー": "Endfield style: key to switch to character 1",
+  "エンドフィールドスタイル: 2 番のキャラに切り替えるキー": "Endfield style: key to switch to character 2",
+  "エンドフィールドスタイル: 3 番のキャラに切り替えるキー": "Endfield style: key to switch to character 3"
 }

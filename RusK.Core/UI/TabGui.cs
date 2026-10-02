@@ -25,22 +25,28 @@ internal sealed class TabGui
         _model = model;
     }
 
-    /// <summary>Update から呼ぶ。キー入力でカーソルを動かす</summary>
-    public void HandleInput()
+    /// <summary>
+    /// Update から呼ぶ。キー入力でカーソルを動かす (ゲームパッドは十字キー・A で決定・B で戻る)。
+    /// いちばん上の列でパッドの B を押したら true (メニューを閉じる)
+    /// </summary>
+    public bool HandleInput()
     {
         var cats = _model.Categories;
-        if (cats.Count == 0) return;
+        if (cats.Count == 0) return false;
         _cat = Wrap(_cat, cats.Count);
         var entries = _model.Entries(cats[_cat]);
 
-        bool up = Repeat(KeyCode.UpArrow), down = Repeat(KeyCode.DownArrow);
-        bool left = Repeat(KeyCode.LeftArrow), right = Repeat(KeyCode.RightArrow);
-        bool enter = NewInput.WasPressedThisFrame(KeyCode.Return) || NewInput.WasPressedThisFrame(KeyCode.KeypadEnter);
-        bool back = NewInput.WasPressedThisFrame(KeyCode.Backspace);
+        bool up = Repeat(KeyCode.UpArrow) | Repeat(PadButton.Up), down = Repeat(KeyCode.DownArrow) | Repeat(PadButton.Down);
+        bool left = Repeat(KeyCode.LeftArrow) | Repeat(PadButton.Left), right = Repeat(KeyCode.RightArrow) | Repeat(PadButton.Right);
+        bool enter = NewInput.WasPressedThisFrame(KeyCode.Return) || NewInput.WasPressedThisFrame(KeyCode.KeypadEnter) ||
+                     NewInput.WasPressedThisFrame(PadButton.A);
+        bool padBack = NewInput.WasPressedThisFrame(PadButton.B);
+        bool back = NewInput.WasPressedThisFrame(KeyCode.Backspace) || padBack;
 
         switch (_level)
         {
             case 0:
+                if (padBack) return true;
                 if (up) _cat = Wrap(_cat - 1, cats.Count);
                 if (down) _cat = Wrap(_cat + 1, cats.Count);
                 if ((right || enter) && _model.Entries(cats[_cat]).Count > 0)
@@ -89,6 +95,7 @@ internal sealed class TabGui
                 break;
             }
         }
+        return false;
     }
 
     private void OpenRows(IMenuEntry e)

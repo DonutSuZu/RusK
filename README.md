@@ -20,7 +20,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143135" src="https://github.com/user-attachments/assets/558d6ad4-841f-498c-a79c-dd3b4c886368" />
 <img width="2559" height="1439" alt="スクリーンショット 2026-09-28 143139" src="https://github.com/user-attachments/assets/7828f779-6900-49a0-81b5-01cdc945e14e" />
 
-**対応ゲームバージョン: 0.0.1876 (a46bc78)** — ゲーム画面の左下に出る `Version 0.0.1876_a46bc78` と同じか確認してください。
+**対応ゲームバージョン: 0.0.1878 (c9d3e1a)** — ゲーム画面の左下に出る `Version 0.0.1878_c9d3e1a` と同じか確認してください。
 ゲームが更新されたときは、メニューの Mods > Check で動かなくなった Mod を確認できます。
 
 ## インストール (利用者向け)
@@ -129,6 +129,19 @@ dotnet build RusK.sln -c Release
 ### キー割り当て（共通）
 「Bind」「Key」行を選んで Enter / クリック → 次に押したキーを割り当てる。
 Ctrl / Shift / Alt を押しながらなら組み合わせキーになる。**Esc** でキャンセル、**Delete** で解除。
+ゲームパッドのボタンも割り当てられる (表示は `Pad A` など)。
+
+### ゲームパッド
+| 操作 | 動作 |
+|---|---|
+| **LS + RS** (両方のスティックの押し込み) | メニュー開閉（Visual > Menu > PadMenu で View + Menu / Off に変更可） |
+| 十字キー | 選択・値の変更 |
+| A / B | 決定 / 戻る（いちばん左の列で B を押すと閉じる） |
+
+- パッドで開いたメニューは、GUI の設定にかかわらず TabGUI で出す。開いている間はゲームの操作を止める (`InputController.SetLockInput`。RusK 本体はゲームの DLL を参照しないのでリフレクションで呼ぶ: `GameInputLock.cs`)
+- パッドのボタンは `KeyCode.JoystickButton0`〜`15` で表す (`PadButton`: 0〜9 は Unity の昔の JoystickButton の並び、10〜15 は LT / RT / 十字キー)。
+  `NewInput` がつながっているすべてのゲームパッド (`Gamepad.s_Gamepads`) から読むので、Mod は `RuskInput.WasPressed(Hotkey)` のままでパッドにも対応する
+- Xbox の名前で表示する。PlayStation のパッドは A=✕ B=○ X=□ Y=△ LB=L1 RB=R1 LT=L2 RT=R2 View=Create Menu=Options
 
 ## メニューの中身
 | カテゴリ | 内容 |
@@ -168,6 +181,7 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 - Party の **BattleStyle** を「エンドフィールド」にすると有効 (Op.2 はメニューに項目を作らない。Party が `EndfieldLink` で `RusK.Mods.Op2.Op2Entry.Attach` を呼ぶ)
 - 戦闘ステージでは 3 人全員をフィールドに置き、操作していないキャラはオート (追いかける・攻撃・ついていく・離れたらワープ)。オートのキャラは無敵
 - **C / Z / F1〜F3** でその場で切り替え (キャラは動かさず、操作・カメラ・HUD・敵の狙いだけ移す)。切り替えパリィも効く
+- 1〜3 と F1〜F3 のキーは Party の設定 (FieldSkill1Key〜 / FieldSwitch1Key〜) で変えられる (ゲームパッドのボタンも可)。Op.2 は `PartyBridge.FieldSkillKey / FieldSwitchKey` (版 4) で読む
 - **共有 EP**: 1 ヒットで 1、バフなどで増えたゲームのエネルギーも足す。最大はフィールドのキャラのエネルギーの最大値でいちばん大きいもの
 - **1〜3 短押し**: そのキャラが EP 100 で特殊攻撃 (操作は切り替えない)。**長押し (0.4 秒)**: キャラごとの必殺ゲージ (そのキャラのヒットで 1、50 で満タン) で必殺技 (追加攻撃の動作)
 - E キーの特殊攻撃・Q キーの追加攻撃は封印し、ゲームのエネルギーは EP の割合に同期。RusK UI のボタン HUD は隠す

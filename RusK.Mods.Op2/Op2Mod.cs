@@ -10,9 +10,9 @@ namespace RusK.Mods.Op2;
 /// 毎フレームの処理と画面の描画は、Party が PartyBridge.EndfieldUpdate / EndfieldGui から呼ぶ
 /// (Party が Op2Entry.Attach を探して呼び、ここで登録する。Mod の読み込み順に左右されないように)
 /// </summary>
-[RuskMod("op2", "Party Op.2", "1.0.0",
+[RuskMod("op2", "Party Op.2", "1.0.1",
     Author = "you",
-    GameVersion = "0.0.1876",
+    GameVersion = "0.0.1878",
     Description = "エンドフィールド風のバトルスタイル。全員がフィールドで戦い、操作していないキャラはオート。Party の BattleStyle で切り替える (Party Mod が必要)")]
 public sealed class Op2Mod : RuskMod
 {

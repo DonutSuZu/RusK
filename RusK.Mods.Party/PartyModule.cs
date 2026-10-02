@@ -11,9 +11,9 @@ namespace RusK.Mods.Party;
 /// アクティブ3人 (ZZZ 風のキャラ切り替え)。
 /// 選んだ仲間 2 人を戦闘ステージで控えに用意し、「次へ」「前へ」のキーで切り替える。
 /// </summary>
-[RuskMod("party", "Party", "1.4.0",
+[RuskMod("party", "Party", "1.5.0",
     Author = "you",
-    GameVersion = "0.0.1876",
+    GameVersion = "0.0.1878",
     Description = "アクティブ3人。仲間を選んで、戦闘中にキーでキャラを切り替える")]
 public sealed class PartyMod : RuskMod
 {
@@ -65,6 +65,8 @@ public sealed class PartyModule : Module
     private readonly BoolSetting _shareBuffs;
     private readonly BoolSetting _devTools;
     private readonly ModeSetting _style;
+    private readonly HotkeySetting[] _fieldSkillKeys = new HotkeySetting[3];
+    private readonly HotkeySetting[] _fieldSwitchKeys = new HotkeySetting[3];
     private readonly BoolSetting _showHud;
     private readonly FloatSetting _hudX;
     private readonly FloatSetting _hudY;
@@ -99,6 +101,14 @@ public sealed class PartyModule : Module
         Instance = this;
         _style = AddSetting(new ModeSetting("BattleStyle", new[] { "ゼンゼロ", "エンドフィールド" }, 0,
             "バトルスタイル。ゼンゼロ: 控えは隠れて交代する。エンドフィールド: 全員がフィールドで戦い、操作していないキャラはオート (Party Op.2 が必要)"));
+        // エンドフィールドスタイル (Party Op.2) のキー。Op.2 はメニューに出ないので、ここで割り当てる (ゲームパッドのボタンも可)
+        for (int i = 0; i < 3; i++)
+        {
+            _fieldSkillKeys[i] = AddSetting(new HotkeySetting($"FieldSkill{i + 1}Key", new Hotkey(KeyCode.Alpha1 + i),
+                $"エンドフィールドスタイル: {i + 1} 番のキャラの特殊攻撃 (短押し) / 必殺技 (長押し) のキー"));
+            _fieldSwitchKeys[i] = AddSetting(new HotkeySetting($"FieldSwitch{i + 1}Key", new Hotkey(KeyCode.F1 + i),
+                $"エンドフィールドスタイル: {i + 1} 番のキャラに切り替えるキー"));
+        }
         _devTools = AddSetting(new BoolSetting("DevTools", false,
             "開発者向け: Party Lab (調査用のウィンドウ) をメニューに出す。ゲームの再起動で反映"));
         Enabled = true;
@@ -122,6 +132,10 @@ public sealed class PartyModule : Module
     internal static Hotkey NextKeyValue = new(KeyCode.C);
     internal static Hotkey PrevKeyValue = new(KeyCode.Z);
 
+    /// <summary>ほかの Mod 用 (PartyBridge): エンドフィールドスタイルの 1〜3 番のキャラのスキルのキーと、切り替えのキー</summary>
+    internal static readonly Hotkey[] FieldSkillKeyValues = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3 };
+    internal static readonly Hotkey[] FieldSwitchKeyValues = { KeyCode.F1, KeyCode.F2, KeyCode.F3 };
+
     public override string Suffix => L.T("{0}人", PartyManager.Members.Count);
 
     public override void OnUpdate()
@@ -135,6 +149,11 @@ public sealed class PartyModule : Module
         BuffShare.Enabled = _shareBuffs.Value;
         NextKeyValue = _nextKey.Value;
         PrevKeyValue = _prevKey.Value;
+        for (int i = 0; i < 3; i++)
+        {
+            FieldSkillKeyValues[i] = _fieldSkillKeys[i].Value;
+            FieldSwitchKeyValues[i] = _fieldSwitchKeys[i].Value;
+        }
         StyleValue = _style.Value;
         EndfieldLink.Tick();
         PartyManager.Tick();

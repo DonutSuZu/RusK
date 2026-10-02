@@ -34,8 +34,6 @@ internal static class FieldSkills
 
     private static readonly float[] PressedAt = { -1f, -1f, -1f };
     private static readonly bool[] LongFired = new bool[SlotCount];
-    private static readonly KeyCode[] Keys = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3 };
-    private static readonly KeyCode[] SwitchKeys = { KeyCode.F1, KeyCode.F2, KeyCode.F3 };
 
     public static int UltOf(PlayerController p) => p != null && Ult.TryGetValue(p.Pointer, out var v) ? v : 0;
 
@@ -131,7 +129,7 @@ internal static class FieldSkills
         // F1〜F3: その番号のキャラに、その場で操作を移す (C / Z に加えて)
         for (int i = 0; i < SlotCount && i < slots.Count; i++)
         {
-            if (!RuskInput.WasPressed(new Hotkey(SwitchKeys[i]))) continue;
+            if (!RuskInput.WasPressed(P.FieldSwitchKey(i))) continue;
             var target = slots[i];
             if (target == null || target.Pointer == P.Current?.Pointer || !Field.IsFielded(target)) break;
             P.SwitchTo(target); // Party の切り替え (ジャスト切り替え・クールタイムつき。エンドフィールドスタイルではその場で)
@@ -140,7 +138,7 @@ internal static class FieldSkills
 
         for (int i = 0; i < SlotCount; i++)
         {
-            var hotkey = new Hotkey(Keys[i]);
+            var hotkey = P.FieldSkillKey(i);
             if (RuskInput.WasPressed(hotkey))
             {
                 PressedAt[i] = Time.unscaledTime;
@@ -148,7 +146,7 @@ internal static class FieldSkills
             }
             if (PressedAt[i] < 0f) continue;
 
-            bool held = RuskInput.IsHeld(Keys[i]);
+            bool held = RuskInput.IsHeld(hotkey);
             var p = i < slots.Count ? slots[i] : null;
             if (held)
             {
@@ -306,7 +304,7 @@ internal static class FieldSkills
         float t = Time.unscaledTime;
 
         // 切り替えの案内
-        string keys = $"{P.NextKey.Display} / {P.PrevKey.Display}  F1〜F{SlotCount}";
+        string keys = $"{P.NextKey.Display} / {P.PrevKey.Display}  {KeyLabel(P.FieldSwitchKey(0))}〜{KeyLabel(P.FieldSwitchKey(SlotCount - 1))}";
         Render.Rect(x, baseY - 40f * s, 22f * s, 22f * s, Panel, 4f * s);
         Render.Text(x, baseY - 40f * s, 22f * s, 22f * s, "⇄", Color.white, Mathf.RoundToInt(13f * s), TextAnchor.MiddleCenter, true);
         Render.Text(x + 28f * s, baseY - 40f * s, 260f * s, 22f * s, L.T("切り替え ({0})", keys), Color.white,
@@ -335,7 +333,7 @@ internal static class FieldSkills
                     new Color(dim, dim, dim, GUI.color.a), 0f, r);
 
             // 番号
-            Render.Text(cx - r, cy + r - 18f * s, 26f * s, 16f * s, $"F{i + 1}", Color.white, Mathf.RoundToInt(11f * s), TextAnchor.MiddleLeft, true, true);
+            Render.Text(cx - r, cy + r - 18f * s, 26f * s, 16f * s, KeyLabel(P.FieldSwitchKey(i)), Color.white, Mathf.RoundToInt(11f * s), TextAnchor.MiddleLeft, true, true);
 
             // 必殺技ゲージ (右上、水がたまる)
             if (i < UltFillParty.Length)
@@ -401,11 +399,15 @@ internal static class FieldSkills
                 new Color(1f, 1f, 1f, GUI.color.a * (epReady ? 0.9f : 0.6f)), 0f, 0f);
 
             // キー
-            float kw = 22f * s, kh = 20f * s;
+            var label = KeyLabel(P.FieldSkillKey(i));
+            float kw = Mathf.Max(22f * s, Render.TextWidth(label, Mathf.RoundToInt(13f * s), true) + 10f * s), kh = 20f * s;
             Render.Rect(cx - kw * 0.5f, cy + r + 10f * s, kw, kh, Panel, 3f * s);
-            Render.Text(cx - kw * 0.5f, cy + r + 10f * s, kw, kh, (i + 1).ToString(), Color.white, Mathf.RoundToInt(13f * s), TextAnchor.MiddleCenter, true);
+            Render.Text(cx - kw * 0.5f, cy + r + 10f * s, kw, kh, label, Color.white, Mathf.RoundToInt(13f * s), TextAnchor.MiddleCenter, true);
         }
     }
+
+    /// <summary>HUD に出すキーの名前 (パッドのボタンは "Pad " を外して短く)</summary>
+    private static string KeyLabel(Hotkey key) => key.IsGamepad ? key.Display.Substring(4) : key.Display;
 
     /// <summary>小さな丸い水のゲージ (下地 → 水 → 縁)。満タンで黄緑に光る</summary>
     private static void DrawLiquid(LiquidFill fill, float cx, float cy, float radius, float level, float time, float s)

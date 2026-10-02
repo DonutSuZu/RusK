@@ -72,3 +72,9 @@
 ゼンゼロ	ZZZ	绝区零
 エンドフィールド	Endfield	终末地
 エンドフィールドスタイルには Party Op.2 が必要です (ゼンゼロのまま動きます)	The Endfield style requires Party Op.2 (running in ZZZ style)	终末地风格需要 Party Op.2 (将以绝区零风格运行)
+エンドフィールドスタイル: 1 番のキャラの特殊攻撃 (短押し) / 必殺技 (長押し) のキー	Endfield style: key for character 1's special attack (tap) / ultimate (hold)	终末地风格: 1 号角色的特殊攻击 (短按) / 必杀技 (长按) 的按键
+エンドフィールドスタイル: 2 番のキャラの特殊攻撃 (短押し) / 必殺技 (長押し) のキー	Endfield style: key for character 2's special attack (tap) / ultimate (hold)	终末地风格: 2 号角色的特殊攻击 (短按) / 必杀技 (长按) 的按键
+エンドフィールドスタイル: 3 番のキャラの特殊攻撃 (短押し) / 必殺技 (長押し) のキー	Endfield style: key for character 3's special attack (tap) / ultimate (hold)	终末地风格: 3 号角色的特殊攻击 (短按) / 必杀技 (长按) 的按键
+エンドフィールドスタイル: 1 番のキャラに切り替えるキー	Endfield style: key to switch to character 1	终末地风格: 切换到 1 号角色的按键
+エンドフィールドスタイル: 2 番のキャラに切り替えるキー	Endfield style: key to switch to character 2	终末地风格: 切换到 2 号角色的按键
+エンドフィールドスタイル: 3 番のキャラに切り替えるキー	Endfield style: key to switch to character 3	终末地风格: 切换到 3 号角色的按键

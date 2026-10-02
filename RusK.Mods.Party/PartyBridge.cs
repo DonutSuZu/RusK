@@ -16,7 +16,7 @@ namespace RusK.Mods.Party;
 public static class PartyBridge
 {
     /// <summary>入口の版。互換性のない変更をしたら上げる (2: バトルスタイルとエンドフィールド用の入口)</summary>
-    public const int Version = 3; // 3: 編成 (Party Formation 用)
+    public const int Version = 4; // 3: 編成 (Party Formation 用)、4: エンドフィールドスタイルのキー
 
     /// <summary>パーティのキャラ (操作中のキャラと控え)</summary>
     public static List<PlayerController> Members()
@@ -66,6 +66,10 @@ public static class PartyBridge
     /// <summary>Party の「次へ」「前へ」のキー</summary>
     public static Hotkey NextKey => PartyModule.NextKeyValue;
     public static Hotkey PrevKey => PartyModule.PrevKeyValue;
+
+    /// <summary>エンドフィールドスタイル (Party Op.2) の、slot 番 (0〜2) のキャラのスキルのキー / 切り替えのキー</summary>
+    public static Hotkey FieldSkillKey(int slot) => PartyModule.FieldSkillKeyValues[slot];
+    public static Hotkey FieldSwitchKey(int slot) => PartyModule.FieldSwitchKeyValues[slot];
 
     /// <summary>true の間、操作中のキャラは攻撃もダメージも受けない (切り替えガードも働かない)</summary>
     public static bool BlockHits;

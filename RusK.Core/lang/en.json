@@ -4,6 +4,7 @@
   "RusK のメニューと HUD の見た目": "Look of the RusK menu and HUD",
   "メニューの種類 (Tab: キーボード操作 / Click: マウス操作)": "Menu type (Tab: keyboard / Click: mouse)",
   "メニューを開閉するキー": "Key to open / close the menu",
+  "ゲームパッドでメニューを開閉するボタン (2 つ同時押し)。開いている間はゲームの操作を止め、十字キーで選択・A で決定・B で戻る": "Gamepad buttons that open / close the menu (press both together). While it is open, the game's controls are paused: D-pad to select, A to confirm, B to go back",
   "背景の不透明度": "Background opacity",
   "アクセントカラー": "Accent color",
   "Static: 固定色 / Rainbow: 虹色 / Breathing: 明滅 / Wave: 色の波": "Static: fixed color / Rainbow: rainbow / Breathing: pulsing / Wave: color wave",
