@@ -91,6 +91,7 @@ public sealed class ModelLabWindow : RuskWindow
         gui.Header("今のキャラ", p != null ? CharacterNames.Get(p.GetPlayerId()) : "(なし)");
         if (gui.Button("調べて書き出す", enabled: p != null, accent: true)) ModelLab.Report();
         if (gui.Button("画面のキャラを調べる (タイトル・キャラ画面など)")) ModelLab.ScanScene();
+        if (gui.Button("骨格を glb で書き出す (Blender 用)", enabled: p != null)) ModelLab.ExportRig(p.transform);
         MotionRecorder.Tick();
         if (gui.Button(MotionRecorder.Recording ? "記録中... (押すと止めて書き出す)" : "キャラの動きと表情を 10 秒記録する"))
         {
@@ -144,6 +145,23 @@ public sealed class ModelLabWindow : RuskWindow
 
 internal static class ModelLab
 {
+    /// <summary>キャラの骨格 (と体のメッシュ) を RusK/data/model/rig_キャラ名.glb に書き出す</summary>
+    public static string ExportRig(Transform character)
+    {
+        try
+        {
+            var body = Vrm.VrmSwap.BodyRenderers(character).ToList();
+            var file = Path.Combine(Ctx.DataDirectory, $"rig_{character.name}.glb");
+            LastFile = Vrm.RigExport.Export(character, body, file, s => Ctx.Log.Info("Model Lab: " + s));
+            return LastFile;
+        }
+        catch (Exception e)
+        {
+            Ctx.Log.Error($"Model Lab: 骨格を書き出せません: {e}");
+            return null;
+        }
+    }
+
     public static IModContext Ctx;
     public static string LastFile;
 

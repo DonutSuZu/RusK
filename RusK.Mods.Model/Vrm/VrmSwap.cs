@@ -407,7 +407,7 @@ internal static class VrmSwap
     }
 
     /// <summary>キャラの体のメッシュ (装備・武器は除く)</summary>
-    private static IEnumerable<SkinnedMeshRenderer> BodyRenderers(Transform character)
+    internal static IEnumerable<SkinnedMeshRenderer> BodyRenderers(Transform character)
     {
         foreach (var r in character.GetComponentsInChildren<SkinnedMeshRenderer>(true))
         {
