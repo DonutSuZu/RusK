@@ -585,6 +585,14 @@ internal static class VrmSwap
         var p = PlayerRef.Current;
         if (p != null && p.gameObject.activeInHierarchy) TryAuto(p.transform, Id(p), p);
 
+        // Party の仲間 (一緒に戦うキャラ・控え) など、場面にいるほかのプレイヤーキャラにも付ける
+        try
+        {
+            foreach (var other in Object.FindObjectsOfType<PlayerController>())
+                if (other != null && other != p && other.gameObject.activeInHierarchy) TryAuto(other.transform, Id(other), other);
+        }
+        catch { }
+
         foreach (var show in Resources.FindObjectsOfTypeAll<CharacterShowController>())
         {
             if (show == null || show.gameObject.scene.name == null || !show.gameObject.activeInHierarchy) continue;

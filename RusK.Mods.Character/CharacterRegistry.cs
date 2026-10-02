@@ -82,7 +82,8 @@ internal static class CharacterRegistry
             // ScriptableObject を丸ごと複製する (動作の一覧なども複製される)
             var clone = Object.Instantiate(baseMm.Cast<Object>()).Cast<MotionManager>();
             clone.id = def.Id;
-            clone.name = def.Key;
+            // 内部の名前は土台のまま (ゲームはこの名前でキャラ用の部品を探すので、変えると準備 (SetData) が失敗する)。
+            // 画面に出る名前は ID から決まる (ActorName_〈ID〉)
             clone.isLock = false;
             clone.hideFlags = HideFlags.DontUnloadUnusedAsset;
             container.characters.Add(clone);
