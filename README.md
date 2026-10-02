@@ -59,6 +59,7 @@ RusK/
 ├─ RusK.Mods.Model/     同梱Mod: キャラの見た目を VRM に (glb の読み込み・動きの写し・揺れ物・表情)
 ├─ RusK.Mods.ItemModel/ 同梱Mod: 武器・装飾品の見た目を glb に (glb の読み込みは RusK.Mods.Model/Vrm をソースごとリンク)
 ├─ RusK.Mods.Shared/    ゲーム用 Mod で共有するソース (キャラの表示名など。各 csproj に Compile Include でリンク)
+├─ EffectKit/           Effect Tuner の自作エフェクトを作る Unity 2022.3.7f1 のプロジェクト (AssetBundle に書き出す)
 ├─ RusK.Manager/        RusK Mod Manager (ランチャー。本体・Mod の導入と更新、ゲームの起動)
 ├─ catalog.json         公開中の Mod の一覧とお知らせ (Mod Manager が main から取得する)
 ├─ RusK.sln
@@ -215,6 +216,11 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 - エフェクトはプールで使い回されるので、最初に見たときの元の値を覚えて毎回そこから計算する (同じ設定がかかっていれば何もしない)
 - 差し替え (`EffectReplacer`): 元のエフェクトの表示を消し、差し替え先 (`Resources/VFX` のプレハブ) を元の子 (`RusK:名前`) として出す。
   元 1 つにつき 1 つ作って使い回し、出るたびに頭から再生する。差し替え先のゲームのスクリプト (時間で隠す・プールに戻すなど) は止める
+- 自作エフェクト: `RusK\effects` の `*.bundle` (AssetBundle) の中のプレハブも差し替え先になる (名前は `custom/プレハブ名`、一覧では ★ 付き)。
+  作り方は [EffectKit/README.md](EffectKit/README.md) (Unity 2022.3.7f1 のプロジェクト。メニューの RusK > エフェクトを書き出す で、書き出してゲームにコピーする)
+  - バンドルは `AssetBundle.LoadFromMemory` で開く (ファイルを掴まないので、ゲームを起動したまま書き出し直して「読み込み直す」で反映できる)
+  - 使えるのは Unity の部品だけ (自作スクリプトは IL2CPP のゲームには無いので動かない)。シェーダーはバンドルに入るので、URP 14 のものならそのまま描ける
+  - 差し替え先のバンドルが無いときは、元のエフェクトを隠さない
 
 ### Custom Model（VRM）
 - `RusK\models` に `.vrm` (VRM 0.x / 1.0) を置き、**Visual > CustomModel** でキャラごとに選ぶ

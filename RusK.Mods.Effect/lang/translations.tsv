@@ -34,3 +34,10 @@ OFF です (Visual > EffectTuner を ON にすると効きます)	Off (turn on V
 エフェクトの一覧を読めませんでした	Could not read the effect list	无法读取特效列表
 グループ	Group	分组
 ページ	Page	页
+自作エフェクト (RusK/effects の .bundle) を読み込み直す	Reload custom effects (.bundle files in RusK/effects)	重新读取自制特效 (RusK/effects 中的 .bundle)
+effects フォルダを開く	Open the effects folder	打开 effects 文件夹
+(見つかりません)	(not found)	(未找到)
+自作	Custom	自制
+読み込み直す	Reload	重新读取
+フォルダを開く	Open folder	打开文件夹
+RusK/effects に .bundle がありません。RusK の EffectKit (Unity 2022.3.7f1) で作れます	No .bundle files in RusK/effects. You can make them with the RusK EffectKit (Unity 2022.3.7f1)	RusK/effects 中没有 .bundle 文件。可以用 RusK 的 EffectKit (Unity 2022.3.7f1) 制作

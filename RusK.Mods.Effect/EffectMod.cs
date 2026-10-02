@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using System.IO;
 using RusK.API;
 
@@ -19,6 +21,8 @@ public sealed class EffectMod : RuskMod
     {
         Ctx = Context;
         EffectHook.Rules = new EffectRules(Context.DataDirectory);
+        // RusK\data\effect → RusK\effects
+        EffectReplacer.Folder = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Context.DataDirectory)!, "..", "effects"));
         var window = new EffectWindow();
         Context.RegisterWindow(window);
         Context.RegisterModule(new EffectModule(window));
@@ -51,6 +55,8 @@ internal sealed class EffectModule : Module
     {
         _window = window;
         AddSetting(new ButtonSetting("OpenWindow", () => _window.Visible = true, "設定画面を開く"));
+        AddSetting(new ButtonSetting("ReloadCustom", EffectReplacer.ReloadCustom, "自作エフェクト (RusK/effects の .bundle) を読み込み直す"));
+        AddSetting(new ButtonSetting("OpenFolder", OpenFolder, "effects フォルダを開く"));
         Enabled = true;
     }
 
@@ -62,4 +68,17 @@ internal sealed class EffectModule : Module
     }
 
     public override void OnDisable() => EffectHook.Enabled = false;
+
+    public static void OpenFolder()
+    {
+        try
+        {
+            Directory.CreateDirectory(EffectReplacer.Folder);
+            Process.Start("explorer.exe", $"\"{EffectReplacer.Folder}\"");
+        }
+        catch (Exception e)
+        {
+            EffectMod.Ctx?.Log.Warning($"Effect: フォルダを開けません: {e.Message}");
+        }
+    }
 }

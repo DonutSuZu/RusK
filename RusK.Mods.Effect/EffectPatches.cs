@@ -48,6 +48,12 @@ internal static class EffectHook
             if (string.IsNullOrEmpty(name)) name = go.name.Replace("(Clone)", "").Trim();
             Remember(Owner ?? "", name);
             var rule = Enabled && Rules != null ? Rules.Resolve(Owner, name) : null;
+            if (rule != null && !string.IsNullOrEmpty(rule.Replace) && !EffectReplacer.Has(rule.Replace))
+            {
+                // 差し替え先が無い (自作のバンドルを外したなど) ときは、元のエフェクトを隠さない
+                rule = rule.Clone();
+                rule.Replace = null;
+            }
             EffectApplier.Apply(go, rule);
             EffectReplacer.Handle(go, rule);
         }

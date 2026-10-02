@@ -9,3 +9,12 @@ dist/
 .idea/
 *.user
 *.suo
+
+# EffectKit (Unity プロジェクト) の生成物
+EffectKit/[Ll]ibrary/
+EffectKit/[Tt]emp/
+EffectKit/[Ll]ogs/
+EffectKit/[Uu]serSettings/
+EffectKit/Build/
+EffectKit/*.csproj
+EffectKit/*.sln

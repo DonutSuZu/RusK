@@ -13,6 +13,8 @@
     <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
     <!-- エフェクトはほぼ全部 ParticleSystem -->
     <Reference Include="$(InteropDir)\UnityEngine.ParticleSystemModule.dll" Private="false" />
+    <!-- 自作エフェクト (RusK\effects の AssetBundle) -->
+    <Reference Include="$(InteropDir)\UnityEngine.AssetBundleModule.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>

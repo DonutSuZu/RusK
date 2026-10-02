@@ -16,7 +16,7 @@ internal sealed class EffectWindow : RuskWindow
 
     // 差し替え先を選ぶ画面
     private bool _picking;
-    private int _pickTab;   // 0: 最近出たもの、1: すべて
+    private int _pickTab;   // 0: 最近出たもの、1: 自作、2: ゲームのすべて
     private int _pickGroup; // すべて: 名前の頭 (HCFX_ など) で分けたグループ
     private int _pickPage;
     private const int PageSize = 25;
@@ -112,8 +112,11 @@ internal sealed class EffectWindow : RuskWindow
 
         // 差し替え (ゲームの別のエフェクトに)
         gui.BeginRow(2.2f, 1f, 1f);
-        gui.Label(L.T("差し替え: {0}", string.IsNullOrEmpty(rule.Replace) ? L.T("なし") : rule.Replace),
-            string.IsNullOrEmpty(rule.Replace) ? RuskStyle.TextDim : RuskStyle.Text);
+        bool missing = !string.IsNullOrEmpty(rule.Replace) && !EffectReplacer.Has(rule.Replace);
+        var replaceName = string.IsNullOrEmpty(rule.Replace) ? L.T("なし") : EffectReplacer.Display(rule.Replace);
+        if (missing) replaceName += " " + L.T("(見つかりません)");
+        gui.Label(L.T("差し替え: {0}", replaceName),
+            string.IsNullOrEmpty(rule.Replace) || missing ? RuskStyle.TextDim : RuskStyle.Text);
         if (gui.Button(_picking ? L.T("閉じる") : L.T("選ぶ"))) _picking = !_picking;
         if (gui.Button(L.T("外す"), enabled: !string.IsNullOrEmpty(rule.Replace))) { rule.Replace = null; changed = true; }
         if (_picking && DrawPicker(gui, out var picked))
@@ -136,16 +139,25 @@ internal sealed class EffectWindow : RuskWindow
     private bool DrawPicker(WindowGui gui, out string picked)
     {
         picked = null;
-        _pickTab = gui.Tabs(new[] { L.T("最近出たもの"), L.T("すべて") }, _pickTab);
+        _pickTab = gui.Tabs(new[] { L.T("最近出たもの"), L.T("自作"), L.T("すべて") }, _pickTab);
         List<string> names;
         if (_pickTab == 0)
         {
             names = Effects(null);
             if (names.Count == 0) gui.Label(L.T("まだありません。戦闘で技を出すと、ここに出ます"), RuskStyle.TextDim, small: true);
         }
+        else if (_pickTab == 1)
+        {
+            names = EffectReplacer.Names.Where(EffectReplacer.IsCustom).ToList();
+            gui.BeginRow(1f, 1f);
+            if (gui.Button(L.T("読み込み直す"))) EffectReplacer.ReloadCustom();
+            if (gui.Button(L.T("フォルダを開く"))) EffectModule.OpenFolder();
+            if (names.Count == 0)
+                gui.Label(L.T("RusK/effects に .bundle がありません。RusK の EffectKit (Unity 2022.3.7f1) で作れます"), RuskStyle.TextDim, small: true);
+        }
         else
         {
-            var all = EffectReplacer.Names;
+            var all = EffectReplacer.Names.Where(n => !EffectReplacer.IsCustom(n)).ToList();
             var groups = all.Select(Group).Distinct().ToList();
             if (groups.Count == 0) { gui.Label(L.T("エフェクトの一覧を読めませんでした"), RuskStyle.TextDim, small: true); return false; }
             _pickGroup = Mathf.Clamp(_pickGroup, 0, groups.Count - 1);
@@ -163,7 +175,7 @@ internal sealed class EffectWindow : RuskWindow
         }
         foreach (var n in names)
         {
-            if (gui.Selectable("  " + n, false))
+            if (gui.Selectable("  " + EffectReplacer.Display(n), false))
             {
                 picked = n;
                 return true;
