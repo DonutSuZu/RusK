@@ -1,5 +1,5 @@
 {
-  "キャラを選んでから、VRM を選んでください。そのキャラを操作しているときに見た目が VRM になります。": "Pick a character, then pick a VRM. The character looks like the VRM while you play as them.",
+  "キャラを選んでから、モデル (VRM / PMX) を選んでください。そのキャラを操作しているときに見た目がそのモデルになります。": "Pick a character, then a model (VRM / PMX). The character looks like that model while you play as it.",
   "キャラ": "Characters",
   "キャラ一覧を取得できません (ゲームに入ってから開いてください)": "Can't get the character list (open this after entering the game)",
   "元の見た目": "Original look",
@@ -8,7 +8,7 @@
   "見た目": "Look",
   "元の見た目にする": "Restore the original look",
   "フォルダを開く": "Open folder",
-  "RusK\\models に .vrm ファイルを置いてください。": "Put .vrm files in RusK\\models.",
+  "RusK\\models に .vrm か .pmx を置いてください (PMX はテクスチャのフォルダごと)。": "Put .vrm or .pmx files in RusK\\models (for PMX, copy the whole folder with its textures).",
   "キャラの見た目を VRM にする画面を開く": "Open the window for turning characters into VRM models",
   "装飾品の表示": "Accessories",
   "VRM にしたキャラの装飾品を部位ごとに隠せます (頭の装飾品が髪に埋まる・頭にめり込むときなど)。": "Hide the accessories of VRM characters by body part (e.g. when a head accessory sinks into the hair or clips into the head).",
@@ -20,7 +20,7 @@
   "スカートの調整": "Skirt tuning",
   "脚がスカートから出るのと、スカートのめくれ具合のバランスを調整します。": "Balance legs poking out of the skirt against how much the skirt flips up.",
   "初期値に戻す": "Reset to defaults",
-  "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)": "Turn characters into VRM models (put .vrm files in RusK\\models)",
+  "キャラの見た目を VRM / PMX にする (RusK\\models に .vrm か .pmx を置く)": "Turns characters into VRM or PMX models (put .vrm / .pmx files in RusK\\models)",
   "今のキャラのモデルを調べて書き出す": "Inspect the current character's model and write a report",
   "入れ替えた見た目の更新 (常に ON にしておいてください)": "Keeps replaced looks updated (keep this ON)",
   "明るさ": "Brightness",
@@ -33,6 +33,11 @@
   "肩": "shoulder",
   "腰": "waist",
   "背中": "back",
+  "左": "Left",
+  "右": "Right",
   "切り抜きなし": "No cutout",
-  "VRM を読み込めませんでした: {0}": "Could not load the VRM: {0}"
+  "VRM を読み込めませんでした: {0}": "Could not load the VRM: {0}",
+  "キャラを選んでから、VRM を選んでください。そのキャラを操作しているときに見た目が VRM になります。": "Pick a character, then pick a VRM. The character looks like the VRM while you play as them.",
+  "RusK\\models に .vrm ファイルを置いてください。": "Put .vrm files in RusK\\models.",
+  "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)": "Turn characters into VRM models (put .vrm files in RusK\\models)"
 }

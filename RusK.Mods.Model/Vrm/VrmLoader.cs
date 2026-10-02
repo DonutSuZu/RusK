@@ -46,6 +46,11 @@ internal sealed class VrmModel
     /// <summary>元にしたゲームの材質の、落ちる影の濃さ (_ReceiveShadowMappingAmount)</summary>
     public float ReceiveShadowBase = -1f;
 
+    /// <summary>基準の姿勢 (T ポーズ) を読み込み時に決めたもの。null なら読み込み直後の姿勢が基準 (VRM は仕様で T ポーズ)</summary>
+    public Dictionary<HumanBodyBones, (Transform bone, Quaternion rotation, Vector3 position)> RestOverride;
+    /// <summary>動きを写した後に毎フレーム呼ぶ (PMX の付与: 回転を別の骨に写す)</summary>
+    public Action AfterPose;
+
     public void Destroy()
     {
         if (Root != null) Object.Destroy(Root);
@@ -204,17 +209,7 @@ internal static class VrmLoader
             }
         }
 
-        // ---- 切り抜きの材質: 使う部分に透明が無ければゲームのシェーダーのまま、あれば切り抜きの方式にする
-        int solid = 0;
-        foreach (var mm in model.Masks)
-        {
-            mm.Solid = mm.Texture == null ? mm.Color.a >= mm.Cutoff : mm.AlphaBytes != null && !mm.TransparentHit;
-            mm.AlphaBytes = null;
-            if (mm.Solid) solid++;
-            else MaskModes.Apply(mm, MaskModes.Current);
-        }
-        if (model.Masks.Count > 0)
-            log?.Invoke($"切り抜きの材質 {model.Masks.Count} 個のうち、透明な部分が無くゲームのシェーダーで描くもの {solid} 個");
+        FinishMasks(model, log);
 
         // ---- 人型の骨・揺れ物・表情 (VRM だけ)
         model.Nodes = nodes;
@@ -239,6 +234,21 @@ internal static class VrmLoader
                     $"テクスチャ {textures.Count}、人型の骨 {model.Human.Count}、揺れ物の骨 {model.Springs?.JointCount ?? 0}、" +
                     $"表情 {model.Expressions?.Count ?? 0}");
         return model;
+    }
+
+    /// <summary>切り抜きの材質: 使う部分に透明が無ければゲームのシェーダーのまま、あれば切り抜きの方式にする</summary>
+    internal static void FinishMasks(VrmModel model, Action<string> log)
+    {
+        int solid = 0;
+        foreach (var mm in model.Masks)
+        {
+            mm.Solid = mm.Texture == null ? mm.Color.a >= mm.Cutoff : mm.AlphaBytes != null && !mm.TransparentHit;
+            mm.AlphaBytes = null;
+            if (mm.Solid) solid++;
+            else MaskModes.Apply(mm, MaskModes.Current);
+        }
+        if (model.Masks.Count > 0)
+            log?.Invoke($"切り抜きの材質 {model.Masks.Count} 個のうち、透明な部分が無くゲームのシェーダーで描くもの {solid} 個");
     }
 
     // ------------------------------------------------------------------ 座標の変換
@@ -327,7 +337,7 @@ internal static class VrmLoader
     /// 切り抜きの材質のテクスチャを、メッシュが使う UV の位置で調べる (頂点・辺の中点・三角形の中の数点)。
     /// 透明 (切り抜きの閾値より下) の画素に当たれば、切り抜きが要る材質
     /// </summary>
-    private static void CheckTransparency(MaskMaterial m, List<Vector2> uv, int[] tris)
+    internal static void CheckTransparency(MaskMaterial m, List<Vector2> uv, int[] tris)
     {
         if (m.TransparentHit || m.AlphaBytes == null) return;
         int w = m.AlphaWidth, h = m.AlphaHeight;
@@ -637,6 +647,13 @@ internal static class VrmLoader
             && es.TryGetProperty("emissiveStrength", out var esv))
             strength = esv.GetSingle();
         SetEmission(mat, emissive.maxColorComponent > 0f ? emissive.gamma * strength : Color.black, emissiveTex);
+        FinishMaterial(mat, template, templates, model);
+        return mat;
+    }
+
+    /// <summary>材質の仕上げ (VRM・glb・PMX で共通): ゲームの材質の余計な設定を外し、影・輪郭線・裏面を合わせる</summary>
+    internal static void FinishMaterial(Material mat, Material template, Templates templates, VrmModel model)
+    {
         // ゲームのシェーダーは発光を _EmissionFactor (25) 倍する。VRM (MToon) の発光は 1 倍が前提なので合わせる
         // (浴衣の柄などがまぶしく光っていた)。glb (Custom Item Model) の発光は今の光り方のまま
         if (model.Version >= 0) SetFloat(mat, "_EmissionFactor", 1f);
@@ -655,7 +672,6 @@ internal static class VrmLoader
 
         // 両面表示の材質も裏面は描かない (裏向きの面をメッシュに足してある)
         SetFloat(mat, "_Cull", 2f);
-        return mat;
     }
 
     /// <summary>
@@ -663,7 +679,7 @@ internal static class VrmLoader
     /// ゲームのシェーダーの _CharacterAlphaClipMap は「服に隠れる肌を消す」地図で、白い所が消える
     /// 画像のデータを直接読み書きする (1 画素ずつ Unity を呼ぶと遅いため)
     /// </summary>
-    private static Texture2D AlphaMap(Texture2D src, Dictionary<IntPtr, Texture2D> cache,
+    internal static Texture2D AlphaMap(Texture2D src, Dictionary<IntPtr, Texture2D> cache,
         Dictionary<IntPtr, (byte[] a, int w, int h)> alphaBytes, VrmModel model)
     {
         if (src == null) return null;
@@ -763,7 +779,7 @@ internal static class VrmLoader
         return tex;
     }
 
-    private static void SetTex(Material m, string prop, Texture tex)
+    internal static void SetTex(Material m, string prop, Texture tex)
     {
         if (tex != null && m.HasProperty(prop)) m.SetTexture(prop, tex);
     }
@@ -808,12 +824,12 @@ internal static class VrmLoader
         if (m.HasProperty(prop)) m.SetTexture(prop, null);
     }
 
-    private static void SetColor(Material m, string prop, Color c)
+    internal static void SetColor(Material m, string prop, Color c)
     {
         if (m.HasProperty(prop)) m.SetColor(prop, c);
     }
 
-    private static void SetFloat(Material m, string prop, float v)
+    internal static void SetFloat(Material m, string prop, float v)
     {
         if (m.HasProperty(prop)) m.SetFloat(prop, v);
     }

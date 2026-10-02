@@ -10,14 +10,14 @@ using Module = RusK.API.Module;
 namespace RusK.Mods.Model;
 
 /// <summary>
-/// Custom Model: キャラの見た目を VRM にする。RusK\models に置いた .vrm を、キャラごとに選べる。
+/// Custom Model: キャラの見た目を VRM / PMX (MMD のモデル) にする。RusK\models に置いた .vrm / .pmx を、キャラごとに選べる。
 /// ゲームのキャラ (骨格・アニメーション・当たり判定) はそのまま動かし、見た目だけを VRM にする。
 /// Model Lab はデバッグ用 (モデルの作りの書き出し・キャラ同士の見た目の入れ替え・切り抜きの方式の比較)。
 /// </summary>
-[RuskMod("model", "Custom VRM Loader", "1.2.6",
+[RuskMod("model", "Custom VRM Loader", "1.3.0",
     Author = "you",
-    GameVersion = "0.0.1873",
-    Description = "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)")]
+    GameVersion = "0.0.1878",
+    Description = "キャラの見た目を VRM / PMX にする (RusK\\models に .vrm か .pmx を置く)")]
 public sealed class ModelMod : RuskMod
 {
     protected override void OnLoad()
@@ -104,7 +104,7 @@ public sealed class ModelLabWindow : RuskWindow
         gui.Space(6f);
         var assigned = Vrm.VrmSwap.AssignedFile(p);
         gui.Header("VRM (試験)", assigned != null ? $"このキャラ: {Path.GetFileNameWithoutExtension(assigned)}" : null);
-        gui.Label("RusK\\models に置いた .vrm を、今のキャラの見た目にします。", RuskStyle.TextDim, small: true);
+        gui.Label("RusK\\models に置いた .vrm / .pmx を、今のキャラの見た目にします。", RuskStyle.TextDim, small: true);
         gui.BeginRow(1f, 1f);
         if (gui.Button("元に戻す", enabled: assigned != null)) Vrm.VrmSwap.Unassign(p);
         if (gui.Button("フォルダを開く")) OpenFolder(Vrm.VrmSwap.ModelsDir);
@@ -118,7 +118,7 @@ public sealed class ModelLabWindow : RuskWindow
             Vrm.MaskModes.SetAll(mode, Vrm.VrmSwap.Models());
         }
         var files = Vrm.VrmSwap.Files().ToList();
-        if (files.Count == 0) gui.Label("(.vrm がありません)", RuskStyle.TextDim, small: true);
+        if (files.Count == 0) gui.Label("(.vrm / .pmx がありません)", RuskStyle.TextDim, small: true);
         foreach (var f in files)
         {
             bool mine = assigned != null && Path.GetFileName(assigned) == Path.GetFileName(f);

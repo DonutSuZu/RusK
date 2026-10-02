@@ -69,7 +69,10 @@ internal static class VrmSwap
         try
         {
             Directory.CreateDirectory(ModelsDir);
-            return Directory.GetFiles(ModelsDir, "*.vrm", SearchOption.AllDirectories).OrderBy(f => f).ToList();
+            // VRM と PMX (MMD のモデル。テクスチャと同じフォルダごと置く)
+            return Directory.GetFiles(ModelsDir, "*.*", SearchOption.AllDirectories)
+                .Where(f => f.EndsWith(".vrm", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".pmx", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(f => f).ToList();
         }
         catch { return Array.Empty<string>(); }
     }
@@ -236,7 +239,9 @@ internal static class VrmSwap
             if (templates.Opaque == null) throw new InvalidOperationException("ゲームの材質が見つかりません");
             LogTemplate(templates.Opaque);
 
-            entry.Model = VrmLoader.Load(file, templates, s => log?.Info("Model: " + s));
+            entry.Model = file.EndsWith(".pmx", StringComparison.OrdinalIgnoreCase)
+                ? Pmx.PmxLoader.Load(file, templates, s => log?.Info("Model: " + s))
+                : VrmLoader.Load(file, templates, s => log?.Info("Model: " + s));
             var root = entry.Model.Root.transform;
 
             // 基準の姿勢 (VRM は読み込み直後の T ポーズ、根元が原点のうちに覚える)
@@ -297,6 +302,7 @@ internal static class VrmSwap
 
             Entries[key] = entry;
             entry.Retargeter.Update();
+            entry.Model.AfterPose?.Invoke();
             entry.Model.Springs?.Reset();
             log?.Info($"Model: {CharacterNames.Get(id)}{(entry.IsShow ? " (画面に見せるモデル)" : "")} の見た目を VRM '{entry.Model.Title}' に " +
                       $"(動きを写す骨 {entry.Retargeter.PairCount} 本、影のメッシュ {shadows} 個)");
@@ -538,6 +544,7 @@ internal static class VrmSwap
             try
             {
                 e.Retargeter.Update();
+                e.Model.AfterPose?.Invoke();
                 e.Model.Skirt?.Update();
                 // 揺れ物と表情は、動きを写した後に (ゲームの時間の流れ = スローや一時停止に合わせる)
                 e.Model.Springs?.Update(Time.deltaTime);

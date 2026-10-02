@@ -35,3 +35,8 @@ VRM にしたキャラの装飾品を部位ごとに隠せます (頭の装飾�
 背中	back	背部
 切り抜きなし	No cutout	不裁剪
 VRM を読み込めませんでした: {0}	Could not load the VRM: {0}	无法加载 VRM: {0}
+キャラを選んでから、モデル (VRM / PMX) を選んでください。そのキャラを操作しているときに見た目がそのモデルになります。	Pick a character, then a model (VRM / PMX). The character looks like that model while you play as it.	先选择角色, 再选择模型 (VRM / PMX)。操作该角色时外观会变成该模型。
+RusK\models に .vrm か .pmx を置いてください (PMX はテクスチャのフォルダごと)。	Put .vrm or .pmx files in RusK\models (for PMX, copy the whole folder with its textures).	请把 .vrm 或 .pmx 放入 RusK\models (PMX 需连同贴图文件夹一起放入)。
+キャラの見た目を VRM / PMX にする (RusK\models に .vrm か .pmx を置く)	Turns characters into VRM or PMX models (put .vrm / .pmx files in RusK\models)	将角色外观替换为 VRM 或 PMX (把 .vrm / .pmx 放入 RusK\models)
+左	Left	左
+右	Right	右

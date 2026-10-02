@@ -14,7 +14,7 @@ namespace RusK.Mods.Model.Vrm;
 /// </summary>
 internal sealed class SpringBoneSystem
 {
-    private sealed class Collider
+    internal sealed class Collider
     {
         public Transform Node;
         public Vector3 Offset;
@@ -55,6 +55,9 @@ internal sealed class SpringBoneSystem
     /// <summary>1 フレームを何回に分けて計算するか (スカートが当たり判定をすり抜けないように)</summary>
     public const int SubSteps = 2;
 
+
+    /// <summary>空の揺れ物 (PMX の剛体から組み立てる用。Add で骨を足す)</summary>
+    public static SpringBoneSystem Create(Transform root) => new() { _root = root };
 
     /// <summary>VRM の設定から揺れ物を組み立てる (モデルが基準の姿勢のうちに呼ぶ)</summary>
     public static SpringBoneSystem Read(JsonElement ext, VrmModel model, bool flipX)
@@ -189,7 +192,7 @@ internal sealed class SpringBoneSystem
         }
     }
 
-    private void Add(Transform bone, Vector3 localTail, float stiffness, float gravity, Vector3 gravityDir, float drag,
+    internal void Add(Transform bone, Vector3 localTail, float stiffness, float gravity, Vector3 gravityDir, float drag,
         float hit, List<Collider> colliders)
     {
         if (_joints.Any(j => j.Bone == bone)) return;

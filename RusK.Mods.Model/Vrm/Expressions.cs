@@ -67,6 +67,9 @@ internal sealed class Expressions
 
     public bool Has(string name) => _binds.ContainsKey(name);
 
+    /// <summary>表情にブレンドシェイプを結び付ける (PMX のモーフから組み立てる用。weight は 0～100)</summary>
+    internal void Bind(string name, SkinnedMeshRenderer smr, int index, float weight) => List(name).Add((smr, index, weight));
+
     /// <summary>表情の強さ (0～1) を決める。名前は VRM 0.x と 1.0 の両方を渡せる (無い方は無視)</summary>
     public void Set(string name, float value)
     {

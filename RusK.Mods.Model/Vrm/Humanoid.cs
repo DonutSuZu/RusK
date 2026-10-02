@@ -258,6 +258,10 @@ internal static class Humanoid
     /// <summary>VRM の人型の骨と基準の姿勢。モデルの根元が原点・回転なしの状態 (読み込み直後) で呼ぶ</summary>
     public static Dictionary<HumanBodyBones, (Transform bone, Rest rest)> VrmRest(VrmModel model)
     {
+        // PMX (A ポーズ) は読み込み時に T ポーズの基準を作ってある
+        if (model.RestOverride != null)
+            return model.RestOverride.ToDictionary(kv => kv.Key,
+                kv => (kv.Value.bone, new Rest { Rotation = kv.Value.rotation, Position = kv.Value.position }));
         var root = model.Root.transform;
         var result = new Dictionary<HumanBodyBones, (Transform, Rest)>();
         foreach (var kv in model.Human)

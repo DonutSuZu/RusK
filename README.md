@@ -8,7 +8,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 - TabGUI / ClickGUI (Horion 風)、ArrayList・通知・ウォーターマーク
 - Mod の着脱 (AssemblyLoadContext)、アクショントリガー、Config プロファイル
 - Flex Window (Mod 用のドラッグ・リサイズできるウィンドウ)
-- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Effect Tuner** (エフェクトの色・大きさ) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
+- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Effect Tuner** (エフェクトの色・大きさ) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM / PMX に) / **Custom Item Model** (武器・装飾品の見た目を glb に)
 - **RusK Check**: ゲームの更新で壊れた Mod を教える診断機能
 
 **ゲーム**: [VED:Recure (Steam)](https://store.steampowered.com/app/3255500/Ved/)
@@ -56,7 +56,7 @@ RusK/
 ├─ RusK.Mods.Chain/     同梱Mod: 連携攻撃 (Party の PartyBridge をリフレクションで使う)
 ├─ RusK.Mods.Op2/       同梱Mod: Party Op.2 (エンドフィールド風のバトルスタイル。Party から呼ばれる)
 ├─ RusK.Mods.Formation/ 同梱Mod: Party Formation (ゼンゼロ風の編成画面。PartyBridge 版 3 を使う)
-├─ RusK.Mods.Model/     同梱Mod: キャラの見た目を VRM に (glb の読み込み・動きの写し・揺れ物・表情)
+├─ RusK.Mods.Model/     同梱Mod: キャラの見た目を VRM / PMX に (glb・PMX の読み込み・動きの写し・揺れ物・表情)
 ├─ RusK.Mods.ItemModel/ 同梱Mod: 武器・装飾品の見た目を glb に (glb の読み込みは RusK.Mods.Model/Vrm をソースごとリンク)
 ├─ RusK.Mods.Shared/    ゲーム用 Mod で共有するソース (キャラの表示名など。各 csproj に Compile Include でリンク)
 ├─ EffectKit/           Effect Tuner の自作エフェクトを作る Unity 2022.3.7f1 のプロジェクト (AssetBundle に書き出す)
@@ -238,6 +238,19 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
 - 装飾品 (WeaponHolder_1～4: 頭・肩・腰・背中) は部位ごとに隠せる (`accessories.txt`、描画だけ止める)
 - 設定は `RusK\data\model\assignments.txt`。ステージ移動などでキャラが作り直されても付け直す
 - **Model > ModelLab** はデバッグ用 (モデルの作りの書き出し・キャラ同士の見た目の入れ替え・切り抜き方式の比較)
+
+### Custom Model（PMX）
+- `RusK\models` に PMX (MMD のモデル、2.0 / 2.1) を**テクスチャのフォルダごと**置くと、VRM と同じ一覧に出る。PMD は読めない (PMX エディタで変換する)
+- `Vrm/Pmx/PmxLoader` が PMX を VRM と同じ形 (`VrmModel`) に組み立てるので、付ける・動きを写す・影・切り抜きは VRM と同じ仕組み
+  - 座標: PMX も Unity も左手系。MMD のモデルは -Z を向いているので Y 軸で 180 度回す (x, z を反転)。1 = 8cm
+  - 骨: MMD の標準の名前 (上半身・左腕・左ひじ・左足D・左親指０ など、全角の数字も可) で人型の骨に対応させる。
+    「腰」が無ければ下半身を腰にして上半身をその子にする (腰を動かしたときに上半身も付いてくるように)
+  - 基準の姿勢: MMD は A ポーズなので、骨を複製して腕を水平にした T ポーズを `VrmModel.RestOverride` に入れる (骨そのものは A ポーズのまま)
+  - 付与 (足D・肩C・腕捩1 など、ほかの骨の回転を写す骨) は `VrmModel.AfterPose` で毎フレーム計算する。人型の骨とその上の骨は対象外
+  - 物理: 「物理」の剛体の骨を VRM の揺れ物 (SpringBone) に、「ボーン追従」の剛体を当たり判定にする (当たらないグループの設定も使う)
+  - 材質: 色 = 環境色 + 拡散色 × 0.6 (MMD の標準のライト)。透明度のあるテクスチャは切り抜き、不透明度 0 の材質 (材質モーフで出すもの) は描かない。
+    スフィア・トゥーンは使わない。テクスチャは PNG・JPG (Unity)、BMP・TGA (`ImageDecoder`)。DDS は読めない
+  - 表情: まばたき・ウィンク・あいうえお・笑い・にこり・怒り・困る・びっくり (グループモーフは中の頂点モーフに分ける)。使うモーフだけブレンドシェイプにする
 
 ### Custom Item Model（武器・装飾品）
 - `RusK\props` に `.glb` を置き、**Visual > CustomItemModel** で装備を選んでから glb を選ぶ。位置・回転・大きさ・発光を調整できる

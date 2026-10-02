@@ -80,9 +80,9 @@
     },
     {
       "id": "model", "name": "Custom VRM Loader", "asset": "RuskModel.dll", "folders": ["models"],
-      "ja": "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)。口パク・表情・揺れ物に対応",
-      "en": "Turns characters into VRM models (put .vrm files in RusK\\models). Lip sync, expressions and physics",
-      "zh": "将角色外观替换为 VRM (把 .vrm 放入 RusK\\models)。支持口型、表情和物理摆动"
+      "ja": "キャラの見た目を VRM / PMX (MMD のモデル) にする (RusK\\models に .vrm か .pmx を置く)。口パク・表情・揺れ物に対応",
+      "en": "Turns characters into VRM or PMX (MMD) models (put .vrm / .pmx files in RusK\\models). Lip sync, expressions and physics",
+      "zh": "将角色外观替换为 VRM 或 PMX (MMD 模型) (把 .vrm / .pmx 放入 RusK\\models)。支持口型、表情和物理摆动"
     },
     {
       "id": "itemmodel", "name": "Custom Item Model", "asset": "RuskItemModel.dll", "folders": ["props"],

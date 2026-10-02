@@ -105,15 +105,18 @@ RusK と Mod の導入・更新をするアプリです (RusK-Mod-Manager.exe)�
                 仲間のカードをクリックしてキャラを選び、下のボタンでバトルスタイルを切り替えます
                 (戦闘中は編成を変更できません)
 
-- Custom VRM Loader: キャラの見た目を VRM にします
+- Custom VRM Loader: キャラの見た目を VRM / PMX (MMD のモデル) にします
                 1. このフォルダの models に .vrm を置く
-                   (VRoid Studio のモデルなど。利用条件で改変・利用が許可されたものを使ってください)
-                2. Visual > CustomVRMLoader を開き、キャラを選んでから VRM を選ぶ
+                   PMX は、テクスチャの入ったフォルダごと置く (例: models\ミク\ミク.pmx)
+                   (VRoid Studio や MMD のモデルなど。利用条件で改変・利用が許可されたものを使ってください)
+                2. Visual > CustomVRMLoader を開き、キャラを選んでから VRM / PMX を選ぶ
                 3. そのキャラを操作しているときに見た目が VRM になります (動きはゲームのキャラのまま)
                    タイトル画面・キャラクター画面・装備画面のキャラも VRM になります
                 髪やスカートの揺れ・影に対応し、口パク・表情・まばたきもゲームのキャラに合わせて動きます
                 走ったときに脚がスカートから出るときは、同じ画面の「スカートの調整」で抑えられます
                 頭などの装飾品が VRM に合わないときは、同じ画面の「装飾品の表示」で部位ごとに隠せます
+                PMX: 標準の骨 (上半身・腕・ひじ・足・ひざ など) があるモデルに対応。物理は揺れ物で近く再現します
+                     PMD は読めません (PMX エディタで PMX に変換してください)。テクスチャの DDS は PNG に変換してください
 - Custom Item Model: 武器・装飾品の見た目を glb (Blender などから書き出せる 3D モデル) にします
                 1. このフォルダの props に .glb を置く (FBX は Blender で開いて glb で書き出してください)
                 2. Visual > CustomItemModel を開き、装備を選んでから glb を選ぶ
@@ -125,7 +128,7 @@ RusK と Mod の導入・更新をするアプリです (RusK-Mod-Manager.exe)�
 - RusK\configs  : 設定 (プロファイル)
 - RusK\data     : Mod のデータ
 - RusK\music    : Music Manager の曲
-- RusK\models   : Custom Model の VRM (アンインストールしても消しません)
+- RusK\models   : Custom Model の VRM・PMX (アンインストールしても消しません)
 - RusK\props    : Custom Item Model の glb (アンインストールしても消しません)
 
 ■ 注意

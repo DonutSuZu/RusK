@@ -45,7 +45,7 @@ public sealed class CustomModelWindow : RuskWindow
         var characters = ModelSwap.Characters().Where(Unlocked).ToList();
         if (_selected < 0 && p != null) _selected = p.GetPlayerId();
 
-        gui.Label(L.T("キャラを選んでから、VRM を選んでください。そのキャラを操作しているときに見た目が VRM になります。"),
+        gui.Label(L.T("キャラを選んでから、モデル (VRM / PMX) を選んでください。そのキャラを操作しているときに見た目がそのモデルになります。"),
             RuskStyle.TextDim, small: true);
 
         gui.Header(L.T("キャラ"));
@@ -71,7 +71,7 @@ public sealed class CustomModelWindow : RuskWindow
 
         var files = VrmSwap.Files().ToList();
         if (files.Count == 0)
-            gui.Label(L.T("RusK\\models に .vrm ファイルを置いてください。"), RuskStyle.TextDim, small: true);
+            gui.Label(L.T("RusK\\models に .vrm か .pmx を置いてください (PMX はテクスチャのフォルダごと)。"), RuskStyle.TextDim, small: true);
         foreach (var f in files)
         {
             bool mine = assigned != null && Path.GetFileName(assigned) == Path.GetFileName(f);
