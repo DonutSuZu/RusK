@@ -31,6 +31,10 @@ internal sealed class GltfMotion
     public int[] Parent;
     public Vector3[] RestPos;
     public Quaternion[] RestRot;
+    /// <summary>骨の大きさ (同じ倍率で扱う。Mixamo はセンチなので 0.01 が付いている)</summary>
+    public float[] RestScale;
+    /// <summary>人型の骨 → ノード (VRMA の対応表、Mixamo・VRoid の名前から)。ゲームと違う骨格の動きを載せ替えるのに使う</summary>
+    public Dictionary<HumanBodyBones, int> Human = new();
     /// <summary>この骨自体に動きのキーがある (この骨だけを上書きし、子はゲームの動きのまま親に付いていく)</summary>
     public bool[] Keyed;
     /// <summary>この骨か、その親のどれかが動いている</summary>
@@ -39,6 +43,7 @@ internal sealed class GltfMotion
     public bool[] Moves;
 
     private readonly List<Channel> _channels = new();
+    private float[] _worldScale;
 
     private static Vector3 P(float x, float y, float z) => new(-x, y, z);
     private static Quaternion Q(float x, float y, float z, float w) => new(x, -y, -z, w);
@@ -57,6 +62,7 @@ internal sealed class GltfMotion
         var parent = Enumerable.Repeat(-1, n).ToArray();
         var restPos = new Vector3[n];
         var restRot = new Quaternion[n];
+        var restScale = Enumerable.Repeat(1f, n).ToArray();
         for (int i = 0; i < n; i++)
         {
             var node = nodesEl[i];
@@ -73,17 +79,24 @@ internal sealed class GltfMotion
             }
             if (node.TryGetProperty("translation", out var t)) restPos[i] = P(t[0].GetSingle(), t[1].GetSingle(), t[2].GetSingle());
             if (node.TryGetProperty("rotation", out var ro)) restRot[i] = Q(ro[0].GetSingle(), ro[1].GetSingle(), ro[2].GetSingle(), ro[3].GetSingle());
+            if (node.TryGetProperty("scale", out var sc)) restScale[i] = sc[0].GetSingle();
             if (node.TryGetProperty("children", out var ch))
                 foreach (var c in ch.EnumerateArray()) parent[c.GetInt32()] = i;
         }
 
+        var human = ReadHuman(json, names);
+
         foreach (var anim in anims.EnumerateArray())
         {
+            string animName = anim.TryGetProperty("name", out var an) ? an.GetString() : null;
+            // VRMA は名前が "animation" だけなので、ファイルの名前にする
+            if (string.IsNullOrEmpty(animName) || animName == "animation")
+                animName = anims.GetArrayLength() == 1 ? Path.GetFileNameWithoutExtension(path) : $"{Path.GetFileNameWithoutExtension(path)}_{result.Count}";
             var motion = new GltfMotion
             {
-                Name = anim.TryGetProperty("name", out var an) ? an.GetString() : $"anim{result.Count}",
-                File = path, Names = names, Parent = parent, RestPos = restPos, RestRot = restRot,
-                Animated = new bool[n], Keyed = new bool[n], Moves = new bool[n],
+                Name = animName,
+                File = path, Names = names, Parent = parent, RestPos = restPos, RestRot = restRot, RestScale = restScale,
+                Animated = new bool[n], Keyed = new bool[n], Moves = new bool[n], Human = human,
             };
             var samplers = anim.GetProperty("samplers");
             foreach (var ch in anim.GetProperty("channels").EnumerateArray())
@@ -121,6 +134,67 @@ internal sealed class GltfMotion
             result.Add(motion);
         }
         return result;
+    }
+
+    /// <summary>人型の骨: VRMA (VRMC_vrm_animation) の対応表、無ければ骨の名前 (Mixamo・VRoid)</summary>
+    private static Dictionary<HumanBodyBones, int> ReadHuman(JsonElement json, string[] names)
+    {
+        var map = new Dictionary<HumanBodyBones, int>();
+        if (json.TryGetProperty("extensions", out var ext) && ext.TryGetProperty("VRMC_vrm_animation", out var vrma)
+            && vrma.TryGetProperty("humanoid", out var hum) && hum.TryGetProperty("humanBones", out var bones))
+        {
+            foreach (var b in bones.EnumerateObject())
+            {
+                if (!b.Value.TryGetProperty("node", out var nodeEl)) continue;
+                // VRM 1.0 は親指の名前が 1 段ずれている (Metacarpal / Proximal / Distal → Unity の Proximal / Intermediate / Distal)
+                var name = b.Name.Replace("ThumbProximal", "ThumbIntermediate").Replace("ThumbMetacarpal", "ThumbProximal");
+                if (Enum.TryParse<HumanBodyBones>(name, true, out var hb) && hb != HumanBodyBones.LastBone) map[hb] = nodeEl.GetInt32();
+            }
+            if (map.Count > 0) return map;
+        }
+        for (int i = 0; i < names.Length; i++)
+            if (HumanName(names[i]) is HumanBodyBones hb && !map.ContainsKey(hb)) map[hb] = i;
+        return map;
+    }
+
+    /// <summary>骨の名前 → 人型の骨 (Mixamo の mixamorig:LeftArm、VRoid の J_Bip_L_UpperArm)</summary>
+    private static HumanBodyBones? HumanName(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return null;
+        var n = raw;
+        int colon = n.LastIndexOf(':');
+        if (colon >= 0) n = n.Substring(colon + 1);
+        if (n.StartsWith("J_Bip_"))
+        {
+            // J_Bip_C_Hips / J_Bip_L_UpperArm / J_Bip_L_Thumb1
+            var parts = n.Split('_');
+            if (parts.Length < 4) return null;
+            string side = parts[2] == "L" ? "Left" : parts[2] == "R" ? "Right" : "";
+            string bone = parts[3] == "ToeBase" ? "Toes" : parts[3];
+            foreach (var (f, uf) in new[] { ("Thumb", "Thumb"), ("Index", "Index"), ("Middle", "Middle"), ("Ring", "Ring"), ("Little", "Little") })
+                if (bone.StartsWith(f) && bone.Length == f.Length + 1)
+                    bone = uf + (f == "Thumb" ? bone[^1] switch { '1' => "Proximal", '2' => "Intermediate", _ => "Distal" }
+                                              : bone[^1] switch { '1' => "Proximal", '2' => "Intermediate", _ => "Distal" });
+            return Enum.TryParse<HumanBodyBones>(side + bone, true, out var r) ? r : null;
+        }
+        // Mixamo
+        string s2 = n.StartsWith("Left") ? "Left" : n.StartsWith("Right") ? "Right" : "";
+        var rest = n.Substring(s2.Length);
+        string mapped = rest switch
+        {
+            "Hips" => "Hips", "Spine" => "Spine", "Spine1" => "Chest", "Spine2" => "UpperChest", "Neck" => "Neck", "Head" => "Head",
+            "Shoulder" => "Shoulder", "Arm" => "UpperArm", "ForeArm" => "LowerArm", "Hand" => "Hand",
+            "UpLeg" => "UpperLeg", "Leg" => "LowerLeg", "Foot" => "Foot", "ToeBase" => "Toes",
+            _ => null,
+        };
+        if (mapped == null && rest.StartsWith("Hand") && rest.Length > 5 && char.IsDigit(rest[^1]))
+        {
+            var finger = rest.Substring(4, rest.Length - 5);
+            finger = finger == "Pinky" ? "Little" : finger;
+            mapped = finger + (rest[^1] switch { '1' => "Proximal", '2' => "Intermediate", _ => "Distal" });
+        }
+        if (mapped == null) return null;
+        return Enum.TryParse<HumanBodyBones>(s2 + mapped, true, out var r2) ? r2 : null;
     }
 
     private static float[] Convert(float[] v, int kind)
@@ -194,6 +268,7 @@ internal sealed class GltfMotion
     public void World(Vector3[] localPos, Quaternion[] localRot, Vector3[] worldPos, Quaternion[] worldRot)
     {
         var done = new bool[Names.Length];
+        _worldScale ??= new float[Names.Length];
         void Calc(int i)
         {
             if (done[i]) return;
@@ -202,12 +277,14 @@ internal sealed class GltfMotion
             {
                 worldPos[i] = localPos[i];
                 worldRot[i] = localRot[i];
+                _worldScale[i] = RestScale[i];
             }
             else
             {
                 Calc(p);
-                worldPos[i] = worldPos[p] + worldRot[p] * localPos[i];
+                worldPos[i] = worldPos[p] + worldRot[p] * (localPos[i] * _worldScale[p]);
                 worldRot[i] = worldRot[p] * localRot[i];
+                _worldScale[i] = _worldScale[p] * RestScale[i];
             }
             done[i] = true;
         }

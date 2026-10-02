@@ -25,6 +25,17 @@ RusK の **Custom Motion** で再生できる glb を作る道具です。
 - 骨は親から順に回す (`pose(t)` が返す並びの順)
 - ねじれ用の骨 (`Bip001 RUpArmTwist` など) は、付いていく骨と一緒に自動で動かす (動かさないと袖が伸びる)
 
+## ほかの骨格の動きを使う (VRMA・Mixamo)
+ゲームと違う骨格で作られた人型の動きも、ゲームのキャラに載せ替えて再生できる (人型の骨の役割で対応させる)。
+- **VRMA** (VRM のアニメーション、`.vrma`): そのまま `RusK\motions` に入れる
+- **Mixamo** (FBX): `fbx_to_glb.py` で glb にしてから入れる
+  ```
+  blender --background --python fbx_to_glb.py -- "Great Sword Slash.fbx" GreatSwordSlash.glb
+  ```
+- 骨の名前 `mixamorig:LeftArm` (Mixamo)、`J_Bip_L_UpperArm` (VRoid) は自動で対応させる
+- 両方の基準の姿勢を、腕を水平にした T ポーズにそろえてから写す。腰の動きは腰の高さの比で縮める
+- **配布するときは、元のモーションの利用規約を確認すること** (Mixamo のモーションは、ファイルそのものの再配布はできない)
+
 ## 手で作るとき (Blender の画面で)
 - 骨格の glb を **ファイル > インポート > glTF 2.0** で読み込み、アーマチュアを選んで **ポーズモード** で骨を回してキーを打つ
 - 腕を回したら、同じ側の `UpArmTwist` / `ForeTwist` も同じだけ回す (上の理由)

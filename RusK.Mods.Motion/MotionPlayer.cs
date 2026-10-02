@@ -34,6 +34,10 @@ internal sealed class MotionPlayer
 
     public readonly Transform Root;
     public readonly GltfMotion Motion;
+    /// <summary>人型の載せ替え (ゲームと違う骨格の動き: VRMA・Mixamo など)。false なら骨の名前で直接対応 (ゲームの骨格で作った動き)</summary>
+    public readonly bool Humanoid;
+    /// <summary>腰の動きの倍率 (腰の高さの比。体格の違いに合わせる)</summary>
+    private readonly float _moveScale = 1f;
     public bool Loop = true;
     public float Time;
     /// <summary>画面から手で再生した (割り当ての自動の出し入れで止めない)</summary>
@@ -85,6 +89,15 @@ internal sealed class MotionPlayer
         var rest = GameRest(root);
 
         var pairs = new List<(Pair pair, int depth)>();
+        int direct = 0;
+        for (int i = 0; i < n; i++)
+            if (motion.Keyed[i] && (byPath.ContainsKey(SrcPath(i)) || byName.ContainsKey(motion.Names[i]))) direct++;
+        if (direct < 4 && motion.Human.ContainsKey(HumanBodyBones.Hips) && motion.Human.Count >= 10)
+        {
+            Humanoid = true;
+            _moveScale = BuildHuman(root, byName, rest, pairs);
+        }
+        else
         for (int i = 0; i < n; i++)
         {
             if (!motion.Keyed[i]) continue;
@@ -97,6 +110,127 @@ internal sealed class MotionPlayer
         _oldRot = new Quaternion[_pairs.Length];
         _oldPos = new Vector3[_pairs.Length];
         _followers = FindFollowers(root, rest);
+    }
+
+    /// <summary>ゲームのキャラ (3ds Max の Biped) の骨の名前 → 人型の骨</summary>
+    private static readonly (HumanBodyBones bone, string name)[] BipedMap =
+    {
+        (HumanBodyBones.Hips, "Bip001 Pelvis"), (HumanBodyBones.Spine, "Bip001 Spine"), (HumanBodyBones.Chest, "Bip001 Spine1"),
+        (HumanBodyBones.UpperChest, "Bip001 Spine2"), (HumanBodyBones.Neck, "Bip001 Neck"), (HumanBodyBones.Head, "Bip001 Head"),
+        (HumanBodyBones.LeftShoulder, "Bip001 L Clavicle"), (HumanBodyBones.LeftUpperArm, "Bip001 L UpperArm"),
+        (HumanBodyBones.LeftLowerArm, "Bip001 L Forearm"), (HumanBodyBones.LeftHand, "Bip001 L Hand"),
+        (HumanBodyBones.RightShoulder, "Bip001 R Clavicle"), (HumanBodyBones.RightUpperArm, "Bip001 R UpperArm"),
+        (HumanBodyBones.RightLowerArm, "Bip001 R Forearm"), (HumanBodyBones.RightHand, "Bip001 R Hand"),
+        (HumanBodyBones.LeftUpperLeg, "Bip001 L Thigh"), (HumanBodyBones.LeftLowerLeg, "Bip001 L Calf"),
+        (HumanBodyBones.LeftFoot, "Bip001 L Foot"), (HumanBodyBones.LeftToes, "Bip001 L Toe0"),
+        (HumanBodyBones.RightUpperLeg, "Bip001 R Thigh"), (HumanBodyBones.RightLowerLeg, "Bip001 R Calf"),
+        (HumanBodyBones.RightFoot, "Bip001 R Foot"), (HumanBodyBones.RightToes, "Bip001 R Toe0"),
+        (HumanBodyBones.LeftThumbProximal, "Bip001 L Finger0"), (HumanBodyBones.LeftThumbIntermediate, "Bip001 L Finger01"),
+        (HumanBodyBones.LeftThumbDistal, "Bip001 L Finger02"), (HumanBodyBones.LeftIndexProximal, "Bip001 L Finger1"),
+        (HumanBodyBones.LeftIndexIntermediate, "Bip001 L Finger11"), (HumanBodyBones.LeftIndexDistal, "Bip001 L Finger12"),
+        (HumanBodyBones.LeftMiddleProximal, "Bip001 L Finger2"), (HumanBodyBones.LeftMiddleIntermediate, "Bip001 L Finger21"),
+        (HumanBodyBones.LeftMiddleDistal, "Bip001 L Finger22"), (HumanBodyBones.LeftRingProximal, "Bip001 L Finger3"),
+        (HumanBodyBones.LeftRingIntermediate, "Bip001 L Finger31"), (HumanBodyBones.LeftRingDistal, "Bip001 L Finger32"),
+        (HumanBodyBones.LeftLittleProximal, "Bip001 L Finger4"), (HumanBodyBones.LeftLittleIntermediate, "Bip001 L Finger41"),
+        (HumanBodyBones.LeftLittleDistal, "Bip001 L Finger42"),
+        (HumanBodyBones.RightThumbProximal, "Bip001 R Finger0"), (HumanBodyBones.RightThumbIntermediate, "Bip001 R Finger01"),
+        (HumanBodyBones.RightThumbDistal, "Bip001 R Finger02"), (HumanBodyBones.RightIndexProximal, "Bip001 R Finger1"),
+        (HumanBodyBones.RightIndexIntermediate, "Bip001 R Finger11"), (HumanBodyBones.RightIndexDistal, "Bip001 R Finger12"),
+        (HumanBodyBones.RightMiddleProximal, "Bip001 R Finger2"), (HumanBodyBones.RightMiddleIntermediate, "Bip001 R Finger21"),
+        (HumanBodyBones.RightMiddleDistal, "Bip001 R Finger22"), (HumanBodyBones.RightRingProximal, "Bip001 R Finger3"),
+        (HumanBodyBones.RightRingIntermediate, "Bip001 R Finger31"), (HumanBodyBones.RightRingDistal, "Bip001 R Finger32"),
+        (HumanBodyBones.RightLittleProximal, "Bip001 R Finger4"), (HumanBodyBones.RightLittleIntermediate, "Bip001 R Finger41"),
+        (HumanBodyBones.RightLittleDistal, "Bip001 R Finger42"),
+    };
+
+    private static readonly HumanBodyBones[] SpineChain = { HumanBodyBones.Spine, HumanBodyBones.Chest, HumanBodyBones.UpperChest };
+
+    /// <summary>
+    /// 人型の載せ替えの組を作る。両方の基準の姿勢を、腕 (上腕・前腕) を真横に向けた T ポーズにそろえ、
+    /// 「動きの骨が T ポーズから回った分」をゲームの骨の T ポーズに掛ける。腰の動きの倍率 (腰の高さの比) を返す
+    /// </summary>
+    private float BuildHuman(Transform root, Dictionary<string, Transform> byName, Dictionary<IntPtr, Matrix4x4> rest,
+        List<(Pair pair, int depth)> pairs)
+    {
+        var m = Motion;
+        // ゲームの人型の骨
+        var dst = new Dictionary<HumanBodyBones, Transform>();
+        foreach (var (hb, name) in BipedMap)
+            if (byName.TryGetValue(name, out var t)) dst[hb] = t;
+
+        // ゲームの基準の姿勢 (根元の空間) を T ポーズに
+        var all = root.GetComponentsInChildren<Transform>(true).Where(t => t != root).ToArray();
+        var gRot = new Dictionary<IntPtr, Quaternion>();
+        var gPos = new Dictionary<IntPtr, Vector3>();
+        foreach (var t in all)
+        {
+            var r = Rest(t, root, rest);
+            gRot[t.Pointer] = r.rotation;
+            gPos[t.Pointer] = new Vector3(r.m03, r.m13, r.m23);
+        }
+        void AimGame(HumanBodyBones bone, HumanBodyBones child, Vector3 dir)
+        {
+            if (!dst.TryGetValue(bone, out var b) || !dst.TryGetValue(child, out var c)) return;
+            var q = Quaternion.FromToRotation(gPos[c.Pointer] - gPos[b.Pointer], dir);
+            var pivot = gPos[b.Pointer];
+            foreach (var t in all)
+            {
+                if (!t.IsChildOf(b)) continue;
+                gPos[t.Pointer] = pivot + q * (gPos[t.Pointer] - pivot);
+                gRot[t.Pointer] = q * gRot[t.Pointer];
+            }
+        }
+        AimGame(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, Vector3.left);
+        AimGame(HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, Vector3.left);
+        AimGame(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, Vector3.right);
+        AimGame(HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, Vector3.right);
+
+        // 動きの基準の姿勢も T ポーズに (VRMA・Mixamo は元から T ポーズだが、念のため)
+        var sRot = (Quaternion[])_wr.Clone();
+        var sPos = (Vector3[])_wp.Clone();
+        bool Under(int i, int ancestor)
+        {
+            for (int k = i; k >= 0; k = m.Parent[k]) if (k == ancestor) return true;
+            return false;
+        }
+        void AimSrc(HumanBodyBones bone, HumanBodyBones child, Vector3 dir)
+        {
+            if (!m.Human.TryGetValue(bone, out var b) || !m.Human.TryGetValue(child, out var c)) return;
+            var q = Quaternion.FromToRotation(sPos[c] - sPos[b], dir);
+            var pivot = sPos[b];
+            for (int i = 0; i < sPos.Length; i++)
+            {
+                if (!Under(i, b)) continue;
+                sPos[i] = pivot + q * (sPos[i] - pivot);
+                sRot[i] = q * sRot[i];
+            }
+        }
+        AimSrc(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, Vector3.left);
+        AimSrc(HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, Vector3.left);
+        AimSrc(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, Vector3.right);
+        AimSrc(HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, Vector3.right);
+
+        // 組: 同じ人型の骨どうし。背骨の数が違うときは、ゲームの一番先の背骨に、動きの一番先の背骨を写す (曲がりを失わないように)
+        var srcFor = new Dictionary<HumanBodyBones, int>();
+        foreach (var hb in dst.Keys)
+            if (m.Human.TryGetValue(hb, out var node)) srcFor[hb] = node;
+        var dstSpine = SpineChain.Where(dst.ContainsKey).ToList();
+        var srcSpine = SpineChain.Where(m.Human.ContainsKey).ToList();
+        if (dstSpine.Count > 0 && srcSpine.Count > 0)
+            srcFor[dstSpine[dstSpine.Count - 1]] = m.Human[srcSpine[srcSpine.Count - 1]];
+
+        foreach (var (hb, node) in srcFor)
+        {
+            var bone = dst[hb];
+            _srcRestInv[node] = Quaternion.Inverse(sRot[node]);
+            _srcRestPos[node] = sPos[node];
+            pairs.Add((new Pair(bone, node, gRot[bone.Pointer], gPos[bone.Pointer], hb == HumanBodyBones.Hips), Depth(bone, root)));
+        }
+
+        // 腰の高さの比 (根元からの高さ)
+        if (dst.TryGetValue(HumanBodyBones.Hips, out var hips) && m.Human.TryGetValue(HumanBodyBones.Hips, out var sh) && Mathf.Abs(sPos[sh].y) > 1e-4f)
+            return gPos[hips.Pointer].y / sPos[sh].y;
+        return 1f;
     }
 
     /// <summary>ねじれ用の骨の名前 → 付いていく骨の名前</summary>
@@ -258,7 +392,7 @@ internal sealed class MotionPlayer
             p.Bone.rotation = w >= 1f ? rot : Quaternion.Slerp(_oldRot[i], rot, w);
             if (p.Move)
             {
-                var pos = Root.TransformPoint(p.DstRestPos + (_wp[p.Node] - _srcRestPos[p.Node]));
+                var pos = Root.TransformPoint(p.DstRestPos + (_wp[p.Node] - _srcRestPos[p.Node]) * _moveScale);
                 p.Bone.position = w >= 1f ? pos : Vector3.Lerp(_oldPos[i], pos, w);
             }
         }
@@ -294,7 +428,7 @@ internal static class MotionPlayers
         if (!Active.TryGetValue(root.Pointer, out var list)) Active[root.Pointer] = list = new List<MotionPlayer>();
         foreach (var old in list) { old.Target = 0f; old.FadeTime = fade; }
         list.Add(player);
-        MotionMod.Ctx?.Log.Info($"Motion: {root.name} で '{motion.Name}' を再生 (動かす骨 {player.PairCount}、お供の骨 {player.FollowerCount}、長さ {motion.Length:0.00} 秒) お供: {player.FollowerNames}");
+        MotionMod.Ctx?.Log.Info($"Motion: {root.name} で '{motion.Name}' を再生 ({(player.Humanoid ? "人型の載せ替え" : "骨の名前で対応")}、動かす骨 {player.PairCount}、お供の骨 {player.FollowerCount}、長さ {motion.Length:0.00} 秒) お供: {player.FollowerNames}");
         return player;
     }
 

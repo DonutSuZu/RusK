@@ -46,7 +46,10 @@ public sealed class MotionMod : RuskMod
         try
         {
             Directory.CreateDirectory(Folder);
-            foreach (var f in Directory.GetFiles(Folder, "*.glb", SearchOption.AllDirectories).OrderBy(f => f))
+            // glb (Blender などで書き出したもの) と vrma (VRM のアニメーション。中身は glb)
+            foreach (var f in Directory.GetFiles(Folder, "*.*", SearchOption.AllDirectories)
+                         .Where(f => f.EndsWith(".glb", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".vrma", StringComparison.OrdinalIgnoreCase))
+                         .OrderBy(f => f))
             {
                 try { list.AddRange(GltfMotion.Load(f)); }
                 catch (Exception e) { Ctx.Log.Warning($"Motion: {Path.GetFileName(f)} を読めません: {e.Message}"); }
