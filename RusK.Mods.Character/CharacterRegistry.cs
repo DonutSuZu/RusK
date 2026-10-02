@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using HarmonyLib;
 using UnityEngine;
@@ -138,7 +139,37 @@ internal static class CharacterRegistry
             container.characters.Add(clone);
             Registered[def.Id] = clone;
             CharacterMod.Ctx?.Log.Info($"Character: {def.Key} (ID {def.Id}) を足しました (土台 {def.Base}、動作 {clone.motions?.Count})");
+            WriteMotionList(def, clone);
         }
+    }
+
+    /// <summary>
+    /// 動作の一覧を 〈キャラのフォルダ〉/motions.txt に書き出す (Custom Motion で差し替えるときの名前を調べる用)。
+    /// 名前・クリップ・長さ (秒)・攻撃判定が出る位置 (0〜1、AttackBoxOn)・ループするか
+    /// </summary>
+    private static void WriteMotionList(CharacterDef def, MotionManager mm)
+    {
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"# {def.Key} (ID {def.Id}, 土台 {def.Base}) の動作。Custom Motion の割り当ては {def.Id}/〈名前〉=〈glb〉#〈アニメーション〉");
+            sb.AppendLine("# 名前	クリップ	秒	攻撃判定	ループ");
+            foreach (var m in mm.motions)
+            {
+                if (m == null) continue;
+                var clip = m.bindAnimClip?.Clip;
+                float sec = clip != null ? clip.length / Mathf.Max(0.05f, m.playSpeed) : 0f;
+                var hits = new List<float>();
+                if (m.animEvent != null)
+                    foreach (var e in m.animEvent)
+                        if (e?.callBack != null)
+                            foreach (var f in e.callBack)
+                                if (f?.funcName != null && f.funcName.EndsWith("AttackBoxOn")) hits.Add(e.playProcess);
+                sb.AppendLine($"{m.name}	{(clip != null ? clip.name : "-")}	{sec:0.00}	{(hits.Count > 0 ? string.Join(",", hits.OrderBy(h => h).Select(h => h.ToString("0.00"))) : "-")}	{(clip != null && clip.isLooping ? "loop" : "")}");
+            }
+            File.WriteAllText(Path.Combine(def.Folder, "motions.txt"), sb.ToString());
+        }
+        catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: 動作の一覧を書き出せません: {e.Message}"); }
     }
 
     /// <summary>セーブに解放とスキルを足す (メモリの中だけ。保存のときは抜く)</summary>

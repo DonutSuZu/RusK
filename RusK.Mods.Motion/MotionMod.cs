@@ -110,7 +110,7 @@ internal sealed class MotionWindow : RuskWindow
         var p = PlayerRef.Current;
         gui.BeginRow(1f, 1f, 1f);
         if (gui.Button(L.T("止める"), enabled: MotionPlayers.Active.Count > 0)) MotionPlayers.StopAll();
-        if (gui.Button(L.T("読み込み直す"))) MotionLibrary.Reload();
+        if (gui.Button(L.T("読み込み直す"))) { MotionLibrary.Reload(); MotionBinder.ReloadBindings(); }
         if (gui.Button(L.T("フォルダを開く"))) MotionMod.OpenFolder();
 
         // glb の動き

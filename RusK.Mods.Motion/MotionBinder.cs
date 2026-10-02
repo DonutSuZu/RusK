@@ -97,6 +97,9 @@ internal static class MotionBinder
         return clip.length / Mathf.Max(0.05f, motion.playSpeed);
     }
 
+    /// <summary>bindings.txt を次に使うときに読み直す (手で書き換えたとき用)</summary>
+    public static void ReloadBindings() => _loaded = false;
+
     private static void Load()
     {
         if (_loaded) return;

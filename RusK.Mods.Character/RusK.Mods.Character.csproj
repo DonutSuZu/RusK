@@ -13,6 +13,9 @@
     <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
     <!-- キャラの絵 (PNG の読み書き) -->
     <Reference Include="$(InteropDir)\UnityEngine.ImageConversionModule.dll" Private="false" />
+    <!-- 動作の一覧 (Animancer.ClipTransition のクリップ) -->
+    <Reference Include="$(InteropDir)\UnityEngine.AnimationModule.dll" Private="false" />
+    <Reference Include="$(InteropDir)\Animancer.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>
