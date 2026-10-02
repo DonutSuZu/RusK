@@ -10,7 +10,7 @@
   "{0} の見た目": "Look of {0}",
   "元の見た目にする": "Restore the original look",
   "フォルダを開く": "Open folder",
-  "RusK\\props に .glb ファイルを置いてください。": "Put .glb files in RusK\\props.",
+  "RusK\\props に .glb / .pmx ファイルを置いてください。": "Put .glb / .pmx files in RusK\\props.",
   "位置・回転・大きさ": "Position / rotation / scale",
   "元の武器・装備品からのずれ": "Offset from the original weapon or accessory",
   "ずれを戻す": "Reset offset",
@@ -18,8 +18,8 @@
   "glb に発光が入っていれば OFF でもそれが光る": "If the glb has its own emission, it glows even when OFF",
   "光らせる": "Make it glow",
   "色": "Color",
-  "武器・装備品の見た目を glb にする (RusK\\props に .glb を置く)": "Replace the look of weapons and accessories with glb models (put .glb files in RusK\\props)",
-  "武器・装備品の見た目を glb にする画面を開く": "Open the window for replacing weapons and accessories with glb models",
+  "武器・装備品の見た目を glb / PMX にする (RusK\\props に置く)。キャラ専用の割り当ても可": "Replaces weapons and accessories with glb / PMX models (put them in RusK\\props). Per-character assignments supported",
+  "武器・装備品の見た目を glb / PMX にする画面を開く": "Open the window for replacing weapons and accessories with glb / PMX models",
   "武器・装備品の置き換えの更新 (常に ON にしておいてください)": "Keeps weapon and accessory replacements updated (keep this ON)",
   "位置 X": "Position X",
   "位置 Y": "Position Y",
@@ -40,5 +40,6 @@
   "水色": "Light blue",
   "青": "Blue",
   "紫": "Purple",
-  "桃": "Pink"
+  "桃": "Pink",
+  "RusK\\props に .glb ファイルを置いてください。": "Put .glb files in RusK\\props."
 }

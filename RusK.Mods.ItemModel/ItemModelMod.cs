@@ -13,10 +13,10 @@ namespace RusK.Mods.ItemModel;
 /// Custom Item Model: 武器・装備品の見た目を glb に置き換える。RusK\props に置いた .glb を、装備ごとに選べる。
 /// glb の読み込みは Custom Model (RusK.Mods.Model/Vrm) の部品をソースごと取り込んで使う。
 /// </summary>
-[RuskMod("itemmodel", "Custom Item Model", "1.1.0",
+[RuskMod("itemmodel", "Custom Item Model", "1.2.0",
     Author = "you",
     GameVersion = "0.0.1873",
-    Description = "武器・装備品の見た目を glb にする (RusK\\props に .glb を置く)")]
+    Description = "武器・装備品の見た目を glb / PMX にする (RusK\\props に置く)。キャラ専用の割り当ても可")]
 public sealed class ItemModelMod : RuskMod
 {
     protected override void OnLoad()
@@ -41,7 +41,7 @@ public sealed class ItemModelModule : Module
     private readonly ItemModelWindow _window;
 
     public ItemModelModule(ItemModelWindow window)
-        : base("CustomItemModel", Categories.Visual, "武器・装備品の見た目を glb にする画面を開く")
+        : base("CustomItemModel", Categories.Visual, "武器・装備品の見た目を glb / PMX にする画面を開く")
     {
         _window = window;
         _window.VisibleChanged += w => Enabled = w.Visible;
@@ -106,7 +106,7 @@ public sealed class ItemModelWindow : RuskWindow
         if (gui.Button(L.T("元の見た目にする"), enabled: assigned != null)) ItemModels.Assign(_selected, null);
         if (gui.Button(L.T("フォルダを開く"))) ItemModels.OpenFolder();
         var files = ItemModels.Files().ToList();
-        if (files.Count == 0) gui.Label(L.T("RusK\\props に .glb ファイルを置いてください。"), RuskStyle.TextDim, small: true);
+        if (files.Count == 0) gui.Label(L.T("RusK\\props に .glb / .pmx ファイルを置いてください。"), RuskStyle.TextDim, small: true);
         foreach (var f in files)
         {
             bool mine = assigned != null && Path.GetFileName(assigned.File) == Path.GetFileName(f);

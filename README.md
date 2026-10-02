@@ -8,7 +8,7 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 - TabGUI / ClickGUI (Horion 風)、ArrayList・通知・ウォーターマーク
 - Mod の着脱 (AssemblyLoadContext)、アクショントリガー、Config プロファイル
 - Flex Window (Mod 用のドラッグ・リサイズできるウィンドウ)
-- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Effect Tuner** (エフェクトの色・大きさ・差し替え・自作エフェクト) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM / PMX に) / **Custom Item Model** (武器・装飾品の見た目を glb に) / **Custom Motion** (Blender・VRMA・Mixamo の動きをキャラの動作に)
+- 同梱 Mod: **RusK UI** (ボタン HUD・攻撃予兆・キー追加) / **EXTREME Difficulty** (難易度 EXTREME の解放と敵の強化) / **Music Manager** (戦闘 BGM の置き換え) / **Voice Replacer** (ボイス・効果音の置き換え) / **Camera View** (視点の切り替え) / **Effect Tuner** (エフェクトの色・大きさ・差し替え・自作エフェクト) / **Party** (アクティブ3人・切り替えパリィ・パッシブバフの共有) / **Chain Attack** (連携攻撃。Party が必要) / **Party Op.2** (エンドフィールド風のバトルスタイル。Party が必要) / **Party Formation** (ゼンゼロ風の編成画面。Party が必要) / **Custom Model** (キャラの見た目を VRM / PMX に) / **Custom Item Model** (武器・装飾品の見た目を glb / PMX に) / **Custom Motion** (Blender・VRMA・Mixamo の動きをキャラの動作に) / **Custom Character** (新しいキャラ枠)
 - **RusK Check**: ゲームの更新で壊れた Mod を教える診断機能
 
 **ゲーム**: [VED:Recure (Steam)](https://store.steampowered.com/app/3255500/Ved/)
@@ -254,7 +254,9 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
   - 表情: まばたき・ウィンク・あいうえお・笑い・にこり・怒り・困る・びっくり (グループモーフは中の頂点モーフに分ける)。使うモーフだけブレンドシェイプにする
 
 ### Custom Item Model（武器・装飾品）
-- `RusK\props` に `.glb` を置き、**Visual > CustomItemModel** で装備を選んでから glb を選ぶ。位置・回転・大きさ・発光を調整できる
+- `RusK\props` に `.glb` か `.pmx` (テクスチャのフォルダごと) を置き、**Visual > CustomItemModel** で装備を選んでから選ぶ。位置・回転・大きさ・発光を調整できる
+- キャラ専用: `assignments.txt` の行の頭を `キャラの番号:装備の番号` にすると、そのキャラが持つときだけ置き換える。ファイルを書き換えると自動で読み直す
+- 材質の元は元の武器のトゥーンシェーダーの材質だけを使う (武器を出す瞬間は溶けて現れる演出の材質に差し替わっている)
 - ゲームの武器・装飾品は、どれも装備 ID ごとの `Equip_<ID>` で、差し込み口 `WeaponHolder_0～4` に付く
   (武器は WeaponController 付きで、しまうとゲームの置き場に戻る。装飾品は WeaponHolder.m_equipGb から探す)。
   `Equip_<ID>` の下に glb を付け、元の見た目は `forceRenderingOff` で隠す
@@ -279,6 +281,20 @@ HUD: 右上 ArrayList（有効モジュール、ゆっくりスライド）、�
     (それまでは伸び縮み、その後は実際の速さ)。当たる瞬間は自動 (手が腰から見て一番速く動く時間) か、画面のスライダーで決める
 - ゲームの動作のデータ: `PlayerController.m_motionMgr` (`MotionManager`) の `motions` (`MotionState`: `bindAnimClip` は Animancer の `ClipTransition`、
   `attackBoxes`・`animEvent`・`comboName`・`playSpeed` など)。再生は Animancer (`ActionAnimController.m_anim`)、切り替えは `MotionController.ChangeMotion`
+
+### Custom Character（新しいキャラ枠）
+- `RusK\characters\<フォルダ>\character.json` (`{"id": 9001, "base": 1006, "name": {"ja": ..., "en": ..., "zh": ...}}`)。id は 9000 以上
+- 仕組み:
+  - キャラの一覧 (`CharacterContainer.characters`) に、土台の `MotionManager` を複製して id・名前を変えたものを足す (毎フレーム確かめる)
+  - セーブ (`GameSave`) には解放・装備・スキルをメモリの中だけ足し、保存 (`SaveGame` / `GameSaveBackUp`) の間だけ抜く
+    (`GetGameSave` / `GetCharacterContainer` を Harmony で書き換えると、別のスレッドから呼ばれて落ちるので触らない)
+  - `Resources.Load` の `ActionSettingRes/MotionList_<id>` は複製を、ほかの `_<id>` は土台のものを渡す。`PlayerController.SetData` の前に `m_id` を直す。
+    `ResourceManager.CharacterIdToTag` にも足す (無いとリーダーで出撃したときに読み込みが終わらない)
+  - キャラを並べる画面 (`WindowCharacterShow`) のカードは数が決まっているので、土台のカードを複製して `SetBindId` で足す
+  - 名前は `GameUtil.GetLocale("ActorName_<id>")` を差し替え
+- 絵: ゲームが `〈種類〉_<id>` の絵を読むとき、土台の絵を表示の枠 (rect) 全体で `images_template` に書き出し、`images\〈種類〉.png` があれば差し替える。
+  撮影 (`captures`) と合成は [tools/character/make_card_art.py](tools/character/make_card_art.py)
+- 動作の一覧はキャラのフォルダの `motions.txt` (名前・クリップ・秒・攻撃判定)。開発用の指示ファイル `RusK\data\character\dev.txt` (switch / motion / bones / capture)
 
 ### Camera View（視点）
 - **Visual > CameraView** の View で「近い肩越し / 真後ろ / 一人称 / カスタム」を選ぶ

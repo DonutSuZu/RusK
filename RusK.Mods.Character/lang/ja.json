@@ -1,6 +1,10 @@
 {
-  "新しいキャラ枠を足す (RusK/characters の character.json。土台のキャラの動作を複製する) (試作)": "新しいキャラ枠を足す (RusK/characters の character.json。土台のキャラの動作を複製する) (試作)",
-  "新しいキャラ枠 (試作)": "新しいキャラ枠 (試作)",
+  "新しいキャラ枠を足す (RusK/characters の character.json。動作・能力は土台のキャラを複製する)": "新しいキャラ枠を足す (RusK/characters の character.json。動作・能力は土台のキャラを複製する)",
+  "新しいキャラ枠 (RusK/characters)": "新しいキャラ枠 (RusK/characters)",
   "新しいキャラに切り替える (押すたびに次のキャラ)": "新しいキャラに切り替える (押すたびに次のキャラ)",
-  "characters フォルダを開く": "characters フォルダを開く"
+  "characters フォルダを開く": "characters フォルダを開く",
+  "今のキャラ (新しいキャラ) の絵の素材を撮り直す (captures フォルダ)": "今のキャラ (新しいキャラ) の絵の素材を撮り直す (captures フォルダ)",
+  "右腕": "右腕",
+  "右ひじ": "右ひじ",
+  "右手首": "右手首"
 }

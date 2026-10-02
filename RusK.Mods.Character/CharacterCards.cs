@@ -32,18 +32,6 @@ internal static class CharacterCards
             CharacterMod.Ctx?.Log.Info($"Character: {def.Key} のカードを足しました (元 {template.gameObject.name})");
         }
     }
-
-    /// <summary>(調査) 画面のカードの一覧</summary>
-    public static void Dump(WindowCharacterShow w)
-    {
-        var sb = new StringBuilder($"Character: (調査) キャラの画面 cards={w.m_crtCards?.Count} unlock=[");
-        if (w.m_unlockCrts != null) sb.Append(string.Join(",", w.m_unlockCrts.ToArray().Select(m => m == null ? "null" : $"{m.id}")));
-        sb.Append($"] cur={w.m_curSelectCrtId}");
-        if (w.m_crtCards != null)
-            foreach (var c in w.m_crtCards)
-                if (c != null) sb.Append($" | {c.gameObject.name} id={c.GetBindId()} active={c.gameObject.activeInHierarchy} button={(c.GetButton() != null ? c.GetButton().isInteractable.ToString() : "-")}");
-        CharacterMod.Ctx?.Log.Info(sb.ToString());
-    }
 }
 
 [HarmonyPatch(typeof(WindowCharacterShow), nameof(WindowCharacterShow.InitialWindow))]
@@ -53,11 +41,5 @@ internal static class CharacterShowPatch
     {
         try { CharacterCards.Add(__instance.m_crtCards); }
         catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: カードを足せません: {e.Message}"); }
-    }
-
-    private static void Postfix(WindowCharacterShow __instance)
-    {
-        try { CharacterCards.Dump(__instance); }
-        catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: (調査) 失敗: {e.Message}"); }
     }
 }

@@ -86,15 +86,21 @@
     },
     {
       "id": "itemmodel", "name": "Custom Item Model", "asset": "RuskItemModel.dll", "folders": ["props"],
-      "ja": "武器・装飾品の見た目を glb にする (RusK\\props に .glb を置く)。発光も設定できる",
-      "en": "Replaces weapons and accessories with glb models (put .glb files in RusK\\props). Glow can be set",
-      "zh": "将武器和饰品替换为 glb 模型 (把 .glb 放入 RusK\\props)。可设置发光"
+      "ja": "武器・装飾品の見た目を glb / PMX にする (RusK\\props に置く)。発光・キャラ専用の割り当ても設定できる",
+      "en": "Replaces weapons and accessories with glb / PMX models (put them in RusK\\props). Glow and per-character assignments",
+      "zh": "将武器和饰品替换为 glb / PMX 模型 (放入 RusK\\props)。可设置发光和按角色分配"
     },
     {
       "id": "motion", "name": "Custom Motion", "asset": "RuskMotion.dll", "folders": ["motions"],
       "ja": "Blender などで作ったアニメーション (glb) や VRM のアニメーション (vrma) を、キャラの動きとして再生する。待機・攻撃などの動作に割り当てられ、攻撃は当たる瞬間に合わせる",
       "en": "Plays animations made in Blender etc. (glb) or VRM animations (vrma) as character motions. Assign them to actions such as idle or attacks; attacks are synced to the hit moment",
       "zh": "将用 Blender 等制作的动画 (glb) 或 VRM 动画 (vrma) 作为角色动作播放。可分配给待机、攻击等动作, 攻击会对齐命中瞬间"
+    },
+    {
+      "id": "character", "name": "Custom Character", "asset": "RuskCharacter.dll", "folders": ["characters"],
+      "ja": "新しいキャラ枠を足す (RusK\\characters に character.json)。動作・能力は土台のキャラを複製し、見た目・動き・武器はほかの Mod で付ける",
+      "en": "Adds new character slots (character.json in RusK\\characters). Motions and stats are copied from a base character; looks, motions and weapons come from the other mods",
+      "zh": "添加新角色栏位 (RusK\\characters 中的 character.json)。动作和能力复制自基础角色, 外观、动作和武器由其他 Mod 提供"
     }
   ]
 }

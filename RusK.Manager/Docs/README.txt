@@ -117,8 +117,9 @@ RusK と Mod の導入・更新をするアプリです (RusK-Mod-Manager.exe)�
                 頭などの装飾品が VRM に合わないときは、同じ画面の「装飾品の表示」で部位ごとに隠せます
                 PMX: 標準の骨 (上半身・腕・ひじ・足・ひざ など) があるモデルに対応。物理は揺れ物で近く再現します
                      PMD は読めません (PMX エディタで PMX に変換してください)。テクスチャの DDS は PNG に変換してください
-- Custom Item Model: 武器・装飾品の見た目を glb (Blender などから書き出せる 3D モデル) にします
+- Custom Item Model: 武器・装飾品の見た目を glb (Blender などから書き出せる 3D モデル) や PMX にします
                 1. このフォルダの props に .glb を置く (FBX は Blender で開いて glb で書き出してください)
+                   PMX はテクスチャの入ったフォルダごと置いてください
                 2. Visual > CustomItemModel を開き、装備を選んでから glb を選ぶ
                 3. 位置・回転・大きさのずれを、同じ画面で調整する
                 「発光」で光らせることもできます (glb に発光が入っていれば、それも光ります)
@@ -131,6 +132,13 @@ RusK と Mod の導入・更新をするアプリです (RusK-Mod-Manager.exe)�
                    (ずれるときは、同じ画面の「当たる瞬間」で調整し、「止めて見る」で確認できます)
                 全身の動きは、走る動作などに割り当てると脚が合わないことがあります。待機・攻撃などに向いています
                 動きの素材は、利用規約で使用が許可されたものを使ってください
+- Custom Character: 新しいキャラ枠を足します
+                1. このフォルダの characters に、キャラごとのフォルダを作り character.json を置く
+                   {"id": 9001, "base": 1006, "name": {"ja": "名前", "en": "Name", "zh": "名字"}}
+                   (id は 9000 以上、base は土台にするゲームのキャラの番号。動作・能力はそのキャラを複製します)
+                2. 見た目 (Custom VRM Loader)・動き (Custom Motion)・武器 (Custom Item Model) を、キャラの番号で割り当てる
+                3. キャラの絵は、images_template のお手本と同じ名前の PNG を images に置くと差し替わります
+                新しいキャラはセーブに残りません (Mod を外してもセーブは壊れません)
 
 ■ フォルダ
 - RusK\mods     : Mod の DLL (ここに置くと読み込まれます)
@@ -140,6 +148,7 @@ RusK と Mod の導入・更新をするアプリです (RusK-Mod-Manager.exe)�
 - RusK\models   : Custom Model の VRM・PMX (アンインストールしても消しません)
 - RusK\props    : Custom Item Model の glb (アンインストールしても消しません)
 - RusK\motions  : Custom Motion の動き (glb・vrma。アンインストールしても消しません)
+- RusK\characters : Custom Character のキャラ (アンインストールしても消しません)
 - RusK\voices   : Voice Replacer の音声
 - RusK\effects  : Effect Tuner の自作エフェクト (.bundle)
 

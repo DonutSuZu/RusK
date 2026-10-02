@@ -4,7 +4,7 @@
   <PropertyGroup>
     <AssemblyName>RuskCharacter</AssemblyName>
     <RootNamespace>RusK.Mods.Character</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>1.0.0</Version>
     <DeployDir>$(RuskGameDir)\mods</DeployDir>
   </PropertyGroup>
 

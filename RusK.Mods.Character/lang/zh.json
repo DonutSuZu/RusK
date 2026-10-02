@@ -1,1 +1,10 @@
-{}
+{
+  "新しいキャラ枠を足す (RusK/characters の character.json。動作・能力は土台のキャラを複製する)": "添加新角色栏位 (RusK/characters 中的 character.json; 动作和能力复制自基础角色)",
+  "新しいキャラ枠 (RusK/characters)": "新角色栏位 (RusK/characters)",
+  "新しいキャラに切り替える (押すたびに次のキャラ)": "切换到新角色 (每按一次切换到下一个)",
+  "characters フォルダを開く": "打开 characters 文件夹",
+  "今のキャラ (新しいキャラ) の絵の素材を撮り直す (captures フォルダ)": "重新拍摄当前 (新) 角色的图片素材 (captures 文件夹)",
+  "右腕": "右腕",
+  "右ひじ": "右ひじ",
+  "右手首": "右手首"
+}
