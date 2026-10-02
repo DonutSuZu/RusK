@@ -33,6 +33,7 @@ public sealed class CharacterMod : RuskMod
         Context.Harmony.PatchAll(typeof(ResourcesLoadPatch));
         Context.Harmony.PatchAll(typeof(SetDataPatch));
         Context.Harmony.PatchAll(typeof(UnlockPatch));
+        Context.Harmony.PatchAll(typeof(CharacterShowPatch));
         Context.RegisterModule(new CharacterModule());
     }
 }
@@ -45,10 +46,30 @@ internal sealed class CharacterModule : Module
     {
         AddSetting(new ButtonSetting("SwitchTo", SwitchTo, "新しいキャラに切り替える (押すたびに次のキャラ)"));
         AddSetting(new ButtonSetting("OpenFolder", OpenFolder, "characters フォルダを開く"));
+        AddSetting(new ButtonSetting("DumpChoose", DumpChoose, "(調査) 開いているキャラ選択の画面をログに書き出す"));
         Enabled = true;
     }
 
-    public override void OnUpdate() => CharacterRegistry.Tick();
+    private float _nextDump;
+    private IntPtr _dumped;
+
+    public override void OnUpdate()
+    {
+        CharacterRegistry.Tick();
+        // (調査) キャラ選択の画面が開いたら、一度だけ自動で書き出す
+        if (UnityEngine.Time.unscaledTime < _nextDump) return;
+        _nextDump = UnityEngine.Time.unscaledTime + 1f;
+        try
+        {
+            var w = UnityEngine.Object.FindObjectOfType<WindowBattleCharacterChoose>();
+            if (w != null && w.Pointer != _dumped && w.m_crtCards != null && w.m_crtCards.Count > 0)
+            {
+                _dumped = w.Pointer;
+                DumpChoose();
+            }
+        }
+        catch { }
+    }
 
     private void SwitchTo()
     {
@@ -61,6 +82,31 @@ internal sealed class CharacterModule : Module
             CharacterMod.Ctx.Log.Info($"Character: {def.Key} に切り替え");
         }
         catch (Exception e) { CharacterMod.Ctx.Log.Warning($"Character: 切り替えに失敗: {e}"); }
+    }
+
+    /// <summary>調査: 開いているキャラ選択の画面 (WindowBattleCharacterChoose) のカード・解放済みのキャラ・並び順</summary>
+    private static void DumpChoose()
+    {
+        var log = CharacterMod.Ctx.Log;
+        try
+        {
+            var w = UnityEngine.Object.FindObjectOfType<WindowBattleCharacterChoose>();
+            if (w == null) { log.Info("Character: (調査) キャラ選択の画面が開いていません"); return; }
+            var sb = new System.Text.StringBuilder($"Character: (調査) 選択画面 cards={w.m_crtCards?.Count} unlock={w.m_unlockCrts?.Count} order=[{(w.m_unlockIndexOrder == null ? "" : string.Join(",", w.m_unlockIndexOrder.ToArray()))}] cur={w.m_curCardIdx}");
+            if (w.m_unlockCrts != null)
+                for (int i = 0; i < w.m_unlockCrts.Count; i++) sb.Append($"\n  unlock[{i}] = {w.m_unlockCrts[i]?.id} {w.m_unlockCrts[i]?.name}");
+            if (w.m_crtCards != null)
+                for (int i = 0; i < w.m_crtCards.Count; i++)
+                {
+                    var c = w.m_crtCards[i];
+                    if (c == null) { sb.Append($"\n  card[{i}] null"); continue; }
+                    sb.Append($"\n  card[{i}] {c.name} active={c.gameObject.activeSelf} interactable={c.isInteractable} children=[{string.Join(",", Enumerable.Range(0, c.transform.childCount).Select(k => c.transform.GetChild(k).name))}]");
+                }
+            if (w.m_cardRoot != null)
+                sb.Append($"\n  cardRoot children=[{string.Join(",", Enumerable.Range(0, w.m_cardRoot.childCount).Select(k => w.m_cardRoot.GetChild(k).name + (w.m_cardRoot.GetChild(k).gameObject.activeSelf ? "" : "(off)")))}]");
+            log.Info(sb.ToString());
+        }
+        catch (Exception e) { log.Warning($"Character: (調査) 失敗: {e}"); }
     }
 
     private static void OpenFolder()

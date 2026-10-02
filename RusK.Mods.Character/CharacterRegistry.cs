@@ -282,7 +282,7 @@ internal static class ResourcesLoadPatch
         typeof(Resources).GetMethods().Where(m => m.Name == nameof(Resources.Load) && !m.IsGenericMethod
             && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType == typeof(string));
 
-    private static void Postfix(string path, ref Object __result)
+    private static void Postfix(string path, object[] __args, ref Object __result)
     {
         if (__result != null || path == null || CharacterRegistry.Registered.Count == 0) return;
         foreach (var (id, mm) in CharacterRegistry.Registered)
@@ -298,8 +298,12 @@ internal static class ResourcesLoadPatch
             }
             else if (def != null)
             {
-                // ほかのキャラごとのデータ (BuffList_〈ID〉 = キャラのバフ など): 土台のキャラのもの
-                __result = Resources.Load(path.Substring(0, path.Length - ids.Length) + def.Base);
+                // ほかのキャラごとのデータ (BuffList_〈ID〉 = キャラのバフ、RoleChoose の絵など): 土台のキャラのもの。
+                // 型を指定して読んでいるときは同じ型で (Sprite で読むところに Texture2D を渡すと、画面を作る処理が止まる)
+                var basePath = path.Substring(0, path.Length - ids.Length) + def.Base;
+                __result = __args.Length > 1 && __args[1] is Il2CppSystem.Type type
+                    ? Resources.Load(basePath, type)
+                    : Resources.Load(basePath);
             }
             if (Logged.Add(path)) CharacterMod.Ctx?.Log.Info($"Character: ゲームのデータ '{path}' の代わりに {(__result == null ? "(見つからない)" : __result.name)} を渡しました");
             return;
