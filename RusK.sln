@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Voice", "RusK.Mod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Effect", "RusK.Mods.Effect\RusK.Mods.Effect.csproj", "{90C504F6-E650-4BE5-BE63-477697C4B146}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Motion", "RusK.Mods.Motion\RusK.Mods.Motion.csproj", "{13A3D28F-48DC-45E1-BEAC-B65E45756292}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,5 +98,9 @@ Global
 		{90C504F6-E650-4BE5-BE63-477697C4B146}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90C504F6-E650-4BE5-BE63-477697C4B146}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90C504F6-E650-4BE5-BE63-477697C4B146}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13A3D28F-48DC-45E1-BEAC-B65E45756292}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13A3D28F-48DC-45E1-BEAC-B65E45756292}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13A3D28F-48DC-45E1-BEAC-B65E45756292}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13A3D28F-48DC-45E1-BEAC-B65E45756292}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

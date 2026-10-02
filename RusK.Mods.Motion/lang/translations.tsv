@@ -1,0 +1,10 @@
+# 元の文	英語	中国語 (简体字)
+RusK/motions の glb の動きを再生します (試作)。押すと、操作キャラと画面に見せるキャラで再生します	Plays the animations in the glb files in RusK/motions (prototype). Click one to play it on your character and on characters shown on screen	播放 RusK/motions 中 glb 的动作 (试作)。点击后会在操作角色和画面上展示的角色上播放
+止める	Stop	停止
+読み込み直す	Reload	重新读取
+フォルダを開く	Open folder	打开文件夹
+動き	Motions	动作
+RusK/motions にアニメーション入りの glb がありません	No glb files with animations in RusK/motions	RusK/motions 中没有带动画的 glb
+Blender などで作ったアニメーション (glb) を、キャラの動きとして再生する (試作)	Plays animations made in Blender etc. (glb) as character motions (prototype)	将用 Blender 等制作的动画 (glb) 作为角色动作播放 (试作)
+画面を開く	Open window	打开窗口
+motions フォルダを開く	Open the motions folder	打开 motions 文件夹

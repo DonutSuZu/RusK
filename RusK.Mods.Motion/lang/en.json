@@ -1,0 +1,11 @@
+{
+  "RusK/motions の glb の動きを再生します (試作)。押すと、操作キャラと画面に見せるキャラで再生します": "Plays the animations in the glb files in RusK/motions (prototype). Click one to play it on your character and on characters shown on screen",
+  "止める": "Stop",
+  "読み込み直す": "Reload",
+  "フォルダを開く": "Open folder",
+  "動き": "Motions",
+  "RusK/motions にアニメーション入りの glb がありません": "No glb files with animations in RusK/motions",
+  "Blender などで作ったアニメーション (glb) を、キャラの動きとして再生する (試作)": "Plays animations made in Blender etc. (glb) as character motions (prototype)",
+  "画面を開く": "Open window",
+  "motions フォルダを開く": "Open the motions folder"
+}

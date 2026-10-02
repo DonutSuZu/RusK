@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\RusK.props" />
+
+  <PropertyGroup>
+    <AssemblyName>RuskMotion</AssemblyName>
+    <RootNamespace>RusK.Mods.Motion</RootNamespace>
+    <Version>0.1.0</Version>
+    <DeployDir>$(RuskGameDir)\mods</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- キャラ・カメラ (動きを上書きするタイミング) -->
+    <Reference Include="$(InteropDir)\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="$(InteropDir)\Cinemachine.dll" Private="false" />
+    <Reference Include="$(InteropDir)\UnityEngine.AnimationModule.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- glb の読み込み (Custom Model と共有) -->
+    <Compile Include="..\RusK.Mods.Model\Vrm\Glb.cs" Link="Gltf\Glb.cs" />
+    <Compile Include="..\RusK.Mods.Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RusK.API\RusK.API.csproj" Private="false" />
+  </ItemGroup>
+</Project>
