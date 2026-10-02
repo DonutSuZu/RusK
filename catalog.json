@@ -3,6 +3,12 @@
   "gameVersion": "0.0.1878 (c9d3e1a)",
   "news": [
     {
+      "date": "2026-10-03",
+      "ja": "新しい Mod: Custom Character (新しいキャラ枠)・Custom Motion (自作の動き)。Custom VRM Loader が PMX (MMD) に、Custom Item Model が PMX の武器とキャラ専用の割り当てに対応しました。Voice Replacer・Effect Tuner も公開しました。",
+      "en": "New mods: Custom Character (new character slots) and Custom Motion (your own motions). Custom VRM Loader now supports PMX (MMD), and Custom Item Model supports PMX weapons and per-character assignments. Voice Replacer and Effect Tuner are out too.",
+      "zh": "新 Mod: Custom Character (新角色栏位)、Custom Motion (自制动作)。Custom VRM Loader 支持 PMX (MMD), Custom Item Model 支持 PMX 武器和按角色分配。Voice Replacer 和 Effect Tuner 也已发布。"
+    },
+    {
       "date": "2026-10-02",
       "ja": "ゲームパッドに対応しました (RusK v1.1.5)。LS + RS でメニューを開き、キーの割り当てにパッドのボタンも使えます。ゲーム 0.0.1878 に対応しています。",
       "en": "Gamepads are now supported (RusK v1.1.5). Press LS + RS to open the menu, and you can bind gamepad buttons. Supports game version 0.0.1878.",
