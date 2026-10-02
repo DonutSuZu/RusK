@@ -144,6 +144,11 @@ def world(arm, bone, tail=False):
     return arm.matrix_world @ (pb.tail if tail else pb.head)
 
 
+def arm_matrix(arm, bone):
+    """骨のワールドの行列"""
+    return arm.matrix_world @ arm.pose.bones[bone].matrix
+
+
 def world_rot(arm, bone):
     return (arm.matrix_world.to_3x3().normalized() @ arm.pose.bones[bone].matrix.to_3x3().normalized())
 
