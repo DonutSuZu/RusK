@@ -15,7 +15,7 @@ namespace RusK.Mods.Motion;
 /// Custom Motion: RusK\motions の glb / vrma (Blender などで作ったアニメーション、VRM のアニメーション) を、ゲームのキャラの動きとして再生する。
 /// 骨は名前で対応させる (Model Lab の「骨格を glb で書き出す」で書き出した骨格で作った動きなら、そのまま使える)
 /// </summary>
-[RuskMod("motion", "Custom Motion", "1.0.0",
+[RuskMod("motion", "Custom Motion", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1878",
     Description = "Blender などで作ったアニメーション (glb / vrma) を、キャラの動きとして再生する。待機・攻撃などの動作に割り当てられる")]

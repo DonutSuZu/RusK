@@ -1,3 +1,8 @@
+使い方 (詳しいマニュアル) / Manual / 使用手册:
+  https://github.com/DonutSuZu/RusK/blob/main/docs/Manual.md
+  https://github.com/DonutSuZu/RusK/blob/main/docs/Manual.en.md
+  https://github.com/DonutSuZu/RusK/blob/main/docs/Manual.zh.md
+
 RusK - VED:Recure Mod Loader
 ============================================================
 

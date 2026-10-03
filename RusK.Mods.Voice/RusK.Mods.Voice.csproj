@@ -4,7 +4,7 @@
   <PropertyGroup>
     <AssemblyName>RuskVoice</AssemblyName>
     <RootNamespace>RusK.Mods.Voice</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <DeployDir>$(RuskGameDir)\mods</DeployDir>
   </PropertyGroup>
 

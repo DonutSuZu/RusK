@@ -23,6 +23,10 @@ BepInEx 6 (IL2CPP) の上で動く、着脱可能な Mod ローダー。
 **対応ゲームバージョン: 0.0.1878 (c9d3e1a)** — ゲーム画面の左下に出る `Version 0.0.1878_c9d3e1a` と同じか確認してください。
 ゲームが更新されたときは、メニューの Mods > Check で動かなくなった Mod を確認できます。
 
+## 使い方 (セットアップ・マニュアル)
+
+入れ方・ゲームの中での操作・ファイルを置く場所・困ったとき: [日本語](docs/Manual.md) · [English](docs/Manual.en.md) · [简体中文](docs/Manual.zh.md)
+
 ## キャラの Mod Pack を作る
 
 新しいキャラ (見た目・絵・武器・声・動き) を足す Mod Pack の作り方と、必要なファイルの種類・数: [docs/ModPack.md](docs/ModPack.md)

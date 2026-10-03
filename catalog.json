@@ -4,6 +4,12 @@
   "news": [
     {
       "date": "2026-10-03",
+      "ja": "キャラの Mod Pack が、フォルダを 1 つ置くだけで動くようになりました。使い方のマニュアル (入れ方・ファイルを置く場所・困ったとき) を公開しました: https://github.com/DonutSuZu/RusK/blob/main/docs/Manual.md",
+      "en": "Character Mod Packs now work by dropping in a single folder. A setup manual (installing, where to put files, troubleshooting) is out: https://github.com/DonutSuZu/RusK/blob/main/docs/Manual.en.md",
+      "zh": "角色 Mod Pack 现在只需放入一个文件夹即可使用。已发布使用手册 (安装、文件放置位置、问题排查): https://github.com/DonutSuZu/RusK/blob/main/docs/Manual.zh.md"
+    },
+    {
+      "date": "2026-10-03",
       "ja": "モデル・武器・新しいキャラの Mod が軽くなりました (引っかかり・初めての出撃の遅れを解消)。Voice Replacer が新しいキャラ専用の声に対応しました。キャラの Mod Pack の作り方を公開しました: https://github.com/DonutSuZu/RusK/blob/main/docs/ModPack.md",
       "en": "The model, weapon and new-character mods are now lighter (no more hitches or delays on the first sortie). Voice Replacer supports voices for new characters. A guide for making character Mod Packs is out: https://github.com/DonutSuZu/RusK/blob/main/docs/ModPack.md",
       "zh": "模型、武器和新角色的 Mod 变得更轻 (消除卡顿和首次出击的延迟)。Voice Replacer 支持新角色专用语音。已发布角色 Mod Pack 制作指南: https://github.com/DonutSuZu/RusK/blob/main/docs/ModPack.md"

@@ -13,7 +13,7 @@ namespace RusK.Mods.ItemModel;
 /// Custom Item Model: 武器・装備品の見た目を glb に置き換える。RusK\props に置いた .glb を、装備ごとに選べる。
 /// glb の読み込みは Custom Model (RusK.Mods.Model/Vrm) の部品をソースごと取り込んで使う。
 /// </summary>
-[RuskMod("itemmodel", "Custom Item Model", "1.3.0",
+[RuskMod("itemmodel", "Custom Item Model", "1.4.0",
     Author = "you",
     GameVersion = "0.0.1873",
     Description = "武器・装備品の見た目を glb / PMX にする (RusK\\props に置く)。キャラ専用の割り当ても可")]

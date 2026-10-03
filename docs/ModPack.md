@@ -8,10 +8,10 @@ VED:Recure に、新しいキャラを 1 人足す「Mod Pack」の作り方で�
 | Mod | 版 | 役目 |
 |---|---|---|
 | Custom Character | 1.2.0 + | キャラ枠・名前・絵 |
-| Custom VRM Loader | 1.4.0 + | 見た目 (VRM / PMX) |
-| Custom Motion | 1.0.0 + | 動き |
-| Custom Item Model | 1.3.0 + | 武器 |
-| Voice Replacer | 1.1.0 + | 声 |
+| Custom VRM Loader | 1.5.0 + | 見た目 (VRM / PMX) |
+| Custom Motion | 1.1.0 + | 動き |
+| Custom Item Model | 1.4.0 + | 武器 |
+| Voice Replacer | 1.2.0 + | 声 |
 
 > 使うモデル・声・絵は、利用規約で改変・利用・配布が許可されたものだけを使ってください。
 > ゲームから書き出したもの (骨格の glb・お手本の絵・ゲームの声) は配らないでください。
@@ -34,26 +34,50 @@ VED:Recure に、新しいキャラを 1 人足す「Mod Pack」の作り方で�
 
 ---
 
-## 2. フォルダの形
+## 2. フォルダの形 (フォルダ 1 つで完結)
 
-ゲームフォルダの `RusK` の下に、こう置きます (キャラ番号 9001、名前 MyChara の例):
+Mod Pack は、**`RusK\characters\` の下のフォルダ 1 つ**にすべて入れます。使う人はこのフォルダを置くだけで動きます (割り当ての設定は要りません):
 
 ```
-RusK\
-  characters\MyChara\
-    character.json            ← キャラ枠
-    images\*.png              ← 差し替える絵 (images_template と同じ名前)
-    images_template\          ← (自動) 土台のキャラの絵のお手本
-    captures\                 ← (自動) モデルを背景透明で撮った絵
-    motions.txt               ← (自動) このキャラの動作の一覧
-  models\MyChara\             ← モデル (.vrm か .pmx。PMX はテクスチャのフォルダごと)
-  props\MyChara\              ← 武器 (.glb か .pmx)
-  motions\MyChara\*.glb       ← 動き
-  voices\9001\*.ogg           ← 声 (キャラ番号のフォルダ)
-  data\model\assignments.txt      ← 見た目の割り当て (1 行)
-  data\itemmodel\assignments.txt  ← 武器の割り当て (1 行)
-  data\motion\bindings.txt        ← 動きの割り当て (動作ごとに 1 行)
+RusK\characters\MyChara\
+  character.json        ← キャラ枠と、見た目・武器・動き・声の割り当て (下の例)
+  model\               ← モデル (.vrm か .pmx。PMX はテクスチャのフォルダごと)
+  weapon\              ← 武器 (.glb か .pmx)
+  motions\             ← 動き (.glb)
+  voices\              ← 声 (土台のキャラの声と同じ名前)
+  images\              ← 差し替える絵 (images_template と同じ名前)
+  images_template\     ← (自動) 土台のキャラの絵のお手本 ※配らない
+  captures\            ← (自動) モデルを背景透明で撮った絵 ※配らない
+  motions.txt           ← (自動) このキャラの動作の一覧
 ```
+
+`character.json` の全部の項目 (ファイルの場所は、このフォルダから見た場所):
+
+```json
+{
+  "id": 9001,
+  "base": 1006,
+  "name": {"ja": "名前", "en": "NAME", "zh": "名字"},
+  "model": "model/chara.pmx",
+  "weapon": {"equip": 1041, "file": "weapon/sword.pmx", "position": [0, 0, 0], "rotation": [0, 180, 0], "scale": 1.0},
+  "motions": {
+    "RedLightCombo0": "motions/slash1.glb#Slash1@0.30",
+    "Idle": "motions/idle.glb"
+  },
+  "voices": "voices"
+}
+```
+
+| 項目 | 意味 | 無いとき |
+|---|---|---|
+| `id` / `base` / `name` | キャラ番号・土台のキャラ・名前 (3 章) | 必須 |
+| `model` | 見た目のモデル | 土台のキャラの見た目 |
+| `weapon` | 武器。`equip` = 置き換える装備の番号 (赤悠の刀は 1041)、位置・回転 (度)・大きさ。発光は `"glow": true, "glowColor": 0〜8, "glowStrength": 2` | 土台のキャラの武器 |
+| `motions` | 動作の名前 → `ファイル#アニメーションの名前@当たる瞬間の秒` (`#`・`@` は省略可) | 土台のキャラの動き |
+| `voices` | 声のフォルダ (省略すると `voices` フォルダがあれば使う) | 土台のキャラの声 |
+
+- 使う人が自分で割り当てを変えたとき (各 Mod の画面や設定ファイル) は、そちらが優先されます
+- 以前の置き方 (`RusK\models`・`props`・`motions`・`voices\9001` と、各 Mod の設定ファイルに割り当てを書く) も、そのまま使えます
 
 ---
 
@@ -85,8 +109,7 @@ RusK\
 
 ## 4. 見た目 (Custom VRM Loader)
 
-- `RusK\models\MyChara\` に `.vrm` か `.pmx` (テクスチャのフォルダごと) を置く
-- `RusK\data\model\assignments.txt` に 1 行: `9001=MyChara\model.pmx`
+- Pack の `model\` に `.vrm` か `.pmx` (テクスチャのフォルダごと) を置き、`character.json` に `"model": "model/chara.pmx"`
 - PMX は MMD の標準の骨 (上半身・腕・ひじ・足・ひざ・指) が必要。A ポーズのままで大丈夫
 - 揺れ物 (髪・スカート) は PMX の剛体から自動で作ります
 
@@ -127,17 +150,18 @@ python tools/character/make_card_art.py "<ゲーム>\RusK\characters\MyChara" �
 
 ## 6. 武器 (Custom Item Model)
 
-- `RusK\props\MyChara\` に `.glb` か `.pmx` を置く
-- `RusK\data\itemmodel\assignments.txt` に 1 行: `9001:1041|MyChara\sword.pmx|0,0,0|0,180,0|1|0|0|2`
-  - `9001:1041` = キャラ 9001 が装備 1041 (赤悠の刀) を持つときだけ置き換え (赤悠の見た目は変わりません)
-  - 続きは `位置|回転|大きさ|発光|発光の色|発光の強さ`。ファイルを保存するとゲームに自動で反映されるので、見ながら合わせられます
+- Pack の `weapon\` に `.glb` か `.pmx` を置き、`character.json` に `"weapon": {"equip": 1041, "file": "weapon/sword.pmx", ...}`
+  - 新しいキャラが装備 1041 (赤悠の刀) を持つときだけ置き換えます (赤悠の見た目は変わりません)
+  - 位置・回転・大きさを見ながら合わせるときは、`RusK\data\itemmodel\assignments.txt` に
+    `9001:1041|<武器のファイル>|0,0,0|0,180,0|1|0|0|2` (`位置|回転|大きさ|発光|発光の色|発光の強さ`) を書くと、
+    保存するたびにゲームに反映されます。決まった値を `character.json` に写して、この行は消します
 - 武器は攻撃している間だけ手に出ます (立っている・走っている間はしまわれます)
 
 ---
 
 ## 7. 声 (Voice Replacer)
 
-`RusK\voices\9001\` に、**土台のキャラの声と同じ名前**で置きます。新しいキャラが場にいて、土台のキャラ本人がいないときだけ使われます。
+Pack の `voices\` に、**土台のキャラの声と同じ名前**で置きます。新しいキャラが場にいて、土台のキャラ本人がいないときだけ使われます。
 
 - 形式: `.ogg` / `.wav` / `.mp3`
 - 同じ名前に `#1`・`#2` を付けて複数置くと、鳴るたびにランダムに選びます (例 `LightAttackVoice_1006_1_JP#2.ogg`)
@@ -231,8 +255,8 @@ python tools/character/make_card_art.py "<ゲーム>\RusK\characters\MyChara" �
 
 1. **Model > ModelLab** の「骨格と動作を glb で書き出す (参考用)」で、土台のキャラの骨格と全部の動作を書き出す (`RusK\data\model\rig_キャラ名_motions.glb`。時間割も入っています。**配らないでください**)
 2. Blender でその骨格に動きを付けて、glb で書き出す (手順・道具: [tools/blender](../tools/blender))
-3. `RusK\motions\MyChara\` に置き、`RusK\data\motion\bindings.txt` に動作ごとに 1 行:
-   `9001/RedLightCombo0=MyChara\Slash1.glb#Slash1@0.30` (`@` の後ろ = 自分の動きの当たる瞬間の秒)
+3. Pack の `motions\` に置き、`character.json` の `"motions"` に動作ごとに 1 行:
+   `"RedLightCombo0": "motions/slash1.glb#Slash1@0.30"` (`@` の後ろ = 自分の動きの当たる瞬間の秒)
 4. ファイルを保存するとゲームに自動で反映されます
 
 **時間割のルール** (攻撃):
@@ -244,10 +268,11 @@ python tools/character/make_card_art.py "<ゲーム>\RusK\characters\MyChara" �
 
 ## 9. 配るとき
 
-配るのは、自分で作った・配布が許可されたものだけです:
+**`RusK\characters\MyChara\` のフォルダを、そのまま zip にして配ります**。使う人は `RusK\characters\` に置くだけです。
 
-- `characters\MyChara\character.json` と `images\`
-- `models\MyChara\`・`props\MyChara\`・`motions\MyChara\`・`voices\9001\`
-- 割り当ての行 (見た目・武器・動き) を README に書いておく
+フォルダから**消してから**配るもの (ゲームから書き出した物):
+- `images_template\` (ゲームの絵)・`captures\` (ゲームの中で撮ったモデルの絵)・`motions.txt`
+- ゲームの声・ゲームの骨格の glb (`rig_*.glb`)
 
-配らないもの: `images_template`・`captures` (ゲームの絵・ゲームのモデルの撮影)、`rig_*.glb` (ゲームの骨格・モデル)、ゲームの声。
+中に入れてよいのは、自分で作ったもの・配布が許可されたものだけです (モデル・声・絵の利用規約を確かめてください)。
+README に「必要な Mod (Custom Character など) と版」を書いておくと親切です。
