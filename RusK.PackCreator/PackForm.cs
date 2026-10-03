@@ -37,12 +37,16 @@ internal sealed class PackForm : Form
     private string _openedFolder;    // 開いた Pack のフォルダ (新しく作るときは null)
 
     private Label _gameLabel, _status;
-    private TextBox _key, _nameJa, _nameEn, _nameZh, _model, _weapon, _voices, _images;
+    private TextBox _key, _nameJa, _nameEn, _nameZh, _model, _weapon, _images;
     private NumericUpDown _id, _equip, _scale;
     private readonly NumericUpDown[] _pos = new NumericUpDown[3], _rot = new NumericUpDown[3];
     private ComboBox _base;
     private DataGridView _motions;
     private Label _voiceInfo, _imageInfo, _motionInfo;
+    private DataGridView _voiceGrid;
+    private CheckBox _voiceChinese;
+    private readonly Dictionary<string, string> _voiceFiles = new(StringComparer.OrdinalIgnoreCase);
+    private long _voiceBase;
 
     public PackForm(string openFolder = null)
     {
@@ -107,7 +111,7 @@ internal sealed class PackForm : Form
         bottom.Controls.Add(_status);
         bottom.Controls.Add(flow);
 
-        var body = new FlowLayoutPanel
+        var body = new StayFlow
         {
             Dock = DockStyle.Fill, AutoScroll = true, FlowDirection = FlowDirection.TopDown, WrapContents = false,
             Padding = new Padding(16, 12, 16, 12), BackColor = Bg,
@@ -293,14 +297,42 @@ internal sealed class PackForm : Form
 
     private Control VoiceSection()
     {
-        var p = Section(Strings.T("5. 声"), Strings.T("ogg / wav / mp3 を入れたフォルダ。ファイル名は「土台のキャラの声の名前」と同じにします (例 LightAttackVoice_1006_1_JP.ogg)。新しいキャラが場にいるときだけ使われます。"), out var g);
-        _voices = Box();
-        Row(g, Strings.T("声のフォルダ"), FilePicker(_voices, () => PickFolder(Strings.T("声のファイルを入れたフォルダ")), UpdateVoiceInfo));
-        var row = new FlowLayoutPanel { AutoSize = true, WrapContents = false, BackColor = Field, Margin = new Padding(0) };
-        _voiceInfo = new Label { AutoSize = true, ForeColor = Dim, Margin = new Padding(0, 7, 8, 0) };
-        row.Controls.Add(_voiceInfo);
-        row.Controls.Add(MakeButton(Strings.T("要る声の一覧"), ShowVoiceList));
-        Row(g, "", row);
+        var p = Section(Strings.T("5. 声"),
+            Strings.T("要る声ごとに、好きな音声ファイル (ogg / wav / mp3、名前は何でもよい) を選びます。「ゲームに入れる」で、ゲームが使う名前に変えてコピーします。新しいキャラが場にいるときだけ使われ、選ばなかった声は土台のキャラの声のままです。"), out var g);
+        _voiceGrid = new DataGridView
+        {
+            Width = 900, Height = 300, BackgroundColor = Bg, ForeColor = TextColor, GridColor = Color.FromArgb(50, 54, 66), BorderStyle = BorderStyle.None,
+            AllowUserToAddRows = false, AllowUserToDeleteRows = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            EnableHeadersVisualStyles = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Margin = new Padding(0, 4, 0, 4), ReadOnly = true,
+        };
+        _voiceGrid.ColumnHeadersDefaultCellStyle.BackColor = Side;
+        _voiceGrid.ColumnHeadersDefaultCellStyle.ForeColor = Dim;
+        _voiceGrid.DefaultCellStyle.BackColor = Bg;
+        _voiceGrid.DefaultCellStyle.ForeColor = TextColor;
+        _voiceGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(40, 64, 104);
+        _voiceGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "when", HeaderText = Strings.T("鳴るとき"), FillWeight = 22 });
+        _voiceGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "name", HeaderText = Strings.T("ゲームが使う名前"), FillWeight = 34 });
+        _voiceGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "file", HeaderText = Strings.T("選んだファイル (ダブルクリックで選ぶ)"), FillWeight = 44 });
+        _voiceGrid.CellDoubleClick += (_, e) => { if (e.RowIndex >= 0) ChooseVoice(new[] { _voiceGrid.Rows[e.RowIndex] }); };
+        var buttons = new FlowLayoutPanel { AutoSize = true, WrapContents = false, BackColor = Field, Margin = new Padding(0) };
+        buttons.Controls.Add(MakeButton(Strings.T("選んだ行にファイルを選ぶ..."), () => ChooseVoice(_voiceGrid.SelectedRows.Cast<DataGridViewRow>().ToArray())));
+        buttons.Controls.Add(MakeButton(Strings.T("選んだ行を外す"), () =>
+        {
+            foreach (DataGridViewRow r in _voiceGrid.SelectedRows) _voiceFiles.Remove((string)r.Cells["name"].Value);
+            RefreshVoiceGrid();
+        }));
+        buttons.Controls.Add(MakeButton(Strings.T("フォルダからまとめて入れる..."), ImportVoiceFolder));
+        _voiceChinese = new CheckBox { Text = Strings.T("中国語の声の名前 (_JP なし) でも置く"), AutoSize = true, Checked = true, ForeColor = TextColor, Margin = new Padding(12, 8, 0, 0) };
+        buttons.Controls.Add(_voiceChinese);
+        _voiceInfo = new Label { AutoSize = true, ForeColor = Dim, Font = _small, Margin = new Padding(0, 4, 0, 0) };
+        var stack = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, WrapContents = false, BackColor = Field, Margin = new Padding(0) };
+        stack.Controls.Add(_voiceGrid);
+        stack.Controls.Add(buttons);
+        stack.Controls.Add(_voiceInfo);
+        g.ColumnStyles[0].Width = 0;
+        g.RowCount++;
+        g.Controls.Add(new Label { Width = 0, Margin = new Padding(0) });
+        g.Controls.Add(stack);
         return p;
     }
 
@@ -329,7 +361,14 @@ internal sealed class PackForm : Form
         foreach (DataGridViewRow r in _motions.Rows) UpdateMotionInfo(r);
         if (b.Weapon is long w && _equip.Value == 0) _equip.Value = w;
         _motionInfo.Text = Strings.T("土台のキャラの動作: {0} 個", b.Motions.Count);
-        UpdateVoiceInfo();
+        if (_voiceBase != 0 && _voiceBase != b.Id && _voiceFiles.Count > 0)
+        {
+            var moved = _voiceFiles.ToList();
+            _voiceFiles.Clear();
+            foreach (var kv in moved) _voiceFiles[kv.Key.Replace("_" + _voiceBase, "_" + b.Id)] = kv.Value;
+        }
+        _voiceBase = b.Id;
+        RefreshVoiceGrid();
     }
 
     private void AddMotionRow(MotionRow m)
@@ -361,29 +400,67 @@ internal sealed class PackForm : Form
 
     // ------------------------------------------------------------------ 声・絵の確認
 
-    private void UpdateVoiceInfo()
+    /// <summary>声の名前の頭 → 鳴るとき (Vocie はゲームの綴りのまま)</summary>
+    private static readonly (string prefix, string when)[] VoiceKinds =
     {
-        if (_voiceInfo == null) return;
-        var folder = _voices.Text.Length > 0 ? _voices.Text : null;
-        if (folder == null) { _voiceInfo.Text = Strings.T("土台のキャラの声: {0} 個", CurrentBase.Voices.Count); _voiceInfo.ForeColor = Dim; return; }
-        var (ok, total, _) = Pack.CheckVoices(folder, CurrentBase);
-        int files = Pack.AudioFiles(folder).Count();
-        _voiceInfo.Text = Strings.T("ファイル {0} 個 / 名前が合うもの {1} / {2}", files, ok, total);
-        _voiceInfo.ForeColor = ok == 0 ? Warn : ok == total ? Good : TextColor;
+        ("LightAttackVoice", "通常攻撃のかけ声"), ("HardAttackVoice", "強い攻撃のかけ声"),
+        ("LightHurtVocie", "小さく攻撃を受けた"), ("HardHurtVocie", "大きく攻撃を受けた"),
+        ("HealthLowVocie", "体力が少ない"), ("DieVocie", "倒れた"),
+        ("FightStartVoice", "戦闘の始まり"), ("FightWellVoice", "いい戦いをした"),
+        ("BuffChooseVoice", "バフを選ぶ"), ("BuffEquipVoice", "バフを付けた"),
+        ("EquipWearVocie", "装備を付けた"), ("ChooseCharVocie", "出撃前にキャラを選んだ"),
+        ("ShowPoseVocie", "キャラ画面のポーズ"), ("SceneChat", "拠点の会話"),
+    };
+
+    private static string WhenOf(string name)
+    {
+        foreach (var (prefix, when) in VoiceKinds)
+            if (name.StartsWith(prefix + "_", StringComparison.OrdinalIgnoreCase)) return Strings.T(when);
+        return "";
     }
 
-    private void ShowVoiceList()
+    /// <summary>表を作り直す (土台のキャラの声の名前 + 選んだファイル)</summary>
+    private void RefreshVoiceGrid()
     {
-        var b = CurrentBase;
-        var folder = _voices.Text.Length > 0 ? _voices.Text : null;
-        var missing = folder != null ? Pack.CheckVoices(folder, b).missing : b.Voices;
-        var text = string.Join(Environment.NewLine, missing);
-        Clipboard.SetText(text.Length > 0 ? text : " ");
-        MessageBox.Show(this,
-            (folder != null ? Strings.T("足りない声 ({0} 個)。一覧をクリップボードにコピーしました。", missing.Count) : Strings.T("要る声 ({0} 個)。一覧をクリップボードにコピーしました。", missing.Count))
-            + Environment.NewLine + Strings.T("中国語の声の設定で遊ぶ人のためには、最後の _JP を外した名前のファイルも置きます。") + Environment.NewLine + Environment.NewLine
-            + string.Join(Environment.NewLine, missing.Take(40)) + (missing.Count > 40 ? Environment.NewLine + "..." : ""),
-            Strings.T("要る声の一覧"));
+        if (_voiceGrid == null) return;
+        int first = _voiceGrid.FirstDisplayedScrollingRowIndex;
+        _voiceGrid.Rows.Clear();
+        foreach (var v in CurrentBase.Voices)
+        {
+            _voiceFiles.TryGetValue(v, out var f);
+            int i = _voiceGrid.Rows.Add(WhenOf(v), v, f != null ? Path.GetFileName(f) : "");
+            _voiceGrid.Rows[i].Cells["file"].ToolTipText = f ?? "";
+            if (f != null) _voiceGrid.Rows[i].Cells["file"].Style.ForeColor = File.Exists(f) ? Good : Bad;
+        }
+        if (first >= 0 && first < _voiceGrid.RowCount) _voiceGrid.FirstDisplayedScrollingRowIndex = first;
+        int have = CurrentBase.Voices.Count(v => _voiceFiles.ContainsKey(v));
+        _voiceInfo.Text = Strings.T("選んだ声: {0} / {1} (戦闘・画面 38 個 + 拠点の会話。全部そろえなくても動きます)", have, CurrentBase.Voices.Count);
+        _voiceInfo.ForeColor = have == 0 ? Dim : have == CurrentBase.Voices.Count ? Good : TextColor;
+    }
+
+    /// <summary>選んだ行にファイルを選ぶ。1 行ならそのファイル、複数行なら選んだファイルを順に割り当てる</summary>
+    private void ChooseVoice(DataGridViewRow[] rows)
+    {
+        if (rows.Length == 0) { SetStatus(Strings.T("先に表で行を選んでください"), Warn); return; }
+        rows = rows.OrderBy(r => r.Index).ToArray();
+        using var d = new OpenFileDialog { Filter = "ogg / wav / mp3|*.ogg;*.wav;*.mp3", Multiselect = rows.Length > 1 };
+        if (d.ShowDialog(this) != DialogResult.OK) return;
+        var files = d.FileNames.OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
+        for (int i = 0; i < rows.Length && i < files.Length; i++) _voiceFiles[(string)rows[i].Cells["name"].Value] = files[i];
+        if (files.Length < rows.Length && files.Length == 1)
+            foreach (var r in rows) _voiceFiles[(string)r.Cells["name"].Value] = files[0]; // 1 つのファイルを選んだ全部の行に
+        RefreshVoiceGrid();
+    }
+
+    /// <summary>フォルダの中の、ゲームの声の名前のファイルをまとめて入れる</summary>
+    private void ImportVoiceFolder()
+    {
+        var folder = PickFolder(Strings.T("ゲームの声の名前のファイルを入れたフォルダ"));
+        if (folder == null) return;
+        var map = Pack.MatchVoices(folder, CurrentBase);
+        foreach (var kv in map) _voiceFiles[kv.Key] = kv.Value;
+        RefreshVoiceGrid();
+        SetStatus(Strings.T("フォルダから {0} 個の声を入れました", map.Count), map.Count > 0 ? Good : Warn);
     }
 
     private void UpdateImageInfo()
@@ -443,9 +520,12 @@ internal sealed class PackForm : Form
         _motions.Rows.Clear();
         OnBaseChanged();
         foreach (var m in _pack.Motions) AddMotionRow(m);
-        _voices.Text = _pack.Voices ?? "";
+        _voiceFiles.Clear();
+        foreach (var kv in _pack.VoiceFiles) _voiceFiles[kv.Key] = kv.Value;
+        _voiceBase = _pack.Base;
+        _voiceChinese.Checked = _pack.VoiceChinese;
+        RefreshVoiceGrid();
         _images.Text = _pack.Images ?? "";
-        UpdateVoiceInfo();
         UpdateImageInfo();
     }
 
@@ -459,9 +539,11 @@ internal sealed class PackForm : Form
             Weapon = _weapon.Text.Length > 0 ? _weapon.Text : null,
             WeaponEquip = (long)_equip.Value, WeaponScale = (double)_scale.Value,
             WeaponPos = _pos.Select(x => (double)x.Value).ToArray(), WeaponRot = _rot.Select(x => (double)x.Value).ToArray(),
-            Voices = _voices.Text.Length > 0 ? _voices.Text : null,
             Images = _images.Text.Length > 0 ? _images.Text : null,
         };
+        foreach (var kv in _voiceFiles)
+            if (CurrentBase.Voices.Contains(kv.Key, StringComparer.OrdinalIgnoreCase)) p.VoiceFiles[kv.Key] = kv.Value;
+        p.VoiceChinese = _voiceChinese.Checked;
         foreach (DataGridViewRow r in _motions.Rows)
         {
             var action = r.Cells["action"].Value as string;
@@ -535,4 +617,10 @@ internal sealed class PackForm : Form
         _status.Text = text;
         _status.ForeColor = color;
     }
+}
+
+/// <summary>押した部品へ勝手にスクロールしない欄 (ボタンやチェックを押すと上に飛ぶのを防ぐ)</summary>
+internal sealed class StayFlow : FlowLayoutPanel
+{
+    protected override Point ScrollToControl(Control activeControl) => AutoScrollPosition;
 }

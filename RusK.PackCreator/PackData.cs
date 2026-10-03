@@ -68,7 +68,10 @@ internal sealed class Pack
     public double[] WeaponPos = { 0, 0, 0 }, WeaponRot = { 0, 0, 0 };
     public double WeaponScale = 1;
     public readonly List<MotionRow> Motions = new();
-    public string Voices;         // フォルダ
+    /// <summary>声: 要る声の名前 (土台のキャラの声の名前、_JP 付き) → 選んだファイル (絶対パス。名前は何でもよい)</summary>
+    public readonly Dictionary<string, string> VoiceFiles = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>中国語の声の設定のための名前 (_JP なし) でも置く</summary>
+    public bool VoiceChinese = true;
     public string Images;         // フォルダ
 
     public static readonly string[] ImageKinds =
@@ -146,8 +149,17 @@ internal sealed class Pack
                 if (hash > 0) { anim = v.Substring(hash + 1); v = v.Substring(0, hash); }
                 p.Motions.Add(new MotionRow { Action = kv.Key, File = P(v), Anim = anim, Hit = hit });
             }
-        if (d.TryGetValue("voices", out var vo)) p.Voices = P(vo);
-        else if (Directory.Exists(Path.Combine(folder, "voices"))) p.Voices = Path.Combine(folder, "voices");
+        var voices = d.TryGetValue("voices", out var vo) ? P(vo) : Path.Combine(folder, "voices");
+        if (voices != null && Directory.Exists(voices))
+        {
+            // Pack の声のファイル: 名前 (_JP 付き) で表の行に入れる。_JP なしだけのものは _JP 付きの行に
+            var files = AudioFiles(voices).ToList();
+            foreach (var f in files.Where(f => BaseName(f).EndsWith("_JP", StringComparison.OrdinalIgnoreCase)))
+                if (!p.VoiceFiles.ContainsKey(BaseName(f))) p.VoiceFiles[BaseName(f)] = f;
+            foreach (var f in files.Where(f => !BaseName(f).EndsWith("_JP", StringComparison.OrdinalIgnoreCase)))
+                if (!p.VoiceFiles.ContainsKey(BaseName(f) + "_JP")) p.VoiceFiles[BaseName(f) + "_JP"] = f;
+            p.VoiceChinese = files.Count == 0 || files.Any(f => !BaseName(f).EndsWith("_JP", StringComparison.OrdinalIgnoreCase));
+        }
         if (Directory.Exists(Path.Combine(folder, "images"))) p.Images = Path.Combine(folder, "images");
         return p;
     }
@@ -166,6 +178,8 @@ internal sealed class Pack
         if (Weapon != null && !File.Exists(Weapon)) list.Add(Strings.T("武器のファイルがありません: {0}", Weapon));
         foreach (var m in Motions)
             if (m.File == null || !File.Exists(m.File)) list.Add(Strings.T("動き ({0}) のファイルがありません", m.Action));
+        foreach (var kv in VoiceFiles)
+            if (!string.IsNullOrEmpty(kv.Value) && !File.Exists(kv.Value)) list.Add(Strings.T("声 ({0}) のファイルがありません", kv.Key));
         return list;
     }
 
@@ -173,17 +187,26 @@ internal sealed class Pack
         folder == null || !Directory.Exists(folder) ? Enumerable.Empty<string>()
             : Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories).Where(f => AudioExt.Contains(Path.GetExtension(f).ToLowerInvariant()));
 
-    /// <summary>声のファイルのうち、土台のキャラの声の名前に合うもの ("名前#2.ogg" の # から後ろは無視)</summary>
-    public static (int matched, int total, List<string> missing) CheckVoices(string folder, BaseChara b)
+    /// <summary>"名前#2.ogg" → "名前" (# から後ろは、同じ声を何通りか置くときの印)</summary>
+    public static string BaseName(string file)
     {
-        var have = new HashSet<string>(AudioFiles(folder).Select(f =>
+        var n = Path.GetFileNameWithoutExtension(file);
+        int h = n.IndexOf('#');
+        return h > 0 ? n.Substring(0, h) : n;
+    }
+
+    /// <summary>フォルダの中の、土台のキャラの声の名前に合うファイル (_JP なしの名前も合わせる)</summary>
+    public static Dictionary<string, string> MatchVoices(string folder, BaseChara b)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var files = AudioFiles(folder).ToList();
+        foreach (var v in b.Voices)
         {
-            var n = Path.GetFileNameWithoutExtension(f);
-            int h = n.IndexOf('#');
-            return h > 0 ? n.Substring(0, h) : n;
-        }), StringComparer.OrdinalIgnoreCase);
-        var missing = b.Voices.Where(v => !have.Contains(v)).ToList();
-        return (b.Voices.Count - missing.Count, b.Voices.Count, missing);
+            var f = files.FirstOrDefault(x => BaseName(x).Equals(v, StringComparison.OrdinalIgnoreCase))
+                    ?? files.FirstOrDefault(x => BaseName(x).Equals(v.Substring(0, v.Length - 3), StringComparison.OrdinalIgnoreCase));
+            if (f != null) map[v] = f;
+        }
+        return map;
     }
 
     public static (int count, List<string> missing) CheckImages(string folder)
@@ -212,13 +235,38 @@ internal sealed class Pack
             var v = rel + (string.IsNullOrEmpty(m.Anim) ? "" : "#" + m.Anim) + (m.Hit is double h ? "@" + h.ToString("0.###", CultureInfo.InvariantCulture) : "");
             motions.Add((m.Action, v));
         }
+        // 声: 選んだファイルを、要る声の名前に変えて voices に置く (中国語の設定のための _JP なしの名前でも)。
+        // 前に置いた声で、今は選んでいないものは消す (選び直したときに古い声が残らないように)
         bool voices = false;
-        if (Voices != null && Directory.Exists(Voices))
+        var vto = Path.Combine(dest, "voices");
+        var keep = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var staged = new List<(string from, string to)>();
+        foreach (var kv in VoiceFiles)
         {
-            var to = Path.Combine(dest, "voices");
-            foreach (var f in AudioFiles(Voices)) CopyInto(f, Path.Combine(to, Path.GetFileName(f)));
-            voices = Directory.Exists(to);
+            if (string.IsNullOrEmpty(kv.Value) || !File.Exists(kv.Value)) continue;
+            var ext = Path.GetExtension(kv.Value).ToLowerInvariant();
+            var names = new List<string> { kv.Key };
+            if (VoiceChinese && kv.Key.EndsWith("_JP", StringComparison.OrdinalIgnoreCase)) names.Add(kv.Key.Substring(0, kv.Key.Length - 3));
+            foreach (var n in names)
+            {
+                var to = Path.Combine(vto, n + ext);
+                keep.Add(Path.GetFullPath(to));
+                staged.Add((kv.Value, to));
+            }
         }
+        // コピー元が voices の中のファイル (開いた Pack) のこともあるので、先に一時ファイルへ写してから置く
+        var temp = staged.Select(x => (tmp: Path.GetTempFileName(), x.to)).ToList();
+        for (int i = 0; i < staged.Count; i++) File.Copy(staged[i].from, temp[i].tmp, true);
+        if (Directory.Exists(vto))
+            foreach (var f in AudioFiles(vto).ToList())
+                if (!keep.Contains(Path.GetFullPath(f))) File.Delete(f);
+        foreach (var (tmp, to) in temp)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(to));
+            File.Copy(tmp, to, true);
+            File.Delete(tmp);
+        }
+        voices = staged.Count > 0;
         if (Images != null && Directory.Exists(Images))
             foreach (var f in Directory.GetFiles(Images, "*.png")) CopyInto(f, Path.Combine(dest, "images", Path.GetFileName(f)));
 
