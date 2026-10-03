@@ -83,7 +83,7 @@ internal sealed class Pack
     public static readonly string[] ImageKinds =
     {
         "blackBar_n", "rolechoose", "character_s", "choose_n", "BGrole", "name_s", "NameBar", "roleName_s",
-        "Profile", "leftFrame", "leftName", "leftNameMask", "buffResuiltProfile", "dialogBox", "character",
+        "Profile", "Role", "leftFrame", "leftName", "leftNameMask", "buffResuiltProfile", "dialogBox", "character",
         "blackBar_h", "bg_s", "BGtext1", "BGtext2", "blackline_s", "btn_fight", "difficult_s", "skillLvColor", "SkillIconAttack", "SkillIconP",
     };
 
@@ -99,6 +99,7 @@ internal sealed class Pack
         ("NameBar", 451, 67, "名前の帯 (英語)", "キャラ画面"),
         ("roleName_s", 206, 30, "英語の名前", "選択"),
         ("Profile", 888, 1440, "横顔", "リザルト画面"),
+        ("Role", 920, 1440, "横顔 (カラー)", "ショップ・ルート (WAVE) の画面"),
         ("leftFrame", 888, 1440, "横顔 + 背景の紙", "リザルト画面"),
         ("leftName", 888, 1440, "英語の名前を 8 段に重ねた文字", "リザルト画面"),
         ("leftNameMask", 1360, 1440, "横顔の形の切り抜き (黒)", "リザルト画面"),

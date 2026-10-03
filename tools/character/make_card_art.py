@@ -5,7 +5,7 @@ Custom Character の絵を作る: ゲームの中で撮ったキャラの絵 (ca
   python make_card_art.py <キャラのフォルダ> <日本語の名前> <英語の名前>
   例: python make_card_art.py ".../RusK/characters/Pyra" ホムラ PYRA
 
-作る絵: character_s (立ち絵) / choose_n (灰色の立ち絵) / BGrole (背景の大きな絵) / rolechoose (顔のアイコン)
+作る絵: character_s (立ち絵) / choose_n (灰色の立ち絵) / BGrole (背景の大きな絵) / rolechoose (顔のアイコン) / Role (ルート画面の横顔)
         blackBar_n (カード) / name_s (名前) / NameBar (名前の帯) / roleName_s (英語の名前)
 """
 import os
@@ -273,6 +273,13 @@ def result_art(folder, name_en, bust, bust_head, tpl, save):
     prof_c = tint.convert("RGBA")
     prof_c.putalpha(prof.getchannel("A"))
     save(prof_c, "Profile")
+
+    # ショップ・ルート (WAVE) の画面の横顔 (920x1440): Profile と同じ大きさで、右に 158・上に 5 ずらした位置。色はそのまま
+    if os.path.exists(os.path.join(folder, "images_template", "Role.png")):
+        t = tpl("Role")
+        save(place_side(side, t.size, s_top, s_front, scale, 189, 658), "Role")
+    else:
+        print("images_template/Role.png が無いので Role は作りません (ゲームでショップ・ルートの画面を開くと書き出されます)")
 
     # 横顔の形の切り抜き (1360x1440): 黒で、横顔の形だけ透明
     t = tpl("leftNameMask")

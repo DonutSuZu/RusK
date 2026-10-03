@@ -130,8 +130,8 @@ internal static class Strings
         ["余白を足します"] = ("will be padded", "将补边距"),
         ["比が違うので伸びます"] = ("different ratio: will stretch", "宽高比不同, 会被拉伸"),
         ["飾り・アイコン (土台のままでも大丈夫)"] = ("Decoration / icon (fine to leave as the base)", "装饰、图标 (保持基础角色的也可以)"),
-        ["選んだ絵: {0} / {1} (キャラの絵 {2} / 15。全部そろえなくても動きます)"] =
-            ("Chosen images: {0} / {1} (character art {2} / 15. Works without all of them)", "已选图片: {0} / {1} (角色图 {2} / 15。不全也能运行)"),
+        ["選んだ絵: {0} / {1} (キャラの絵 {2} / {3}。全部そろえなくても動きます)"] =
+            ("Chosen images: {0} / {1} (character art {2} / {3}. Works without all of them)", "已选图片: {0} / {1} (角色图 {2} / {3}。不全也能运行)"),
         ["比が違う絵: {0}"] = ("Different ratio: {0}", "宽高比不同: {0}"),
         ["絵の名前のファイルを入れたフォルダ"] = ("A folder with files named like the game's images", "放有以游戏图片名命名的文件的文件夹"),
         ["フォルダから {0} 枚の絵を入れました"] = ("Added {0} images from the folder", "已从文件夹加入 {0} 张图片"),
@@ -152,6 +152,8 @@ internal static class Strings
         ["選択"] = ("Selection", "选择"),
         ["横顔"] = ("Side face", "侧脸"),
         ["リザルト画面"] = ("Result screen", "结算画面"),
+        ["横顔 (カラー)"] = ("Side face (color)", "侧脸 (彩色)"),
+        ["ショップ・ルート (WAVE) の画面"] = ("Shop / route (WAVE) screen", "商店、路线 (WAVE) 画面"),
         ["横顔 + 背景の紙"] = ("Side face + background paper", "侧脸 + 背景纸"),
         ["英語の名前を 8 段に重ねた文字"] = ("English name stacked in 8 rows", "英文名叠成 8 行的文字"),
         ["横顔の形の切り抜き (黒)"] = ("Side-face silhouette (black)", "侧脸形状的剪影 (黑)"),

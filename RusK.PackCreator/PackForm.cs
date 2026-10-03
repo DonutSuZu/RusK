@@ -668,9 +668,9 @@ internal sealed class PackForm : Form
         if (first >= 0 && first < _imageGrid.RowCount) _imageGrid.FirstDisplayedScrollingRowIndex = first;
         int count = Pack.ImageKinds.Count(k => _imageFiles.ContainsKey(k));
         int chara = Pack.ImageInfo.Count(x => _imageFiles.ContainsKey(x.kind));
-        _imageInfo.Text = Strings.T("選んだ絵: {0} / {1} (キャラの絵 {2} / 15。全部そろえなくても動きます)", count, Pack.ImageKinds.Length, chara)
+        _imageInfo.Text = Strings.T("選んだ絵: {0} / {1} (キャラの絵 {2} / {3}。全部そろえなくても動きます)", count, Pack.ImageKinds.Length, chara, Pack.ImageInfo.Length)
             + (stretched > 0 ? "  " + Strings.T("比が違う絵: {0}", stretched) : "");
-        _imageInfo.ForeColor = count == 0 ? Dim : chara == 15 ? Good : TextColor;
+        _imageInfo.ForeColor = count == 0 ? Dim : chara == Pack.ImageInfo.Length ? Good : TextColor;
     }
 
     /// <summary>選んだ行にファイルを選ぶ。1 行ならそのファイル、複数行なら選んだファイルを順に割り当てる</summary>

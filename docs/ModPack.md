@@ -27,7 +27,7 @@ VED:Recure に、新しいキャラを 1 人足す「Mod Pack」の作り方で�
 |---|---|---|---|
 | 1. キャラ枠 | `character.json` | 1 | 必須 |
 | 2. 見た目 | VRM か PMX のモデル | 1 | 無ければ土台のキャラの見た目 |
-| 3. 絵 | PNG | 25 種類 (うちキャラの絵は 15) | 無ければ土台のキャラの絵 |
+| 3. 絵 | PNG | 26 種類 (うちキャラの絵は 16) | 無ければ土台のキャラの絵 |
 | 4. 武器 | glb か PMX | 1 | 無ければ土台のキャラの武器 |
 | 5. 声 | ogg / wav / mp3 | 戦闘・画面 38 + 拠点の会話 24 = 62 | 無ければ土台のキャラの声 |
 | 6. 動き | glb (Blender) | 37 動作 (うちアニメあり 34) | 無ければ土台のキャラの動き |
@@ -134,6 +134,7 @@ RusK\characters\MyChara\
 | `NameBar` | 451×67 | 名前の帯 (英語) | キャラ画面 |
 | `roleName_s` | 206×30 | 英語の名前 | 選択 |
 | `Profile` | 888×1440 | 横顔 | リザルト画面 |
+| `Role` | 920×1440 | 横顔 (カラー) | ショップ・ルート (WAVE) の画面 |
 | `leftFrame` | 888×1440 | 横顔 + 背景の紙 | リザルト画面 |
 | `leftName` | 888×1440 | 英語の名前を 8 段に重ねた文字 | リザルト画面 |
 | `leftNameMask` | 1360×1440 | 横顔の形の切り抜き (黒) | リザルト画面 |
@@ -143,7 +144,7 @@ RusK\characters\MyChara\
 | `blackBar_h` / `bg_s` / `BGtext1` / `BGtext2` / `blackline_s` / `btn_fight` / `difficult_s` / `skillLvColor` / `SkillIconAttack` / `SkillIconP` | — | 飾り・アイコン | 土台のままでも大丈夫 |
 
 **自動で作る方法**: 新しいキャラを操作すると、モデルを背景透明で撮影します (`captures`: 顔・バストアップ・全身・横顔。メニューの **CustomCharacter > Capture** で撮り直し)。
-[tools/character/make_card_art.py](../tools/character/make_card_art.py) が、撮った絵をお手本の構図に合わせて合成し、名前の文字も描きます (上の表の上から 14 種類):
+[tools/character/make_card_art.py](../tools/character/make_card_art.py) が、撮った絵をお手本の構図に合わせて合成し、名前の文字も描きます (上の表の上から 15 種類):
 
 ```
 python tools/character/make_card_art.py "<ゲーム>\RusK\characters\MyChara" 名前 NAME
