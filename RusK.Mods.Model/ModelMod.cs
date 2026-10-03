@@ -15,7 +15,7 @@ namespace RusK.Mods.Model;
 /// ゲームのキャラ (骨格・アニメーション・当たり判定) はそのまま動かし、見た目だけを VRM にする。
 /// Model Lab はデバッグ用 (モデルの作りの書き出し・キャラ同士の見た目の入れ替え・切り抜きの方式の比較)。
 /// </summary>
-[RuskMod("model", "Custom VRM Loader", "1.3.0",
+[RuskMod("model", "Custom VRM Loader", "1.4.0",
     Author = "you",
     GameVersion = "0.0.1878",
     Description = "キャラの見た目を VRM / PMX にする (RusK\\models に .vrm か .pmx を置く)")]
@@ -23,6 +23,8 @@ public sealed class ModelMod : RuskMod
 {
     protected override void OnLoad()
     {
+        SceneChars.Patch(Context.Harmony);
+        Spike.Log = msg => Context.Log.Info(msg);
         ModelLab.Ctx = Context;
         Vrm.VrmEnv.Ctx = Context;
         Vrm.VrmSwap.LoadAssignments();
@@ -71,6 +73,12 @@ public sealed class ModelRuntimeModule : Module
     {
         ModelSwap.Tick();
         try { ModelLab.DevTick(); } catch { }
+        // ゲームが起動して少ししたら、割り当てたモデルを先に読んでおく (初めての場面でモデルが遅れて付かないように)
+        if (UnityEngine.Time.unscaledTime > 3f)
+        {
+            Vrm.ModelCache.Preload(Vrm.VrmSwap.AssignedFiles());
+            Vrm.ModelCache.Tick();
+        }
     }
 }
 

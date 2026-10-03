@@ -42,11 +42,18 @@ internal static class CharacterRegistry
         {
             var util = GameUtil.Instance;
             if (util == null) return;
+            long t0 = RusK.Mods.Shared.Spike.Begin();
             EnsureContainer(util.GetCharacterContainer());
+            RusK.Mods.Shared.Spike.End("Character: キャラの一覧", t0);
             EnsureResourceTags();
             if (Time.unscaledTime < _next) return;
             _next = Time.unscaledTime + 1f;
-            EnsureSave(GameUtil.GetGameSave());
+            long t1 = RusK.Mods.Shared.Spike.Begin();
+            var save = GameUtil.GetGameSave();
+            RusK.Mods.Shared.Spike.End("Character: セーブを取り出す (GetGameSave)", t1);
+            long t2 = RusK.Mods.Shared.Spike.Begin();
+            EnsureSave(save);
+            RusK.Mods.Shared.Spike.End("Character: セーブに足す (EnsureSave)", t2);
         }
         catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: 準備に失敗: {e.Message}"); }
     }

@@ -85,6 +85,7 @@ internal static class VrmLoader
         using var glb = Glb.Load(path);
         var json = glb.Json;
         var model = new VrmModel { Title = Path.GetFileNameWithoutExtension(path) };
+        ModelCache.CurrentFile = path;
 
         // ---- バージョン
         JsonElement ext = default;
@@ -684,6 +685,12 @@ internal static class VrmLoader
     {
         if (src == null) return null;
         if (cache.TryGetValue(src.Pointer, out var done)) return done;
+        if (ModelCache.TryAlpha(src, out var shared, out var sharedBytes))
+        {
+            if (sharedBytes.HasValue) alphaBytes[src.Pointer] = sharedBytes.Value;
+            cache[src.Pointer] = shared;
+            return shared;
+        }
         Texture2D result = null;
         try
         {
@@ -721,7 +728,10 @@ internal static class VrmLoader
             };
             result.LoadRawTextureData(bytes);
             result.Apply(false, true);
-            model.Assets.Add(result);
+            // 元のテクスチャが使い回しなら、透明度のテクスチャも使い回す
+            if (ModelCache.IsShared(src))
+                ModelCache.PutAlpha(src, result, alphaBytes.TryGetValue(src.Pointer, out var ab) ? ab : null);
+            else model.Assets.Add(result);
         }
         catch (Exception e)
         {
@@ -765,13 +775,17 @@ internal static class VrmLoader
             var img = glb.Json.GetProperty("images")[source];
             if (img.TryGetProperty("bufferView", out var bv))
             {
-                var bytes = glb.ViewBytes(bv.GetInt32());
-                tex = new Texture2D(2, 2, TextureFormat.RGBA32, true)
+                // 展開した画像は使い回す (モデルを外しても消さない)
+                tex = ModelCache.GlbImage(source, () =>
                 {
-                    name = img.TryGetProperty("name", out var n) ? n.GetString() : $"tex{index}",
-                };
-                ImageConversion.LoadImage(tex, bytes);
-                model.Assets.Add(tex);
+                    var bytes = glb.ViewBytes(bv.GetInt32());
+                    var t2 = new Texture2D(2, 2, TextureFormat.RGBA32, true)
+                    {
+                        name = img.TryGetProperty("name", out var n) ? n.GetString() : $"tex{index}",
+                    };
+                    ImageConversion.LoadImage(t2, bytes);
+                    return t2;
+                });
             }
         }
         catch { tex = null; }

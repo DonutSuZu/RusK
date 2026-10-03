@@ -51,7 +51,8 @@ internal static class CharacterChoose
             if (Time.unscaledTime >= _next)
             {
                 _next = Time.unscaledTime + 0.5f;
-                foreach (var w in Object.FindObjectsOfType<WindowBattleCharacterChoose>()) Fit(w);
+                // 画面は開いたとき (InitialWindow) に覚えておく (毎回探すと重い)
+                if (Window != null && Window.gameObject.activeInHierarchy) Fit(Window);
             }
             Follow();
         }
@@ -59,6 +60,7 @@ internal static class CharacterChoose
     }
 
     private static ScrollRect _scroll;
+    public static WindowBattleCharacterChoose Window;
 
     private static void Fit(WindowBattleCharacterChoose w)
     {
@@ -147,6 +149,7 @@ internal static class CharacterChoosePatch
 {
     private static void Prefix(WindowBattleCharacterChoose __instance)
     {
+        CharacterChoose.Window = __instance;
         try { CharacterChoose.AddCards(__instance); }
         catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: キャラ選択のカードを足せません: {e.Message}"); }
     }

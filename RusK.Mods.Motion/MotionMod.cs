@@ -25,6 +25,7 @@ public sealed class MotionMod : RuskMod
 
     protected override void OnLoad()
     {
+        Spike.Log = msg => Context.Log.Info(msg);
         Ctx = Context;
         var window = new MotionWindow();
         Context.RegisterWindow(window);

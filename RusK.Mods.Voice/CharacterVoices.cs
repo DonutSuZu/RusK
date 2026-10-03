@@ -70,7 +70,7 @@ internal static class CharacterVoices
         Present.Clear();
         try
         {
-            foreach (var p in Object.FindObjectsOfType<PlayerController>())
+            foreach (var p in RusK.Mods.Shared.SceneChars.Players())
                 if (p != null && p.gameObject.activeInHierarchy)
                     Present.Add((long)Math.Round(p.GetPlayerId()));
         }

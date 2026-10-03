@@ -4,7 +4,7 @@
   <PropertyGroup>
     <AssemblyName>RuskItemModel</AssemblyName>
     <RootNamespace>RusK.Mods.ItemModel</RootNamespace>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <DeployDir>$(RuskGameDir)\mods</DeployDir>
   </PropertyGroup>
 
@@ -25,6 +25,7 @@
     <Compile Include="..\RusK.Mods.Model\Vrm\Expressions.cs" Link="Gltf\Expressions.cs" />
     <Compile Include="..\RusK.Mods.Model\Vrm\SkirtFollow.cs" Link="Gltf\SkirtFollow.cs" />
     <Compile Include="..\RusK.Mods.Model\Vrm\SkirtTuning.cs" Link="Gltf\SkirtTuning.cs" />
+    <Compile Include="..\RusK.Mods.Model\Vrm\ModelCache.cs" Link="Gltf\ModelCache.cs" />
     <!-- PMX (MMD のモデル) の読み込み -->
     <Compile Include="..\RusK.Mods.Model\Vrm\Pmx\*.cs" Link="Gltf\Pmx\%(Filename)%(Extension)" />
   </ItemGroup>

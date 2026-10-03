@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -9,7 +10,7 @@ namespace RusK.Mods.Effect;
 /// Effect Tuner: 技やヒットのエフェクトの色・明るさ・大きさを、全体・キャラ・敵・エフェクトごとに変える。
 /// ゲームのエフェクトはほぼ全部 ParticleSystem で、色はパーティクルの startColor / colorOverLifetime で付いているので、そこを変える
 /// </summary>
-[RuskMod("effect", "Effect Tuner", "1.0.0",
+[RuskMod("effect", "Effect Tuner", "1.1.0",
     Author = "you",
     GameVersion = "0.0.1878",
     Description = "技やヒットのエフェクトの色・明るさ・大きさを変える。ゲームの別のエフェクトや自作エフェクト (RusK/effects) に差し替えもできる")]
@@ -65,7 +66,22 @@ internal sealed class EffectModule : Module
         // 最初から有効のときは OnEnable が呼ばれないので、毎フレーム合わせる
         EffectHook.Enabled = Enabled;
         EffectHook.Rules?.Tick();
+        // 差し替えを使う設定があれば、ゲームが起動して少ししたら差し替え先を先に読んでおく
+        // (戦闘で初めてエフェクトが出た瞬間に読み込んで、かくつかないように)
+        if (!_warmed && UnityEngine.Time.unscaledTime > 5f)
+        {
+            _warmed = true;
+            try
+            {
+                var rules = EffectHook.Rules?.Rules;
+                if (rules != null && rules.Values.Any(r => r != null && !string.IsNullOrEmpty(r.Replace)))
+                    EffectReplacer.Has(null);
+            }
+            catch { }
+        }
     }
+
+    private bool _warmed;
 
     public override void OnDisable() => EffectHook.Enabled = false;
 

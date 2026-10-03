@@ -216,18 +216,30 @@ internal static class ItemModels
     /// </summary>
     private static void Scan()
     {
+        // ゲームの全部の部品から探すと重い (1 回 40 ms 以上かかり、引っかかる)。武器・装飾品が付くのはキャラの差し込み口なので、
+        // 場にいるキャラ (操作キャラ・仲間) と見せるためのモデルの中だけを探す。しまった武器は、手に戻ったときに見つかる
         try
         {
-            foreach (var w in Resources.FindObjectsOfTypeAll<WeaponController>())
+            var roots = new List<Transform>();
+            foreach (var pc in RusK.Mods.Shared.SceneChars.Players()) roots.Add(pc.transform);
+            foreach (var sc in RusK.Mods.Shared.SceneChars.Shows()) roots.Add(sc.transform);
+            var weapons = new List<WeaponController>();
+            var holders = new List<WeaponHolder>();
+            foreach (var r in roots)
             {
-                if (w == null || w.gameObject.scene.name == null) continue;
+                weapons.AddRange(r.GetComponentsInChildren<WeaponController>(true));
+                holders.AddRange(r.GetComponentsInChildren<WeaponHolder>(true));
+            }
+            foreach (var w in weapons)
+            {
+                if (w == null) continue;
                 long id = -1;
                 try { id = (long)Math.Round(w.GetEquipSetting()?.equipId ?? -1); } catch { }
                 Track(w.gameObject, id);
             }
-            foreach (var h in Resources.FindObjectsOfTypeAll<WeaponHolder>())
+            foreach (var h in holders)
             {
-                if (h == null || h.gameObject.scene.name == null) continue;
+                if (h == null) continue;
                 GameObject gb = null;
                 long id = -1;
                 try

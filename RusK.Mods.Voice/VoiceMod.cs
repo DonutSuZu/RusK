@@ -20,6 +20,7 @@ public sealed class VoiceMod : RuskMod
 
     protected override void OnLoad()
     {
+        RusK.Mods.Shared.SceneChars.Patch(Context.Harmony);
         Ctx = Context;
         _module = new VoiceModule(Context);
         Context.RegisterModule(_module);

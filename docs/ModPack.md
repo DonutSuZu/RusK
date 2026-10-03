@@ -7,10 +7,10 @@ VED:Recure に、新しいキャラを 1 人足す「Mod Pack」の作り方で�
 
 | Mod | 版 | 役目 |
 |---|---|---|
-| Custom Character | 1.1.0 + | キャラ枠・名前・絵 |
-| Custom VRM Loader | 1.3.0 + | 見た目 (VRM / PMX) |
+| Custom Character | 1.2.0 + | キャラ枠・名前・絵 |
+| Custom VRM Loader | 1.4.0 + | 見た目 (VRM / PMX) |
 | Custom Motion | 1.0.0 + | 動き |
-| Custom Item Model | 1.2.0 + | 武器 |
+| Custom Item Model | 1.3.0 + | 武器 |
 | Voice Replacer | 1.1.0 + | 声 |
 
 > 使うモデル・声・絵は、利用規約で改変・利用・配布が許可されたものだけを使ってください。

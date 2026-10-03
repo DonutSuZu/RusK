@@ -30,7 +30,7 @@ internal static class PmxLoader
     /// <param name="prop">小物 (武器など、人の形でないもの): 人型の骨・基準の姿勢・揺れ物を作らない</param>
     public static VrmModel Load(string path, VrmLoader.Templates templates, Action<string> log, bool prop = false)
     {
-        var pmx = PmxFile.Load(path);
+        var pmx = ModelCache.Pmx(path);
         var dir = Path.GetDirectoryName(path)!;
         var model = new VrmModel { Title = Path.GetFileNameWithoutExtension(path), Version = PmxVersion };
         model.Root = new GameObject("RusK_PMX_" + model.Title);
@@ -346,12 +346,9 @@ internal static class PmxLoader
             if (!File.Exists(file)) log?.Invoke($"テクスチャが見つかりません: {rel}");
             else
             {
-                var tex = ImageDecoder.Load(file, out bool alpha);
-                if (tex != null)
-                {
-                    model.Assets.Add(tex);
-                    result = (tex, alpha);
-                }
+                // 展開したテクスチャは使い回す (モデルを外しても消さない)
+                var (tex, alpha) = ModelCache.Image(file);
+                if (tex != null) result = (tex, alpha);
             }
         }
         catch (Exception e) { log?.Invoke($"テクスチャを読めません ({rel}): {e.Message}"); }

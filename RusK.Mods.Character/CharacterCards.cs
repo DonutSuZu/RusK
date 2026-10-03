@@ -43,6 +43,7 @@ internal static class CardScroll
     private static float _next;
 
     private static RectTransform _content;
+    public static WindowCharacterShow Window;
 
     /// <summary>十字キーで選んだカードが枠の外なら、見えるところまで縦に寄せる</summary>
     private static void Follow()
@@ -70,12 +71,9 @@ internal static class CardScroll
         try { Follow(); } catch { }
         if (UnityEngine.Time.unscaledTime < _next) return;
         _next = UnityEngine.Time.unscaledTime + 0.5f;
-        try
-        {
-            foreach (var w in Object.FindObjectsOfType<WindowCharacterShow>())
-                Fit(w);
-        }
-        catch { }
+        // 画面は開いたとき (InitialWindow) に覚えておく (毎回探すと重い: 全部の部品を見る)
+        try { if (Window != null && Window.gameObject.activeInHierarchy) Fit(Window); }
+        catch { Window = null; }
     }
 
     public static void Fit(WindowCharacterShow w)
@@ -127,6 +125,7 @@ internal static class CharacterShowPatch
 {
     private static void Prefix(WindowCharacterShow __instance)
     {
+        CardScroll.Window = __instance;
         try { CharacterCards.Add(__instance.m_crtCards); }
         catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: カードを足せません: {e.Message}"); }
     }

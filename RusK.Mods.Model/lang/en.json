@@ -37,6 +37,8 @@
   "右": "Right",
   "切り抜きなし": "No cutout",
   "VRM を読み込めませんでした: {0}": "Could not load the VRM: {0}",
+  "Model: 見せるモデルの更新": "Model: 見せるモデルの更新",
+  "Model: キャラのモデルの更新 (動きを写す・揺れ物・表情)": "Model: キャラのモデルの更新 (動きを写す・揺れ物・表情)",
   "キャラを選んでから、VRM を選んでください。そのキャラを操作しているときに見た目が VRM になります。": "Pick a character, then pick a VRM. The character looks like the VRM while you play as them.",
   "RusK\\models に .vrm ファイルを置いてください。": "Put .vrm files in RusK\\models.",
   "キャラの見た目を VRM にする (RusK\\models に .vrm を置く)": "Turn characters into VRM models (put .vrm files in RusK\\models)"

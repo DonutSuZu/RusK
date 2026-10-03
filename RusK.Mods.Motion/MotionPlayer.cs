@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using RusK.Mods.Shared;
 using UnityEngine;
 
 namespace RusK.Mods.Motion;
@@ -475,6 +476,13 @@ internal static class MotionPlayers
     }
 
     public static void Tick()
+    {
+        long t = Spike.Begin();
+        try { TickCore(); }
+        finally { Spike.End("Motion: 自作の動きを写す", t); }
+    }
+
+    private static void TickCore()
     {
         if (UnityEngine.Time.frameCount == _lastFrame) return;
         _lastFrame = UnityEngine.Time.frameCount;

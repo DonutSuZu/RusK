@@ -164,8 +164,10 @@ internal static class EffectReplacer
         {
             if (slot?.Clone != null) UnityEngine.Object.Destroy(slot.Clone);
             LoadPrefabs();
-            if (!_prefabs.TryGetValue(name, out var prefab))
+            if (!_prefabs.TryGetValue(name, out var prefab) || prefab == null)
             {
+                // 差し替え先が消えている (場面の切り替えでゲームの元のプレハブが消えたなど)。次に読み直す
+                if (prefab == null) _prefabs.Remove(name);
                 Slots.Remove(id);
                 return;
             }

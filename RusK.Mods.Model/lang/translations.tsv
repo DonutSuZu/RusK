@@ -40,3 +40,7 @@ RusK\models に .vrm か .pmx を置いてください (PMX はテクスチャ�
 キャラの見た目を VRM / PMX にする (RusK\models に .vrm か .pmx を置く)	Turns characters into VRM or PMX models (put .vrm / .pmx files in RusK\models)	将角色外观替换为 VRM 或 PMX (把 .vrm / .pmx 放入 RusK\models)
 左	Left	左
 右	Right	右
+Model: 見せるモデルの更新		
+Model: キャラのモデルの更新 (動きを写す・揺れ物・表情)		
+Model: 見せるモデルの更新	Model: 見せるモデルの更新	Model: 見せるモデルの更新
+Model: キャラのモデルの更新 (動きを写す・揺れ物・表情)	Model: キャラのモデルの更新 (動きを写す・揺れ物・表情)	Model: キャラのモデルの更新 (動きを写す・揺れ物・表情)

@@ -56,6 +56,103 @@ internal static class VrmSwap
     private static readonly HashSet<IntPtr> Failed = new();
 
     private static float _nextAuto;
+
+    /// <summary>
+    /// 作ったモデルの置き場 (ファイルごと)。キャラが作り直されたら (ステージの移動・画面の切り替え)、モデルを捨てずに隠して置いておき、
+    /// 次に同じモデルのキャラが出たら付け直すだけにする (作り直しは重く、初めての場面ではモデルが遅れて付き、かくつく)。
+    /// タイトル画面・キャラの画面で見せたモデルも入るので、初めての出撃のときにはできあがっている
+    /// </summary>
+    private sealed class Pooled
+    {
+        public VrmModel Model;
+        public Dictionary<HumanBodyBones, (Transform bone, Humanoid.Rest rest)> Rest;
+        public readonly List<Renderer> Shadows = new();
+    }
+
+    private static readonly Dictionary<string, Stack<Pooled>> Pool = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<IntPtr, Dictionary<HumanBodyBones, (Transform bone, Humanoid.Rest rest)>> RestOf = new();
+
+    private static VrmLoader.Templates _lastTemplates;
+    private static readonly HashSet<string> Prebuilt = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// まだ一度も作っていない割り当てのモデルを、先に作って置き場に入れておく (1 回に 1 つ)。
+    /// 材質の元 (ゲームの体の材質) が要るので、何かのキャラに一度モデルを付けた後 (タイトル画面など) から
+    /// </summary>
+    private static void Prebuild(bool loading)
+    {
+        // 作るのは重い (1 体 0.3〜1.2 秒止まる) ので、戦っていない間 (読み込み中・タイトル・メニュー) だけ
+        var cur = PlayerRef.Current;
+        bool playing = cur != null && cur.gameObject.activeInHierarchy;
+        if (!loading && playing) return;
+        if (_lastTemplates?.Opaque == null) _lastTemplates = FindTemplates();
+        if (_lastTemplates?.Opaque == null) return;
+        foreach (var rel in Assignments.Values.Distinct())
+        {
+            var file = Path.Combine(ModelsDir, rel);
+            if (!Prebuilt.Add(file)) continue;
+            if (!File.Exists(file) || (Pool.TryGetValue(file, out var st) && st.Count > 0) || Entries.Values.Any(e => string.Equals(e.File, file, StringComparison.OrdinalIgnoreCase))) continue;
+            try
+            {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                var log = VrmEnv.Ctx?.Log;
+                var model = file.EndsWith(".pmx", StringComparison.OrdinalIgnoreCase)
+                    ? Pmx.PmxLoader.Load(file, _lastTemplates, s => log?.Info("Model: " + s))
+                    : VrmLoader.Load(file, _lastTemplates, s => log?.Info("Model: " + s));
+                var rest = Humanoid.VrmRest(model);
+                RestOf[model.Root.Pointer] = rest;
+                Object.DontDestroyOnLoad(model.Root);
+                foreach (var r in model.Renderers) r.shadowCastingMode = ShadowCastingMode.Off;
+                var pooled = new Pooled { Model = model, Rest = rest };
+                AddShadowCasters(model, model.Root.layer, pooled.Shadows);
+                model.Root.SetActive(false);
+                if (!Pool.TryGetValue(file, out var stack)) Pool[file] = stack = new Stack<Pooled>();
+                stack.Push(pooled);
+                log?.Info($"Model: '{rel}' を先に作っておきました ({watch.ElapsedMilliseconds} ms)");
+            }
+            catch (Exception e) { VrmEnv.Ctx?.Log.Warning($"Model: '{rel}' を先に作れません: {e.Message}"); }
+            return; // 1 回に 1 つ
+        }
+    }
+
+    /// <summary>その場にいるゲームのキャラ (操作キャラ・見せるためのモデル) の体から、材質の元を取る</summary>
+    private static VrmLoader.Templates FindTemplates()
+    {
+        try
+        {
+            var roots = new List<Transform>();
+            foreach (var pc in SceneChars.Players()) roots.Add(pc.transform);
+            foreach (var sc in SceneChars.Shows()) roots.Add(sc.transform);
+            foreach (var r in roots)
+            {
+                var body = BodyRenderers(r).ToList();
+                var opaque = body.SelectMany(x => x.sharedMaterials).FirstOrDefault(m => m != null && m.renderQueue < 2500);
+                if (opaque == null) continue;
+                return new VrmLoader.Templates
+                {
+                    Opaque = opaque,
+                    Transparent = body.SelectMany(x => x.sharedMaterials).FirstOrDefault(m => m != null && m.renderQueue >= 3000),
+                    OutlineWidth = 0f,
+                };
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    /// <summary>使い終わったモデルを置き場に戻す (割り当てから外れたファイルなら捨てる)</summary>
+    private static void Park(Entry e)
+    {
+        var model = e.Model;
+        if (model?.Root == null) return;
+        bool assigned = e.File != null && Assignments.Values.Any(rel => string.Equals(Path.Combine(ModelsDir, rel), e.File, StringComparison.OrdinalIgnoreCase));
+        if (!assigned || !RestOf.TryGetValue(model.Root.Pointer, out var rest)) { RestOf.Remove(model.Root.Pointer); model.Destroy(); return; }
+        model.Root.SetActive(false);
+        var p = new Pooled { Model = model, Rest = rest };
+        p.Shadows.AddRange(e.Shadows);
+        if (!Pool.TryGetValue(e.File, out var stack)) Pool[e.File] = stack = new Stack<Pooled>();
+        stack.Push(p);
+    }
     private static bool _loggedTemplate;
 
     /// <summary>VRM を置くフォルダ (RusK\models)</summary>
@@ -113,6 +210,10 @@ internal static class VrmSwap
     }
 
     // ------------------------------------------------------------------ キャラごとの設定
+
+    /// <summary>割り当てたモデルのファイル (先読み用)</summary>
+    public static IEnumerable<string> AssignedFiles() =>
+        Assignments.Values.Distinct().Select(rel => Path.Combine(ModelsDir, rel)).ToList();
 
     public static void LoadAssignments()
     {
@@ -237,15 +338,35 @@ internal static class VrmSwap
                 OutlineWidth = 0f,
             };
             if (templates.Opaque == null) throw new InvalidOperationException("ゲームの材質が見つかりません");
+            _lastTemplates ??= templates;
             LogTemplate(templates.Opaque);
 
-            entry.Model = file.EndsWith(".pmx", StringComparison.OrdinalIgnoreCase)
-                ? Pmx.PmxLoader.Load(file, templates, s => log?.Info("Model: " + s))
-                : VrmLoader.Load(file, templates, s => log?.Info("Model: " + s));
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            Pooled pooled = null;
+            if (Pool.TryGetValue(file, out var stack))
+                while (stack.Count > 0 && pooled == null)
+                {
+                    var p = stack.Pop();
+                    if (p.Model?.Root != null) pooled = p;
+                }
+            Dictionary<HumanBodyBones, (Transform bone, Humanoid.Rest rest)> dstRest;
+            if (pooled != null)
+            {
+                entry.Model = pooled.Model;
+                entry.Model.Root.SetActive(true);
+                dstRest = pooled.Rest;
+                entry.Shadows.AddRange(pooled.Shadows);
+            }
+            else
+            {
+                entry.Model = file.EndsWith(".pmx", StringComparison.OrdinalIgnoreCase)
+                    ? Pmx.PmxLoader.Load(file, templates, s => log?.Info("Model: " + s))
+                    : VrmLoader.Load(file, templates, s => log?.Info("Model: " + s));
+                // 基準の姿勢 (VRM は読み込み直後の T ポーズ、根元が原点のうちに覚える)
+                dstRest = Humanoid.VrmRest(entry.Model);
+                RestOf[entry.Model.Root.Pointer] = dstRest;
+            }
             var root = entry.Model.Root.transform;
-
-            // 基準の姿勢 (VRM は読み込み直後の T ポーズ、根元が原点のうちに覚える)
-            var dstRest = Humanoid.VrmRest(entry.Model);
             var srcRest = Humanoid.BipedRest(character, body);
 
             // キャラの下には置かない: ゲームの材質の管理 (MaterialController) がキャラの下の描画部品を集めて
@@ -265,7 +386,9 @@ internal static class VrmSwap
                 r.shadowCastingMode = ShadowCastingMode.Off;
                 r.receiveShadows = body[0].receiveShadows;
             }
-            int shadows = AddShadowCasters(entry.Model, layer, entry.Shadows);
+            int shadows = pooled != null ? entry.Shadows.Count : AddShadowCasters(entry.Model, layer, entry.Shadows);
+            foreach (var r in entry.Shadows)
+                if (r != null) r.gameObject.layer = layer;
             try { entry.Materials = player != null ? player.GetMaterialController() : null; } catch { }
 
             entry.Retargeter = new Retargeter(character, srcRest, root, dstRest);
@@ -305,7 +428,7 @@ internal static class VrmSwap
             entry.Model.AfterPose?.Invoke();
             entry.Model.Springs?.Reset();
             log?.Info($"Model: {CharacterNames.Get(id)}{(entry.IsShow ? " (画面に見せるモデル)" : "")} の見た目を VRM '{entry.Model.Title}' に " +
-                      $"(動きを写す骨 {entry.Retargeter.PairCount} 本、影のメッシュ {shadows} 個)");
+                      $"(動きを写す骨 {entry.Retargeter.PairCount} 本、影のメッシュ {shadows} 個、{(pooled != null ? "使い回し" : "読み込み")} {watch.ElapsedMilliseconds} ms)");
         }
         catch (Exception e)
         {
@@ -338,7 +461,7 @@ internal static class VrmSwap
             if (r != null) r.forceRenderingOff = false;
         e.HiddenAccessories.Clear();
         e.Retargeter?.RestoreAttachments();
-        e.Model?.Destroy();
+        Park(e);
     }
 
     /// <summary>
@@ -515,6 +638,13 @@ internal static class VrmSwap
     /// </summary>
     public static void LateTick(bool shows = false)
     {
+        long t = Spike.Begin();
+        try { LateTickCore(shows); }
+        finally { Spike.End(shows ? "Model: 見せるモデルの更新" : "Model: キャラのモデルの更新 (動きを写す・揺れ物・表情)", t); }
+    }
+
+    private static void LateTickCore(bool shows)
+    {
         if (shows)
         {
             if (Time.frameCount == _lastShowFrame) return; // カメラが複数あっても 1 フレームに 1 回
@@ -552,17 +682,22 @@ internal static class VrmSwap
 
             try
             {
+                long t0 = Prof.ElapsedTicks;
                 e.Retargeter.Update();
                 e.Model.AfterPose?.Invoke();
                 e.Model.Skirt?.Update();
+                long t1 = Prof.ElapsedTicks;
                 // 揺れ物と表情は、動きを写した後に (ゲームの時間の流れ = スローや一時停止に合わせる)
                 e.Model.Springs?.Update(Time.deltaTime);
+                long t2 = Prof.ElapsedTicks;
                 // 表情: ゲームのキャラの顔を写す (口パク・表情・まばたき)。顔が無ければ自動のまばたき
                 if (e.Face != null)
                     e.Model.Expressions?.FromGame(n => e.FaceShapes.TryGetValue(n, out var i) ? e.Face.GetBlendShapeWeight(i) : 0f, Time.deltaTime);
                 else
                     e.Model.Expressions?.Update(Time.deltaTime);
                 MotionRecorder.Sample(e.Root);
+                long t3 = Prof.ElapsedTicks;
+                ProfAdd(e.Model.Title, t1 - t0, t2 - t1, t3 - t2);
             }
             catch (Exception ex)
             {
@@ -572,7 +707,9 @@ internal static class VrmSwap
             }
         }
 
+        long ta = Spike.Begin();
         AutoApply();
+        Spike.End("Model: 自動で付ける (AutoApply)", ta);
     }
 
     /// <summary>
@@ -582,14 +719,19 @@ internal static class VrmSwap
     private static void AutoApply()
     {
         if (Assignments.Count == 0 || Time.unscaledTime < _nextAuto) return;
-        _nextAuto = Time.unscaledTime + 1f;
+        // 短い場面 (移動の演出など) でも付くように、こまめに見る
+        _nextAuto = Time.unscaledTime + 0.2f;
 
+        // 読み込み中 (移動の演出など) は、置き場にできあがったモデルがあるときだけ付ける (読み込みは重いので後で)
+        bool loading = false;
         try
         {
             var util = GameUtil.Instance;
-            if (util != null && util.GetInLoading()) return;
+            loading = util != null && util.GetInLoading();
         }
         catch { }
+        _poolOnly = loading;
+        Prebuild(loading);
 
         var p = PlayerRef.Current;
         if (p != null && p.gameObject.activeInHierarchy) TryAuto(p.transform, Id(p), p);
@@ -597,18 +739,43 @@ internal static class VrmSwap
         // Party の仲間 (一緒に戦うキャラ・控え) など、場面にいるほかのプレイヤーキャラにも付ける
         try
         {
-            foreach (var other in Object.FindObjectsOfType<PlayerController>())
+            foreach (var other in SceneChars.Players())
                 if (other != null && other != p && other.gameObject.activeInHierarchy) TryAuto(other.transform, Id(other), other);
         }
         catch { }
 
-        foreach (var show in Resources.FindObjectsOfTypeAll<CharacterShowController>())
+        foreach (var show in SceneChars.Shows())
         {
-            if (show == null || show.gameObject.scene.name == null || !show.gameObject.activeInHierarchy) continue;
+            if (show == null || !show.gameObject.activeInHierarchy) continue;
             long id = ShowIds.TryGetValue(show.Pointer, out var known) ? known : GuessId(show.gameObject.name);
             if (id < 0) continue;
             TryAuto(show.transform, id, null);
         }
+    }
+
+    private static bool _poolOnly;
+
+    // ---- 重さの記録: モデルごとの 1 フレームあたりの時間 (動きを写す / 揺れ物 / 表情)。10 秒ごとにログへ
+    private static readonly System.Diagnostics.Stopwatch Prof = System.Diagnostics.Stopwatch.StartNew();
+    private static readonly Dictionary<string, (long pose, long spring, long face, int frames)> ProfSum = new();
+    private static float _nextProf = 10f;
+    /// <summary>重さの記録をログに出す (調べるときだけ)</summary>
+    public static bool LogWeight = false;
+
+    private static void ProfAdd(string title, long pose, long spring, long face)
+    {
+        ProfSum.TryGetValue(title, out var v);
+        ProfSum[title] = (v.pose + pose, v.spring + spring, v.face + face, v.frames + 1);
+        if (Time.unscaledTime < _nextProf || !LogWeight) return;
+        _nextProf = Time.unscaledTime + 10f;
+        double ms = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+        foreach (var kv in ProfSum)
+        {
+            var (po, sp, fa, n) = kv.Value;
+            if (n == 0) continue;
+            VrmEnv.Ctx?.Log.Info($"Model: (重さ) '{kv.Key}' 1 フレームあたり 動きを写す {po * ms / n:0.00} ms / 揺れ物 {sp * ms / n:0.00} ms / 表情 {fa * ms / n:0.00} ms ({n} フレーム)");
+        }
+        ProfSum.Clear();
     }
 
     private static void TryAuto(Transform character, long id, PlayerController player)
@@ -617,6 +784,7 @@ internal static class VrmSwap
         if (Entries.ContainsKey(key) || Failed.Contains(key)) return;
         if (!Assignments.TryGetValue(id, out var rel)) return;
         var file = Path.Combine(ModelsDir, rel);
+        if (_poolOnly && !(Pool.TryGetValue(file, out var ready) && ready.Count > 0)) return;
         if (!System.IO.File.Exists(file))
         {
             Failed.Add(key);
