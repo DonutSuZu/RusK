@@ -4,6 +4,12 @@
   "news": [
     {
       "date": "2026-10-03",
+      "ja": "モデル・武器・新しいキャラの Mod が軽くなりました (引っかかり・初めての出撃の遅れを解消)。Voice Replacer が新しいキャラ専用の声に対応しました。キャラの Mod Pack の作り方を公開しました: https://github.com/DonutSuZu/RusK/blob/main/docs/ModPack.md",
+      "en": "The model, weapon and new-character mods are now lighter (no more hitches or delays on the first sortie). Voice Replacer supports voices for new characters. A guide for making character Mod Packs is out: https://github.com/DonutSuZu/RusK/blob/main/docs/ModPack.md",
+      "zh": "模型、武器和新角色的 Mod 变得更轻 (消除卡顿和首次出击的延迟)。Voice Replacer 支持新角色专用语音。已发布角色 Mod Pack 制作指南: https://github.com/DonutSuZu/RusK/blob/main/docs/ModPack.md"
+    },
+    {
+      "date": "2026-10-03",
       "ja": "新しい Mod: Custom Character (新しいキャラ枠)・Custom Motion (自作の動き)。Custom VRM Loader が PMX (MMD) に、Custom Item Model が PMX の武器とキャラ専用の割り当てに対応しました。Voice Replacer・Effect Tuner も公開しました。",
       "en": "New mods: Custom Character (new character slots) and Custom Motion (your own motions). Custom VRM Loader now supports PMX (MMD), and Custom Item Model supports PMX weapons and per-character assignments. Voice Replacer and Effect Tuner are out too.",
       "zh": "新 Mod: Custom Character (新角色栏位)、Custom Motion (自制动作)。Custom VRM Loader 支持 PMX (MMD), Custom Item Model 支持 PMX 武器和按角色分配。Voice Replacer 和 Effect Tuner 也已发布。"
