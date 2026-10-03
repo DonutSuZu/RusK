@@ -241,7 +241,28 @@ internal static class ModelLab
         {
             if (line == "rig") ExportRig(p.transform);
             else if (line == "rigmotions") ExportRig(p.transform, withMotions: true);
+            else if (line == "holders") DumpHolders(p.transform);
         }
+    }
+
+    /// <summary>装飾品の差し込み口 (WeaponHolder_*) の親・位置・向き・大きさと中身をログに書く (開発用)</summary>
+    private static void DumpHolders(Transform root)
+    {
+        var sb = new StringBuilder($"Model: 差し込み口 ({root.name})\n");
+        foreach (var t in root.GetComponentsInChildren<Transform>(true))
+        {
+            if (!t.name.StartsWith("WeaponHolder_") && !t.name.StartsWith("Bip001 Pelvis") && !t.name.StartsWith("Bip001 Spine1")) continue;
+            sb.AppendLine($"  '{t.name}' 親 '{t.parent?.name}' local {t.localPosition:F3} {t.localEulerAngles:F1} 大きさ {t.lossyScale:F3} world {t.position:F3} {t.eulerAngles:F1}");
+            if (!t.name.StartsWith("WeaponHolder_")) continue;
+            for (int i = 0; i < t.childCount; i++)
+            {
+                var c = t.GetChild(i);
+                sb.AppendLine($"      子 '{c.name}' 表示={c.gameObject.activeInHierarchy} local {c.localPosition:F3} {c.localEulerAngles:F1} {c.localScale:F3} world {c.position:F3}");
+            }
+        }
+        var vrm = root.Find("RusK_VRM") ?? root.GetComponentsInChildren<Transform>(true).FirstOrDefault(x => x.name.StartsWith("RusK_"));
+        if (vrm != null) sb.AppendLine($"  VRM '{vrm.name}' world {vrm.position:F3} {vrm.eulerAngles:F1} 大きさ {vrm.lossyScale:F3}");
+        Ctx.Log.Info(sb.ToString());
     }
 
     /// <summary>

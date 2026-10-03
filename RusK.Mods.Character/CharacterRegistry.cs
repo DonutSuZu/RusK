@@ -401,3 +401,30 @@ internal static class UnlockPatch
 }
 
 
+
+/// <summary>
+/// 装飾品の位置・向き・大きさは、装備の設定 (EquipSetting.equipPos) にキャラ ID (bindId) ごとに入っていて、
+/// ResolveEquipPos が持ち主のキャラ ID で引く。新しいキャラの ID の分は無いので、0 のまま付いて横倒しになる
+/// → 引いた ID が新しいキャラなら、土台のキャラの ID の設定を返す
+/// </summary>
+[HarmonyPatch(typeof(WeaponHolder), nameof(WeaponHolder.ResolveEquipPos))]
+internal static class ResolveEquipPosPatch
+{
+    private static void Postfix(WeaponHolder __instance, double crtId, ref EquipPos equipPosSetting, ref PosStruct __result)
+    {
+        try
+        {
+            var def = CharacterRegistry.Find(crtId);
+            var list = def == null ? null : __instance.m_equipSetting?.equipPos;
+            if (list == null) return;
+            foreach (var e in list)
+            {
+                if (e == null || (long)Math.Round(e.bindId) != def.Base) continue;
+                equipPosSetting = e;
+                __result = e.pos;
+                return;
+            }
+        }
+        catch (Exception e) { CharacterMod.Ctx?.Log.Warning($"Character: 装飾品の位置を土台のキャラに合わせられません: {e.Message}"); }
+    }
+}
