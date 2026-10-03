@@ -4,7 +4,7 @@
   <PropertyGroup>
     <AssemblyName>RuskParty</AssemblyName>
     <RootNamespace>RusK.Mods.Party</RootNamespace>
-    <Version>1.5.0</Version>
+    <Version>1.5.1</Version>
     <DeployDir>$(RuskGameDir)\mods</DeployDir>
   </PropertyGroup>
 
@@ -18,6 +18,8 @@
     <Reference Include="$(InteropDir)\UnityEngine.AnimationModule.dll" Private="false" />
     <!-- Party Lab: 置くときに地面の高さに合わせる (Raycast) -->
     <Reference Include="$(InteropDir)\UnityEngine.PhysicsModule.dll" Private="false" />
+    <!-- 新しいキャラ (Mod Pack) の顔アイコンを PNG から読む -->
+    <Reference Include="$(InteropDir)\UnityEngine.ImageConversionModule.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>

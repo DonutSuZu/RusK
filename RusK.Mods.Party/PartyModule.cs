@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using RusK.API;
+using RusK.Mods.Shared;
 using UnityEngine;
 using Module = RusK.API.Module;
 
@@ -507,20 +509,118 @@ internal static class PartyHud
         return Sprites.TryGetValue(name, out sp) ? sp : null;
     }
 
+    /// <summary>新しいキャラ (Mod Pack) の顔の絵: images\avatar.png → images\dialogBox.png → captures\face.png (無ければ null)</summary>
+    private static readonly Dictionary<long, Texture2D> PackFaces = new();
+    private static List<CharacterPack> _packs;
+
+    private static CharacterPack PackOf(long id)
+    {
+        if (PartyManager.Ctx == null) return null;
+        _packs ??= CharacterPacks.Load(PartyManager.Ctx.DataDirectory);
+        return _packs.FirstOrDefault(x => x.Id == id);
+    }
+
+    private static Texture2D PackFace(CharacterPack pack)
+    {
+        if (PackFaces.TryGetValue(pack.Id, out var cached)) return cached;
+        Texture2D tex = null;
+        foreach (var rel in new[] { "images/avatar.png", "images/dialogBox.png", "captures/face.png" })
+        {
+            var file = pack.Path(rel);
+            if (!File.Exists(file)) continue;
+            try
+            {
+                tex = new Texture2D(2, 2, TextureFormat.RGBA32, false) { name = "avatar_" + pack.Id, hideFlags = HideFlags.DontUnloadUnusedAsset };
+                ImageConversion.LoadImage(tex, File.ReadAllBytes(file));
+                PartyManager.Log?.Info($"Party: 新しいキャラ {pack.Id} の顔アイコンに {rel} を使います");
+                break;
+            }
+            catch (Exception e)
+            {
+                PartyManager.Log?.Warning($"Party: {file} を読めません: {e.Message}");
+                tex = null;
+            }
+        }
+        PackFaces[pack.Id] = tex;
+        return tex;
+    }
+
+    /// <summary>
+    /// 顔が真ん中に来る正方形 (テクスチャの座標、下が 0)。絵の透明でない部分から、頭のてっぺんと首 (頭の下で一番細い行) を探す。
+    /// 会話の顔 (dialogBox) のように顔が端に寄った絵でも、丸いアイコンの中に顔が収まるように
+    /// </summary>
+    private static Rect FaceRect(Texture2D tex)
+    {
+        int w = tex.width, h = tex.height;
+        var full = new Rect(0, 0, w, h);
+        try
+        {
+            var px = tex.GetPixels32();
+            // 上から数えた行 y の、透明でない左右の端 (無ければ null)
+            (int l, int r)? Row(int y)
+            {
+                int row = (h - 1 - y) * w, l = -1, rr = -1;
+                for (int x = 0; x < w; x++)
+                    if (px[row + x].a > 128) { if (l < 0) l = x; rr = x; }
+                return l < 0 ? null : (l, rr);
+            }
+            int top = -1, bottom = -1;
+            for (int y = 0; y < h; y++) if (Row(y) != null) { if (top < 0) top = y; bottom = y; }
+            if (top < 0) return full;
+            int body = bottom - top + 1, neck = top + body / 3, best = int.MaxValue;
+            for (int y = top + body / 8; y < top + body / 2; y++)
+                if (Row(y) is var (l, rr) && rr - l < best) { best = rr - l; neck = y; }
+            float cx = 0; int n = 0;
+            for (int y = top; y < neck; y++) if (Row(y) is var (l, rr)) { cx += (l + rr) * 0.5f; n++; }
+            if (n == 0) return full;
+            cx /= n;
+            int head = Mathf.Max(8, neck - top);
+            int side = Mathf.Min(Mathf.Min(w, h), Mathf.RoundToInt(head * 1.45f));
+            int x0 = Mathf.Clamp(Mathf.RoundToInt(cx - side * 0.5f), 0, w - side);
+            int y0 = Mathf.Clamp(top - Mathf.RoundToInt(head * 0.12f), 0, h - side); // 上から数えた正方形の上端
+            return new Rect(x0, h - y0 - side, side, side);
+        }
+        catch { return full; }
+    }
+
     internal static Texture Portrait(MotionManager mm)
     {
         if (mm == null) return null;
         long id = (long)Math.Round(mm.id);
-        // ID 付きの顔アイコン (avatar_<ID>) を優先する。PlayerShow2D.portrait は別キャラの画像が入っていることがある
-        var sprite = FindSprite($"avatar_{id}");
         Portraits.TryGetValue(id, out var rt);
-        if (rt != null && rt.IsCreated() && (sprite == null || PortraitSource.GetValueOrDefault(id) == sprite.name)) return rt;
-        if (sprite == null && PortraitFailed.Contains(id)) return null;
+        Texture source = null;
+        Rect r = default;
+        string sourceName = null;
+        Sprite sprite = null;
+        if (id >= 9000)
+        {
+            // 新しいキャラ: ゲームに顔アイコンは無いので、Pack の絵 → 土台のキャラの顔アイコン。
+            // (avatar_<9000 以上> を探すと、見つからないたびに全部の画像を探し直して重くなる)
+            var pack = PackOf(id);
+            var face = pack == null ? null : PackFace(pack);
+            if (face != null)
+            {
+                if (rt != null && rt.IsCreated() && PortraitSource.GetValueOrDefault(id) == face.name) return rt;
+                source = face;
+                r = FaceRect(face);
+                sourceName = face.name;
+            }
+            else if (pack != null) sprite = FindSprite($"avatar_{pack.Base}");
+        }
+        // ID 付きの顔アイコン (avatar_<ID>) を優先する。PlayerShow2D.portrait は別キャラの画像が入っていることがある
+        else sprite = FindSprite($"avatar_{id}");
+        if (source == null && rt != null && rt.IsCreated() && (sprite == null || PortraitSource.GetValueOrDefault(id) == sprite.name)) return rt;
+        if (source == null && sprite == null && PortraitFailed.Contains(id)) return null;
 
         try
         {
-            if (sprite == null) sprite = mm.playerShow?.portrait;
-            var tex = sprite?.texture;
+            if (source == null)
+            {
+                if (sprite == null) sprite = mm.playerShow?.portrait;
+                source = sprite?.texture;
+                if (source != null) { r = sprite.textureRect; sourceName = sprite.name; }
+            }
+            var tex = source;
             if (tex == null)
             {
                 PortraitFailed.Add(id);
@@ -529,7 +629,6 @@ internal static class PartyHud
             }
 
             // 長い辺を切って正方形に (縦長なら上寄せにして顔を残す)
-            var r = sprite.textureRect;
             float side = Mathf.Min(r.width, r.height);
             float ox = r.x + (r.width - side) * 0.5f;
             float oy = r.y + (r.height - side); // テクスチャ座標は下が 0 なので、上端に合わせる
@@ -544,7 +643,7 @@ internal static class PartyHud
 
             Graphics.Blit(tex, rt, new Vector2(side / tex.width, side / tex.height),
                 new Vector2(ox / tex.width, oy / tex.height));
-            PortraitSource[id] = sprite.name;
+            PortraitSource[id] = sourceName;
             return rt;
         }
         catch (Exception e)
