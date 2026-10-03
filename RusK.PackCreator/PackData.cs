@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -72,7 +75,10 @@ internal sealed class Pack
     public readonly Dictionary<string, string> VoiceFiles = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>中国語の声の設定のための名前 (_JP なし) でも置く</summary>
     public bool VoiceChinese = true;
-    public string Images;         // フォルダ
+    /// <summary>絵: 絵の名前 (images_template と同じ) → 選んだファイル (絶対パス。名前は何でもよい)</summary>
+    public readonly Dictionary<string, string> ImageFiles = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>縦横の比がお手本と違う絵に、透明の余白を足して比を合わせる (そのままだと伸びる)</summary>
+    public bool ImageFit = true;
 
     public static readonly string[] ImageKinds =
     {
@@ -80,6 +86,62 @@ internal sealed class Pack
         "Profile", "leftFrame", "leftName", "leftNameMask", "buffResuiltProfile", "dialogBox", "character",
         "blackBar_h", "bg_s", "BGtext1", "BGtext2", "blackline_s", "btn_fight", "difficult_s", "skillLvColor", "SkillIconAttack", "SkillIconP",
     };
+
+    /// <summary>絵の大きさ (お手本、土台が赤悠のとき)、中身、出る場所。飾りは大きさを決めていない</summary>
+    public static readonly (string kind, int w, int h, string what, string where)[] ImageInfo =
+    {
+        ("blackBar_n", 204, 106, "顔と英語の名前のカード", "キャラ画面の一覧"),
+        ("rolechoose", 210, 100, "顔のアイコン", "パーティ・選択"),
+        ("character_s", 365, 1440, "立ち絵 (カラー)", "出撃前の選択 (選んだとき)"),
+        ("choose_n", 365, 1440, "立ち絵 (灰色)", "出撃前の選択"),
+        ("BGrole", 1200, 1440, "大きな背景の絵 (灰色・暗め)", "キャラ画面"),
+        ("name_s", 449, 173, "名前 (自分の言語の文字)", "キャラ画面"),
+        ("NameBar", 451, 67, "名前の帯 (英語)", "キャラ画面"),
+        ("roleName_s", 206, 30, "英語の名前", "選択"),
+        ("Profile", 888, 1440, "横顔", "リザルト画面"),
+        ("leftFrame", 888, 1440, "横顔 + 背景の紙", "リザルト画面"),
+        ("leftName", 888, 1440, "英語の名前を 8 段に重ねた文字", "リザルト画面"),
+        ("leftNameMask", 1360, 1440, "横顔の形の切り抜き (黒)", "リザルト画面"),
+        ("buffResuiltProfile", 1645, 1440, "暗いバストアップ", "バフの結果"),
+        ("dialogBox", 256, 256, "会話の顔", "会話"),
+        ("character", 158, 559, "小さな全身", "(画面による)"),
+    };
+
+    private static readonly string[] ImageExt = { ".png", ".jpg", ".jpeg", ".bmp" };
+
+    /// <summary>絵のお手本の大きさ。Pack に images_template があればその大きさ (土台のキャラの本当の大きさ)、無ければ上の表</summary>
+    public static Size? ImageSize(string packDir, string kind)
+    {
+        try
+        {
+            var t = packDir == null ? null : Path.Combine(packDir, "images_template", kind + ".png");
+            if (t != null && File.Exists(t)) using (var img = Image.FromFile(t)) return img.Size;
+        }
+        catch { }
+        foreach (var i in ImageInfo) if (i.kind == kind) return new Size(i.w, i.h);
+        return null;
+    }
+
+    /// <summary>縦横の比が 2% 以上違うか</summary>
+    public static bool AspectDiffers(Size a, Size b) =>
+        Math.Abs(a.Width / (double)a.Height - b.Width / (double)b.Height) > 0.02 * (b.Width / (double)b.Height);
+
+    public static IEnumerable<string> ImageFilesIn(string folder) =>
+        folder == null || !Directory.Exists(folder) ? Enumerable.Empty<string>()
+            : Directory.GetFiles(folder).Where(f => ImageExt.Contains(Path.GetExtension(f).ToLowerInvariant()));
+
+    /// <summary>フォルダの中の、絵の名前に合うファイル</summary>
+    public static Dictionary<string, string> MatchImages(string folder)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var files = ImageFilesIn(folder).ToList();
+        foreach (var k in ImageKinds)
+        {
+            var f = files.FirstOrDefault(x => Path.GetFileNameWithoutExtension(x).Equals(k, StringComparison.OrdinalIgnoreCase));
+            if (f != null) map[k] = f;
+        }
+        return map;
+    }
 
     private static readonly string[] AudioExt = { ".ogg", ".wav", ".mp3" };
 
@@ -160,7 +222,7 @@ internal sealed class Pack
                 if (!p.VoiceFiles.ContainsKey(BaseName(f) + "_JP")) p.VoiceFiles[BaseName(f) + "_JP"] = f;
             p.VoiceChinese = files.Count == 0 || files.Any(f => !BaseName(f).EndsWith("_JP", StringComparison.OrdinalIgnoreCase));
         }
-        if (Directory.Exists(Path.Combine(folder, "images"))) p.Images = Path.Combine(folder, "images");
+        foreach (var kv in MatchImages(Path.Combine(folder, "images"))) p.ImageFiles[kv.Key] = kv.Value;
         return p;
     }
 
@@ -180,6 +242,8 @@ internal sealed class Pack
             if (m.File == null || !File.Exists(m.File)) list.Add(Strings.T("動き ({0}) のファイルがありません", m.Action));
         foreach (var kv in VoiceFiles)
             if (!string.IsNullOrEmpty(kv.Value) && !File.Exists(kv.Value)) list.Add(Strings.T("声 ({0}) のファイルがありません", kv.Key));
+        foreach (var kv in ImageFiles)
+            if (!string.IsNullOrEmpty(kv.Value) && !File.Exists(kv.Value)) list.Add(Strings.T("絵 ({0}) のファイルがありません", kv.Key));
         return list;
     }
 
@@ -209,16 +273,59 @@ internal sealed class Pack
         return map;
     }
 
-    public static (int count, List<string> missing) CheckImages(string folder)
-    {
-        var have = folder != null && Directory.Exists(folder)
-            ? new HashSet<string>(Directory.GetFiles(folder, "*.png").Select(Path.GetFileNameWithoutExtension), StringComparer.OrdinalIgnoreCase)
-            : new HashSet<string>();
-        var missing = ImageKinds.Where(k => !have.Contains(k)).ToList();
-        return (ImageKinds.Length - missing.Count, missing);
-    }
 
     // ------------------------------------------------------------------ 作る
+
+    /// <summary>
+    /// 絵: 選んだファイルを images\〈絵の名前〉.png に置く (PNG でなければ PNG にする)。
+    /// 縦横の比がお手本と違えば、透明の余白を足して比を合わせる (ゲームは比が同じなら大きさの違いは合わせてくれる)。
+    /// 前に置いた絵で、今は選んでいないものは消す
+    /// </summary>
+    private void PlaceImages(string dest)
+    {
+        var to = Path.Combine(dest, "images");
+        // コピー元が images の中のファイル (開いた Pack) のこともあるので、先に全部メモリに読んでから書く
+        var ready = new List<(string kind, byte[] png)>();
+        foreach (var kv in ImageFiles)
+        {
+            if (string.IsNullOrEmpty(kv.Value) || !File.Exists(kv.Value)) continue;
+            var want = ImageSize(dest, kv.Key);
+            using var src = new Bitmap(new MemoryStream(File.ReadAllBytes(kv.Value)));
+            bool fit = ImageFit && want is Size w && AspectDiffers(src.Size, w);
+            bool png = Path.GetExtension(kv.Value).Equals(".png", StringComparison.OrdinalIgnoreCase);
+            if (!fit && png) { ready.Add((kv.Key, File.ReadAllBytes(kv.Value))); continue; }
+            Bitmap outBmp = src;
+            if (fit)
+            {
+                // 絵がはみ出さない、お手本と同じ比の大きさ (絵の解像度のまま)
+                var ws = want.Value;
+                double ratio = ws.Width / (double)ws.Height;
+                int cw = src.Width, ch = src.Height;
+                if (src.Width / (double)src.Height > ratio) ch = (int)Math.Round(src.Width / ratio);
+                else cw = (int)Math.Round(src.Height * ratio);
+                outBmp = new Bitmap(cw, ch, PixelFormat.Format32bppArgb);
+                using var g = Graphics.FromImage(outBmp);
+                g.Clear(Color.Transparent);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.DrawImage(src, new Rectangle((cw - src.Width) / 2, (ch - src.Height) / 2, src.Width, src.Height));
+            }
+            using (var ms = new MemoryStream())
+            {
+                outBmp.Save(ms, ImageFormat.Png);
+                ready.Add((kv.Key, ms.ToArray()));
+            }
+            if (!ReferenceEquals(outBmp, src)) outBmp.Dispose();
+        }
+        var keep = new HashSet<string>(ready.Select(r => r.kind + ".png"), StringComparer.OrdinalIgnoreCase);
+        if (Directory.Exists(to))
+            foreach (var f in ImageFilesIn(to).ToList())
+                if (ImageKinds.Contains(Path.GetFileNameWithoutExtension(f), StringComparer.OrdinalIgnoreCase) && !keep.Contains(Path.GetFileName(f))) File.Delete(f);
+        foreach (var (kind, data) in ready)
+        {
+            Directory.CreateDirectory(to);
+            File.WriteAllBytes(Path.Combine(to, kind + ".png"), data);
+        }
+    }
 
     /// <summary>ゲームの RusK\characters\〈Key〉 に、ファイルをコピーして character.json を書く。書いたフォルダを返す</summary>
     public string Build(string game)
@@ -267,8 +374,7 @@ internal sealed class Pack
             File.Delete(tmp);
         }
         voices = staged.Count > 0;
-        if (Images != null && Directory.Exists(Images))
-            foreach (var f in Directory.GetFiles(Images, "*.png")) CopyInto(f, Path.Combine(dest, "images", Path.GetFileName(f)));
+        PlaceImages(dest);
 
         File.WriteAllText(Path.Combine(dest, "character.json"), Json(model, weapon, motions, voices), new UTF8Encoding(false));
         return dest;

@@ -37,13 +37,15 @@ internal sealed class PackForm : Form
     private string _openedFolder;    // 開いた Pack のフォルダ (新しく作るときは null)
 
     private Label _gameLabel, _status;
-    private TextBox _key, _nameJa, _nameEn, _nameZh, _model, _weapon, _images;
+    private TextBox _key, _nameJa, _nameEn, _nameZh, _model, _weapon;
     private NumericUpDown _id, _equip, _scale;
     private readonly NumericUpDown[] _pos = new NumericUpDown[3], _rot = new NumericUpDown[3];
     private ComboBox _base;
     private DataGridView _motions;
     private Label _voiceInfo, _imageInfo, _motionInfo;
-    private DataGridView _voiceGrid;
+    private DataGridView _voiceGrid, _imageGrid;
+    private CheckBox _imageFit;
+    private readonly Dictionary<string, string> _imageFiles = new(StringComparer.OrdinalIgnoreCase);
     private CheckBox _voiceChinese;
     private readonly Dictionary<string, string> _voiceFiles = new(StringComparer.OrdinalIgnoreCase);
     private long _voiceBase;
@@ -338,11 +340,44 @@ internal sealed class PackForm : Form
 
     private Control ImageSection()
     {
-        var p = Section(Strings.T("6. 絵"), Strings.T("カード・立ち絵・名前などの PNG を入れたフォルダ (名前と大きさは、ゲームが書き出すお手本 images_template と同じ)。無い絵は土台のキャラの絵のままです。"), out var g);
-        _images = Box();
-        Row(g, Strings.T("絵のフォルダ"), FilePicker(_images, () => PickFolder(Strings.T("絵 (PNG) を入れたフォルダ")), UpdateImageInfo));
-        _imageInfo = new Label { AutoSize = true, ForeColor = Dim, Margin = new Padding(0, 7, 8, 0) };
-        Row(g, "", _imageInfo);
+        var p = Section(Strings.T("6. 絵"),
+            Strings.T("絵ごとに、好きな画像ファイル (PNG / JPG、名前は何でもよい) を選びます。「ゲームに入れる」で、ゲームが使う名前の PNG にしてコピーします。大きさが違っても、縦横の比が同じならゲームが合わせます。選ばなかった絵は土台のキャラの絵のままです。"), out var g);
+        _imageGrid = new DataGridView
+        {
+            Width = 900, Height = 300, BackgroundColor = Bg, ForeColor = TextColor, GridColor = Color.FromArgb(50, 54, 66), BorderStyle = BorderStyle.None,
+            AllowUserToAddRows = false, AllowUserToDeleteRows = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            EnableHeadersVisualStyles = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Margin = new Padding(0, 4, 0, 4), ReadOnly = true,
+        };
+        _imageGrid.ColumnHeadersDefaultCellStyle.BackColor = Side;
+        _imageGrid.ColumnHeadersDefaultCellStyle.ForeColor = Dim;
+        _imageGrid.DefaultCellStyle.BackColor = Bg;
+        _imageGrid.DefaultCellStyle.ForeColor = TextColor;
+        _imageGrid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(40, 64, 104);
+        _imageGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "what", HeaderText = Strings.T("中身 (出る場所)"), FillWeight = 30 });
+        _imageGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "name", HeaderText = Strings.T("ゲームが使う名前"), FillWeight = 18 });
+        _imageGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "size", HeaderText = Strings.T("お手本の大きさ"), FillWeight = 12 });
+        _imageGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "file", HeaderText = Strings.T("選んだファイル (ダブルクリックで選ぶ)"), FillWeight = 40 });
+        _imageGrid.CellDoubleClick += (_, e) => { if (e.RowIndex >= 0) ChooseImage(new[] { _imageGrid.Rows[e.RowIndex] }); };
+        var buttons = new FlowLayoutPanel { AutoSize = true, WrapContents = false, BackColor = Field, Margin = new Padding(0) };
+        buttons.Controls.Add(MakeButton(Strings.T("選んだ行にファイルを選ぶ..."), () => ChooseImage(_imageGrid.SelectedRows.Cast<DataGridViewRow>().ToArray())));
+        buttons.Controls.Add(MakeButton(Strings.T("選んだ行を外す"), () =>
+        {
+            foreach (DataGridViewRow r in _imageGrid.SelectedRows) _imageFiles.Remove((string)r.Cells["name"].Value);
+            RefreshImageGrid();
+        }));
+        buttons.Controls.Add(MakeButton(Strings.T("フォルダからまとめて入れる..."), ImportImageFolder));
+        _imageFit = new CheckBox { Text = Strings.T("比が違う絵は透明の余白を足して合わせる"), AutoSize = true, Checked = true, ForeColor = TextColor, Margin = new Padding(12, 8, 0, 0) };
+        _imageFit.CheckedChanged += (_, _) => RefreshImageGrid();
+        buttons.Controls.Add(_imageFit);
+        _imageInfo = new Label { AutoSize = true, ForeColor = Dim, Font = _small, Margin = new Padding(0, 4, 0, 0) };
+        var stack = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, WrapContents = false, BackColor = Field, Margin = new Padding(0) };
+        stack.Controls.Add(_imageGrid);
+        stack.Controls.Add(buttons);
+        stack.Controls.Add(_imageInfo);
+        g.ColumnStyles[0].Width = 0;
+        g.RowCount++;
+        g.Controls.Add(new Label { Width = 0, Margin = new Padding(0) });
+        g.Controls.Add(stack);
         return p;
     }
 
@@ -463,14 +498,78 @@ internal sealed class PackForm : Form
         SetStatus(Strings.T("フォルダから {0} 個の声を入れました", map.Count), map.Count > 0 ? Good : Warn);
     }
 
-    private void UpdateImageInfo()
+    /// <summary>今の Pack のフォルダ (お手本 images_template の大きさを読むため)</summary>
+    private string PackDir => _game == null || _key.Text.Trim().Length == 0 ? null : Path.Combine(Pack.CharactersDir(_game), _key.Text.Trim());
+
+    /// <summary>画像ファイルの大きさ (読めなければ null)</summary>
+    private static Size? FileSize(string f)
     {
-        if (_imageInfo == null) return;
-        var folder = _images.Text.Length > 0 ? _images.Text : null;
-        var (count, missing) = Pack.CheckImages(folder);
-        _imageInfo.Text = folder == null ? Strings.T("絵は {0} 種類 (キャラの絵 15 + 飾り 10)", Pack.ImageKinds.Length)
-            : Strings.T("{0} / {1} 種類 (無い絵: {2})", count, Pack.ImageKinds.Length, string.Join(", ", missing.Take(6)) + (missing.Count > 6 ? " ..." : ""));
-        _imageInfo.ForeColor = folder == null ? Dim : count >= 15 ? Good : TextColor;
+        try { using var img = Image.FromStream(new MemoryStream(File.ReadAllBytes(f)), false, false); return img.Size; }
+        catch { return null; }
+    }
+
+    private void RefreshImageGrid()
+    {
+        if (_imageGrid == null) return;
+        int first = _imageGrid.FirstDisplayedScrollingRowIndex;
+        _imageGrid.Rows.Clear();
+        var dir = PackDir;
+        var info = Pack.ImageInfo.ToDictionary(x => x.kind, x => x);
+        int stretched = 0;
+        foreach (var k in Pack.ImageKinds)
+        {
+            var what = info.TryGetValue(k, out var x) ? Strings.T(x.what) + " (" + Strings.T(x.where) + ")" : Strings.T("飾り・アイコン (土台のままでも大丈夫)");
+            var want = Pack.ImageSize(dir, k);
+            _imageFiles.TryGetValue(k, out var f);
+            var text = f != null ? Path.GetFileName(f) : "";
+            var color = Good;
+            if (f != null && !File.Exists(f)) color = Bad;
+            else if (f != null && FileSize(f) is Size have)
+            {
+                text += $"  ({have.Width}×{have.Height})";
+                if (want is Size w && Pack.AspectDiffers(have, w))
+                {
+                    text += _imageFit.Checked ? "  " + Strings.T("余白を足します") : "  " + Strings.T("比が違うので伸びます");
+                    color = Warn;
+                    stretched++;
+                }
+            }
+            int i = _imageGrid.Rows.Add(what, k, want is Size s ? $"{s.Width}×{s.Height}" : "—", text);
+            _imageGrid.Rows[i].Cells["file"].ToolTipText = f ?? "";
+            if (f != null) _imageGrid.Rows[i].Cells["file"].Style.ForeColor = color;
+            if (!info.ContainsKey(k)) _imageGrid.Rows[i].DefaultCellStyle.ForeColor = Dim;
+        }
+        if (first >= 0 && first < _imageGrid.RowCount) _imageGrid.FirstDisplayedScrollingRowIndex = first;
+        int count = Pack.ImageKinds.Count(k => _imageFiles.ContainsKey(k));
+        int chara = Pack.ImageInfo.Count(x => _imageFiles.ContainsKey(x.kind));
+        _imageInfo.Text = Strings.T("選んだ絵: {0} / {1} (キャラの絵 {2} / 15。全部そろえなくても動きます)", count, Pack.ImageKinds.Length, chara)
+            + (stretched > 0 ? "  " + Strings.T("比が違う絵: {0}", stretched) : "");
+        _imageInfo.ForeColor = count == 0 ? Dim : chara == 15 ? Good : TextColor;
+    }
+
+    /// <summary>選んだ行にファイルを選ぶ。1 行ならそのファイル、複数行なら選んだファイルを順に割り当てる</summary>
+    private void ChooseImage(DataGridViewRow[] rows)
+    {
+        if (rows.Length == 0) { SetStatus(Strings.T("先に表で行を選んでください"), Warn); return; }
+        rows = rows.OrderBy(r => r.Index).ToArray();
+        using var d = new OpenFileDialog { Filter = "PNG / JPG|*.png;*.jpg;*.jpeg;*.bmp", Multiselect = rows.Length > 1 };
+        if (d.ShowDialog(this) != DialogResult.OK) return;
+        var files = d.FileNames.OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
+        for (int i = 0; i < rows.Length && i < files.Length; i++) _imageFiles[(string)rows[i].Cells["name"].Value] = files[i];
+        if (files.Length < rows.Length && files.Length == 1)
+            foreach (var r in rows) _imageFiles[(string)r.Cells["name"].Value] = files[0];
+        RefreshImageGrid();
+    }
+
+    /// <summary>フォルダの中の、絵の名前のファイルをまとめて入れる</summary>
+    private void ImportImageFolder()
+    {
+        var folder = PickFolder(Strings.T("絵の名前のファイルを入れたフォルダ"));
+        if (folder == null) return;
+        var map = Pack.MatchImages(folder);
+        foreach (var kv in map) _imageFiles[kv.Key] = kv.Value;
+        RefreshImageGrid();
+        SetStatus(Strings.T("フォルダから {0} 枚の絵を入れました", map.Count), map.Count > 0 ? Good : Warn);
     }
 
     // ------------------------------------------------------------------ 画面 ⇔ Pack
@@ -525,8 +624,9 @@ internal sealed class PackForm : Form
         _voiceBase = _pack.Base;
         _voiceChinese.Checked = _pack.VoiceChinese;
         RefreshVoiceGrid();
-        _images.Text = _pack.Images ?? "";
-        UpdateImageInfo();
+        _imageFiles.Clear();
+        foreach (var kv in _pack.ImageFiles) _imageFiles[kv.Key] = kv.Value;
+        RefreshImageGrid();
     }
 
     private Pack FromUi()
@@ -539,11 +639,12 @@ internal sealed class PackForm : Form
             Weapon = _weapon.Text.Length > 0 ? _weapon.Text : null,
             WeaponEquip = (long)_equip.Value, WeaponScale = (double)_scale.Value,
             WeaponPos = _pos.Select(x => (double)x.Value).ToArray(), WeaponRot = _rot.Select(x => (double)x.Value).ToArray(),
-            Images = _images.Text.Length > 0 ? _images.Text : null,
+            ImageFit = _imageFit.Checked,
         };
         foreach (var kv in _voiceFiles)
             if (CurrentBase.Voices.Contains(kv.Key, StringComparer.OrdinalIgnoreCase)) p.VoiceFiles[kv.Key] = kv.Value;
         p.VoiceChinese = _voiceChinese.Checked;
+        foreach (var kv in _imageFiles) p.ImageFiles[kv.Key] = kv.Value;
         foreach (DataGridViewRow r in _motions.Rows)
         {
             var action = r.Cells["action"].Value as string;
