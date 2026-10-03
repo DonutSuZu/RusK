@@ -193,9 +193,9 @@ internal static class Strings
         ["モデルのファイルがありません: {0}"] = ("Model file not found: {0}", "找不到模型文件: {0}"),
         ["武器のファイルがありません: {0}"] = ("Weapon file not found: {0}", "找不到武器文件: {0}"),
         ["動き ({0}) のファイルがありません"] = ("Motion file for {0} not found", "找不到动作 ({0}) 的文件"),
-        ["要る声ごとに、好きな音声ファイル (ogg / wav / mp3、名前は何でもよい) を選びます。「ゲームに入れる」で、ゲームが使う名前に変えてコピーします。新しいキャラが場にいるときだけ使われ、選ばなかった声は土台のキャラの声のままです。"] =
-            ("Pick any audio file (ogg / wav / mp3, any file name) for each voice. \"Put into the game\" copies it with the name the game uses. Used only while the new character is on the field; voices you don't pick stay as the base character's.",
-             "为每个所需语音选择任意音频文件 (ogg / wav / mp3, 文件名随意)。点击\"放入游戏\"时会改成游戏使用的名字并复制。仅在新角色在场时使用, 未选择的语音保持基础角色的语音。"),
+        ["要る声ごとに、好きな音声ファイル (ogg / wav / mp3、名前は何でもよい) を選びます。「ゲームに入れる」で、ゲームが使う名前に変えてコピーします。新しいキャラが場にいるときだけ使われ、選ばなかった声は土台のキャラの声のままです。名前の最後の _JP は、ゲームの「声の言語」が日本語のときの名前です (文字の言語とは別の設定。英語の声はありません)。中国語の声では _JP なしの名前で鳴るので、下のチェックを入れておくと両方に対応します。"] =
+            ("Pick any audio file (ogg / wav / mp3, any file name) for each voice. \"Put into the game\" copies it with the name the game uses. Used only while the new character is on the field; voices you don't pick stay as the base character's. The trailing _JP is the name used when the game's \"Voice language\" is Japanese (a separate setting from the text language; there are no English voices). With Chinese voices the name without _JP is used, so keep the checkbox below on to support both.",
+             "为每个所需语音选择任意音频文件 (ogg / wav / mp3, 文件名随意)。点击\"放入游戏\"时会改成游戏使用的名字并复制。仅在新角色在场时使用, 未选择的语音保持基础角色的语音。名字末尾的 _JP 是游戏\"语音语言\"为日语时使用的名字 (与文字语言是不同的设置, 没有英语语音)。中文语音使用不带 _JP 的名字, 勾选下方选项即可同时支持两种。"),
         ["鳴るとき"] = ("When it plays", "播放时机"),
         ["ゲームが使う名前"] = ("Name the game uses", "游戏使用的名字"),
         ["選んだファイル (ダブルクリックで選ぶ)"] = ("Chosen file (double-click to choose)", "选择的文件 (双击选择)"),

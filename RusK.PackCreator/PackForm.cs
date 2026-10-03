@@ -307,7 +307,7 @@ internal sealed class PackForm : Form
     private Control VoiceSection()
     {
         var p = Section(Strings.T("5. 声"),
-            Strings.T("要る声ごとに、好きな音声ファイル (ogg / wav / mp3、名前は何でもよい) を選びます。「ゲームに入れる」で、ゲームが使う名前に変えてコピーします。新しいキャラが場にいるときだけ使われ、選ばなかった声は土台のキャラの声のままです。"), out var g);
+            Strings.T("要る声ごとに、好きな音声ファイル (ogg / wav / mp3、名前は何でもよい) を選びます。「ゲームに入れる」で、ゲームが使う名前に変えてコピーします。新しいキャラが場にいるときだけ使われ、選ばなかった声は土台のキャラの声のままです。名前の最後の _JP は、ゲームの「声の言語」が日本語のときの名前です (文字の言語とは別の設定。英語の声はありません)。中国語の声では _JP なしの名前で鳴るので、下のチェックを入れておくと両方に対応します。"), out var g);
         _voiceGrid = new DataGridView
         {
             Width = 900, Height = 300, BackgroundColor = Bg, ForeColor = TextColor, GridColor = Color.FromArgb(50, 54, 66), BorderStyle = BorderStyle.None,
