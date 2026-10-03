@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using RusK.Manager;
 
@@ -255,41 +256,47 @@ internal sealed class PackForm : Form
     private Control MotionSection()
     {
         var p = Section(Strings.T("4. 動き"),
-            Strings.T("動作ごとに、自作の動き (Blender で作った glb) を割り当てます。「当たる瞬間」は自分の動きで剣が当たる秒です (攻撃の動作だけ)。右の「土台」は、土台のキャラの動作の長さと攻撃判定の位置です。"), out var g);
+            Strings.T("動作ごとに、自作の動き (Blender で作った glb) を選びます。選ばなかった動作は土台のキャラの動きのままです。「当たる瞬間」は自分の動きで剣が当たる秒です (攻撃の動作だけ)。「土台」は、土台のキャラの動作の長さと攻撃判定の位置です。1 つの glb に動きをまとめたときは「アニメーションの名前」に名前を書きます。"), out var g);
         _motions = new DataGridView
         {
-            Width = 900, Height = 240, BackgroundColor = Bg, ForeColor = TextColor, GridColor = Color.FromArgb(50, 54, 66), BorderStyle = BorderStyle.None,
-            AllowUserToAddRows = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            Width = 900, Height = 300, BackgroundColor = Bg, ForeColor = TextColor, GridColor = Color.FromArgb(50, 54, 66), BorderStyle = BorderStyle.None,
+            AllowUserToAddRows = false, AllowUserToDeleteRows = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect,
             EnableHeadersVisualStyles = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Margin = new Padding(0, 4, 0, 4),
+            EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2,
         };
         _motions.ColumnHeadersDefaultCellStyle.BackColor = Side;
         _motions.ColumnHeadersDefaultCellStyle.ForeColor = Dim;
         _motions.DefaultCellStyle.BackColor = Bg;
         _motions.DefaultCellStyle.ForeColor = TextColor;
         _motions.DefaultCellStyle.SelectionBackColor = Color.FromArgb(40, 64, 104);
-        _motions.Columns.Add(new DataGridViewComboBoxColumn { Name = "action", HeaderText = Strings.T("動作"), FillWeight = 26, FlatStyle = FlatStyle.Flat });
-        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "file", HeaderText = Strings.T("動きのファイル (ダブルクリックで選ぶ)"), FillWeight = 40, ReadOnly = true });
-        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "anim", HeaderText = Strings.T("アニメーションの名前 (省略可)"), FillWeight = 20 });
-        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "hit", HeaderText = Strings.T("当たる瞬間 (秒)"), FillWeight = 12 });
-        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "info", HeaderText = Strings.T("土台"), FillWeight = 20, ReadOnly = true });
+        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "what", HeaderText = Strings.T("中身"), FillWeight = 24, ReadOnly = true });
+        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "action", HeaderText = Strings.T("ゲームが使う名前"), FillWeight = 22, ReadOnly = true });
+        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "info", HeaderText = Strings.T("土台"), FillWeight = 14, ReadOnly = true });
+        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "file", HeaderText = Strings.T("動きのファイル (ダブルクリックで選ぶ)"), FillWeight = 22, ReadOnly = true });
+        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "anim", HeaderText = Strings.T("アニメーションの名前"), FillWeight = 11 });
+        _motions.Columns.Add(new DataGridViewTextBoxColumn { Name = "hit", HeaderText = Strings.T("当たる瞬間 (秒)"), FillWeight = 9 });
         _motions.CellDoubleClick += (_, e) =>
         {
-            if (e.RowIndex < 0 || _motions.Columns[e.ColumnIndex].Name != "file") return;
-            var f = PickFile("glb|*.glb");
-            if (f != null) _motions.Rows[e.RowIndex].Cells["file"].Value = f;
+            if (e.RowIndex < 0) return;
+            var col = _motions.Columns[e.ColumnIndex].Name;
+            if (col == "anim" || col == "hit") { _motions.BeginEdit(true); return; }
+            ChooseMotion(new[] { _motions.Rows[e.RowIndex] });
         };
-        _motions.CellValueChanged += (_, e) => { if (e.RowIndex >= 0 && _motions.Columns[e.ColumnIndex].Name == "action") UpdateMotionInfo(_motions.Rows[e.RowIndex]); };
-        _motions.CurrentCellDirtyStateChanged += (_, _) => { if (_motions.IsCurrentCellDirty) _motions.CommitEdit(DataGridViewDataErrorContexts.Commit); };
+        _motions.CellEndEdit += (_, _) => UpdateMotionCount();
         _motions.DataError += (_, e) => e.ThrowException = false;
         var buttons = new FlowLayoutPanel { AutoSize = true, WrapContents = false, BackColor = Field, Margin = new Padding(0) };
-        buttons.Controls.Add(MakeButton(Strings.T("＋ 動作を足す"), () => AddMotionRow(null)));
-        buttons.Controls.Add(MakeButton(Strings.T("＋ 通常攻撃 5 段を足す"), AddCombo));
-        buttons.Controls.Add(MakeButton(Strings.T("選んだ行を消す"), () => { foreach (DataGridViewRow r in _motions.SelectedRows) _motions.Rows.Remove(r); }));
-        _motionInfo = new Label { AutoSize = true, ForeColor = Dim, Font = _small, Margin = new Padding(12, 8, 0, 0) };
-        buttons.Controls.Add(_motionInfo);
+        buttons.Controls.Add(MakeButton(Strings.T("選んだ行にファイルを選ぶ..."), () => ChooseMotion(_motions.SelectedRows.Cast<DataGridViewRow>().ToArray())));
+        buttons.Controls.Add(MakeButton(Strings.T("選んだ行を外す"), () =>
+        {
+            foreach (DataGridViewRow r in _motions.SelectedRows) SetMotionFile(r, null, clear: true);
+            UpdateMotionCount();
+        }));
+        buttons.Controls.Add(MakeButton(Strings.T("フォルダからまとめて入れる..."), ImportMotionFolder));
+        _motionInfo = new Label { AutoSize = true, ForeColor = Dim, Font = _small, Margin = new Padding(0, 4, 0, 0) };
         var stack = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, WrapContents = false, BackColor = Field, Margin = new Padding(0) };
         stack.Controls.Add(_motions);
         stack.Controls.Add(buttons);
+        stack.Controls.Add(_motionInfo);
         g.ColumnStyles[0].Width = 0;
         g.RowCount++;
         g.Controls.Add(new Label { Width = 0, Margin = new Padding(0) });
@@ -388,14 +395,8 @@ internal sealed class PackForm : Form
     private void OnBaseChanged()
     {
         var b = CurrentBase;
-        var col = (DataGridViewComboBoxColumn)_motions.Columns["action"];
-        var keep = _motions.Rows.Cast<DataGridViewRow>().Select(r => r.Cells["action"].Value as string).Where(a => a != null).ToList();
-        col.Items.Clear();
-        foreach (var m in b.Motions) col.Items.Add(m.name);
-        foreach (var a in keep) if (!col.Items.Contains(a)) col.Items.Add(a); // 前の土台の動作も残す (警告は info に)
-        foreach (DataGridViewRow r in _motions.Rows) UpdateMotionInfo(r);
+        RebuildMotions(MotionAssignments());
         if (b.Weapon is long w && _equip.Value == 0) _equip.Value = w;
-        _motionInfo.Text = Strings.T("土台のキャラの動作: {0} 個", b.Motions.Count);
         if (_voiceBase != 0 && _voiceBase != b.Id && _voiceFiles.Count > 0)
         {
             var moved = _voiceFiles.ToList();
@@ -406,31 +407,156 @@ internal sealed class PackForm : Form
         RefreshVoiceGrid();
     }
 
-    private void AddMotionRow(MotionRow m)
+    /// <summary>表に入っている動きの割り当て (ファイルを選んだ行だけ)</summary>
+    private List<MotionRow> MotionAssignments()
     {
-        var col = (DataGridViewComboBoxColumn)_motions.Columns["action"];
-        var action = m?.Action ?? CurrentBase.Motions.FirstOrDefault().name;
-        if (action != null && !col.Items.Contains(action)) col.Items.Add(action);
-        int i = _motions.Rows.Add(action, m?.File ?? "", m?.Anim ?? "", m?.Hit?.ToString("0.###", CultureInfo.InvariantCulture) ?? "", "");
-        UpdateMotionInfo(_motions.Rows[i]);
+        var list = new List<MotionRow>();
+        if (_motions == null) return list;
+        foreach (DataGridViewRow r in _motions.Rows)
+        {
+            var file = r.Cells["file"].Tag as string;
+            if (string.IsNullOrEmpty(file)) continue;
+            double? hit = double.TryParse((r.Cells["hit"].Value as string ?? "").Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var h) ? h : null;
+            var anim = (r.Cells["anim"].Value as string ?? "").Trim();
+            list.Add(new MotionRow { Action = (string)r.Cells["action"].Value, File = file, Anim = anim.Length > 0 ? anim : null, Hit = hit });
+        }
+        return list;
     }
 
-    private void AddCombo()
+    /// <summary>表を作り直す: 土台のキャラの動作を全部並べ、割り当てを入れる。土台に無い動作の割り当ては下に足す</summary>
+    private void RebuildMotions(List<MotionRow> assigned)
     {
-        var have = new HashSet<string>(_motions.Rows.Cast<DataGridViewRow>().Select(r => r.Cells["action"].Value as string));
-        // 通常攻撃: 名前に Combo / NormalAttack が入り、攻撃判定のある最初の 5 つ (派生の動作は除く)
-        var combo = CurrentBase.Motions.Where(m => m.hit != null && (m.name.Contains("Combo") || m.name.Contains("NormalAttack")) && !m.name.Contains("QTE") && !m.name.Contains("_Parry") && !m.name.Contains("Defence") && !m.name.Contains("Loop") && !m.name.Contains("Charge"))
-            .Take(5);
-        foreach (var m in combo)
-            if (!have.Contains(m.name)) AddMotionRow(new MotionRow { Action = m.name });
+        if (_motions == null) return;
+        int first = _motions.FirstDisplayedScrollingRowIndex;
+        _motions.Rows.Clear();
+        var b = CurrentBase;
+        var map = new Dictionary<string, MotionRow>();
+        foreach (var m in assigned) if (m.Action != null && !map.ContainsKey(m.Action)) map[m.Action] = m;
+        foreach (var m in b.Motions)
+        {
+            var info = $"{m.sec:0.00}s" + (m.hit is double h ? Strings.T(" / 当たる {0:0.00}", h) : "") + (m.loop ? Strings.T(" / ループ") : "");
+            int i = _motions.Rows.Add(DescribeMotion(m.name), m.name, info, "", "", "");
+            if (map.TryGetValue(m.name, out var a)) FillMotionRow(_motions.Rows[i], a);
+        }
+        foreach (var a in assigned.Where(x => x.Action != null && !b.Motions.Any(m => m.name == x.Action)))
+        {
+            int i = _motions.Rows.Add(DescribeMotion(a.Action), a.Action, Strings.T("(土台に無い動作)"), "", "", "");
+            _motions.Rows[i].Cells["info"].Style.ForeColor = Warn;
+            FillMotionRow(_motions.Rows[i], a);
+        }
+        if (first >= 0 && first < _motions.RowCount) _motions.FirstDisplayedScrollingRowIndex = first;
+        UpdateMotionCount();
     }
 
-    private void UpdateMotionInfo(DataGridViewRow r)
+    private void FillMotionRow(DataGridViewRow r, MotionRow m)
     {
-        var a = r.Cells["action"].Value as string;
-        var m = CurrentBase.Motions.FirstOrDefault(x => x.name == a);
-        r.Cells["info"].Value = m.name == null ? Strings.T("(土台に無い動作)")
-            : $"{m.sec:0.00}s" + (m.hit is double h ? Strings.T(" / 当たる {0:0.00}", h) : "") + (m.loop ? Strings.T(" / ループ") : "");
+        SetMotionFile(r, m.File);
+        r.Cells["anim"].Value = m.Anim ?? "";
+        r.Cells["hit"].Value = m.Hit?.ToString("0.###", CultureInfo.InvariantCulture) ?? "";
+    }
+
+    /// <summary>行のファイル (Tag にパス、表示はファイル名)。clear なら名前・秒も消す</summary>
+    private void SetMotionFile(DataGridViewRow r, string file, bool clear = false)
+    {
+        var c = r.Cells["file"];
+        c.Tag = file;
+        c.Value = file == null ? "" : Path.GetFileName(file);
+        c.ToolTipText = file ?? "";
+        c.Style.ForeColor = file == null ? TextColor : File.Exists(file) ? Good : Bad;
+        if (clear) { r.Cells["anim"].Value = ""; r.Cells["hit"].Value = ""; }
+    }
+
+    private void UpdateMotionCount()
+    {
+        if (_motionInfo == null) return;
+        int have = _motions.Rows.Cast<DataGridViewRow>().Count(r => r.Cells["file"].Tag is string f && f.Length > 0);
+        _motionInfo.Text = Strings.T("選んだ動き: {0} / {1} (全部そろえなくても動きます。通常攻撃 5 段から始めるのがおすすめ)", have, CurrentBase.Motions.Count);
+        _motionInfo.ForeColor = have == 0 ? Dim : TextColor;
+    }
+
+    /// <summary>選んだ行にファイルを選ぶ。1 行ならそのファイル、複数行なら選んだファイルを順に割り当てる (1 つなら全部の行に)</summary>
+    private void ChooseMotion(DataGridViewRow[] rows)
+    {
+        if (rows.Length == 0) { SetStatus(Strings.T("先に表で行を選んでください"), Warn); return; }
+        rows = rows.OrderBy(r => r.Index).ToArray();
+        using var d = new OpenFileDialog { Filter = "glb|*.glb", Multiselect = rows.Length > 1 };
+        if (d.ShowDialog(this) != DialogResult.OK) return;
+        var files = d.FileNames.OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray();
+        if (files.Length == 1) foreach (var r in rows) SetMotionFile(r, files[0]);
+        else for (int i = 0; i < rows.Length && i < files.Length; i++) SetMotionFile(rows[i], files[i]);
+        UpdateMotionCount();
+    }
+
+    /// <summary>フォルダの中の、動作の名前の glb をまとめて入れる</summary>
+    private void ImportMotionFolder()
+    {
+        var folder = PickFolder(Strings.T("動作の名前の glb を入れたフォルダ"));
+        if (folder == null) return;
+        var files = Directory.GetFiles(folder, "*.glb");
+        int n = 0;
+        foreach (DataGridViewRow r in _motions.Rows)
+        {
+            var f = files.FirstOrDefault(x => Path.GetFileNameWithoutExtension(x).Equals((string)r.Cells["action"].Value, StringComparison.OrdinalIgnoreCase));
+            if (f != null) { SetMotionFile(r, f); n++; }
+        }
+        UpdateMotionCount();
+        SetStatus(Strings.T("フォルダから {0} 個の動きを入れました", n), n > 0 ? Good : Warn);
+    }
+
+    /// <summary>動作の名前 → 中身の説明 (キャラごとに名前の付け方が違うので、名前の部分から決める)</summary>
+    private static string DescribeMotion(string name)
+    {
+        string Dir(string n)
+        {
+            foreach (var (key, ja) in new[] { ("LeftDown", "左下"), ("RightDown", "右下"), ("LeftUp", "左上"), ("RightUp", "右上"), ("Left", "左"), ("Right", "右"), ("Middle", "正面"), ("Middile", "正面") })
+                if (n.Contains(key)) return Strings.T(ja);
+            return "";
+        }
+        if (name.Contains("QTE"))
+        {
+            var what = name.Contains("Special") ? "連携のスペシャル攻撃" : name.Contains("Normal") ? "連携の通常攻撃" : "連携のダッシュ攻撃";
+            return Strings.T(what);
+        }
+        var combo = Regex.Match(name, @"(Combo|NormalAttack)_?(\d)");
+        if (combo.Success)
+        {
+            var t = Strings.T("通常攻撃 {0} 段目", int.Parse(combo.Groups[2].Value) + 1);
+            if (name.StartsWith("Gun")) t += Strings.T(" (銃)");
+            if (name.Contains("Parry")) t += " " + Strings.T("パリィ ({0}) からの攻撃", Dir(name.Substring(name.IndexOf("Parry"))));
+            else if (name.Contains("DefenceAccept")) t += " " + Strings.T("防御で受けたあとの攻撃");
+            else if (name.Contains("Defence")) t += " " + Strings.T("防御からの攻撃");
+            if (name.EndsWith("_Loop")) t += " " + Strings.T("(溜め中)");
+            else if (name.EndsWith("ChargeEnd")) t += " " + Strings.T("(溜め終わり)");
+            return t;
+        }
+        if (name.Contains("HitHeavy")) return Strings.T("大きく攻撃を受けた ({0})", Dir(name));
+        if (Regex.IsMatch(name, "Hit(Left|Right|Middle)")) return Strings.T("攻撃を受けた ({0})", Dir(name));
+        if (name.StartsWith("Parry_")) return Strings.T("パリィ ({0})", Dir(name));
+        switch (name)
+        {
+            case "Idle": return Strings.T("立っている (待機)");
+            case "Idle2": case "Idle3": return Strings.T("立っている (待機 {0})", name.Substring(4));
+            case "Run": return Strings.T("走る");
+            case "RunLeft": return Strings.T("左へ走る");
+            case "RunRight": return Strings.T("右へ走る");
+            case "RunRightAround": return Strings.T("回り込んで走る");
+            case "RunStop": return Strings.T("走るのをやめる");
+            case "RunTurn": return Strings.T("走りながら振り向く");
+            case "FastRun": return Strings.T("速く走る");
+            case "FastRun_RightFoot": return Strings.T("速く走る (右足から)");
+            case "FastRunStop": return Strings.T("速く走るのをやめる");
+            case "Defence": case "Defence_1": case "Defence_2": return Strings.T("防御の構え");
+            case "DefenceAccept": return Strings.T("防御で受けた");
+            case "SpecialAttack": return Strings.T("スペシャル攻撃");
+            case "DashAttack": return Strings.T("ダッシュ攻撃");
+            case "DashFront": return Strings.T("前へ回避");
+            case "DashBack": return Strings.T("後ろへ回避");
+            case "Interection": return Strings.T("調べる・話しかける");
+            case "JumpNextLevel": return Strings.T("次の場所へ跳ぶ");
+            case "Die": return Strings.T("倒れる");
+            case "Born": return Strings.T("登場");
+        }
+        return "";
     }
 
     // ------------------------------------------------------------------ 声・絵の確認
@@ -616,9 +742,8 @@ internal sealed class PackForm : Form
             _pos[i].Value = (decimal)Math.Max(-10, Math.Min(10, _pack.WeaponPos[i]));
             _rot[i].Value = (decimal)Math.Max(-360, Math.Min(360, _pack.WeaponRot[i]));
         }
-        _motions.Rows.Clear();
         OnBaseChanged();
-        foreach (var m in _pack.Motions) AddMotionRow(m);
+        RebuildMotions(_pack.Motions);
         _voiceFiles.Clear();
         foreach (var kv in _pack.VoiceFiles) _voiceFiles[kv.Key] = kv.Value;
         _voiceBase = _pack.Base;
@@ -645,15 +770,7 @@ internal sealed class PackForm : Form
             if (CurrentBase.Voices.Contains(kv.Key, StringComparer.OrdinalIgnoreCase)) p.VoiceFiles[kv.Key] = kv.Value;
         p.VoiceChinese = _voiceChinese.Checked;
         foreach (var kv in _imageFiles) p.ImageFiles[kv.Key] = kv.Value;
-        foreach (DataGridViewRow r in _motions.Rows)
-        {
-            var action = r.Cells["action"].Value as string;
-            var file = r.Cells["file"].Value as string;
-            if (string.IsNullOrEmpty(action) || string.IsNullOrEmpty(file)) continue;
-            double? hit = double.TryParse((r.Cells["hit"].Value as string ?? "").Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var h) ? h : null;
-            var anim = (r.Cells["anim"].Value as string ?? "").Trim();
-            p.Motions.Add(new MotionRow { Action = action, File = file, Anim = anim.Length > 0 ? anim : null, Hit = hit });
-        }
+        p.Motions.AddRange(MotionAssignments());
         return p;
     }
 
