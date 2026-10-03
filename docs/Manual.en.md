@@ -124,6 +124,7 @@ A character Mod Pack is **just one folder**.
 
 - New characters are not stored in your save. Removing the Pack or the mods does not break your save
 - How to make one: [docs/ModPack.md](ModPack.md) (Japanese)
+- To make your own, **RusK Pack Creator** (`RusK-Pack-Creator.exe`, on the [release page](https://github.com/DonutSuZu/RusK/releases)) is the easiest way: fill in the fields and press "Put into the game"
 
 ---
 

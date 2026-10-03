@@ -124,6 +124,7 @@ Ved疗愈所\                 ← ゲームのフォルダ (ved.exe がある)
 
 - 新しいキャラはセーブには残りません。Pack や Mod を外しても、セーブは壊れません
 - 作り方: [docs/ModPack.md](ModPack.md)
+- 自分で作るときは **RusK Pack Creator** (`RusK-Pack-Creator.exe`、[リリースのページ](https://github.com/DonutSuZu/RusK/releases)) が便利です。項目を選んで「ゲームに入れる」を押すだけで Pack ができます
 
 ---
 

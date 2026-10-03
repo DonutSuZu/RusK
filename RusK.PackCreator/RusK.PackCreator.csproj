@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    RusK Mod Pack Creator: キャラの Mod Pack (RusK\characters\〈名前〉) を画面で作る道具。
+    Mod Manager と同じく .NET Framework 4.8 の WinForms アプリ (利用者は追加インストール不要)。
+    ビルドすると dist\ に配る exe (RusK-Pack-Creator.exe) ができる
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>RusK Pack Creator</AssemblyName>
+    <RootNamespace>RusK.PackCreator</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <!-- この道具の版 (リリースのタグ packcreator-vX.Y.Z と合わせる) -->
+    <Version>1.0.0</Version>
+    <Product>RusK Mod Pack Creator</Product>
+    <Company>RusK</Company>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DistDir>$(MSBuildThisFileDirectory)..\dist\</DistDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ゲームのフォルダを探す部品は Mod Manager のものを使う -->
+    <Compile Include="..\RusK.Manager\GameLocator.cs" Link="GameLocator.cs" />
+    <!-- 表示の言語とゲームのフォルダは Mod Manager と同じ設定ファイル -->
+    <Compile Include="..\RusK.Manager\Settings.cs" Link="Settings.cs" />
+    <!-- 土台のキャラの動作・声の名前の一覧 (ゲーム 0.0.1878 から書き出したもの。名前だけ) -->
+    <EmbeddedResource Include="packdata.json" LogicalName="packdata.json" />
+    <EmbeddedResource Include="..\icon.png" LogicalName="icon.png" />
+  </ItemGroup>
+
+  <!-- 配る exe を dist\ に置く -->
+  <Target Name="CopyToDist" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(DistDir)RusK-Pack-Creator.exe" />
+    <Message Importance="high" Text="RusK Pack Creator -> $(DistDir)RusK-Pack-Creator.exe" />
+  </Target>
+</Project>

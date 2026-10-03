@@ -1,0 +1,2110 @@
+{
+ "gameVersion": "0.0.1878 (c9d3e1a)",
+ "bases": {
+  "1001": {
+   "name": [
+    "黛",
+    "PinkLight",
+    "黛"
+   ],
+   "weapon": null,
+   "motions": [
+    {
+     "name": "Run",
+     "sec": 0.51,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunStop",
+     "sec": 2.5,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRun",
+     "sec": 0.4,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunTurn",
+     "sec": 1.2,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRunStop",
+     "sec": 3.5,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Defence",
+     "sec": 5.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DefenceAccept",
+     "sec": 5.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Idle",
+     "sec": 1.67,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "DashAttack",
+     "sec": 6.94,
+     "hit": 0.04,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_0",
+     "sec": 5.13,
+     "hit": 0.1,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_1",
+     "sec": 4.62,
+     "hit": 0.1,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_2",
+     "sec": 5.0,
+     "hit": 0.1,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_3",
+     "sec": 4.62,
+     "hit": 0.06,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4",
+     "sec": 0.56,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack",
+     "sec": 6.38,
+     "hit": 0.07,
+     "loop": false
+    },
+    {
+     "name": "Interection",
+     "sec": 2.05,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Idle2",
+     "sec": 13.68,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "Idle3",
+     "sec": 4.68,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RedLight_HitHeavy_Middile_Official",
+     "sec": 4.07,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Left_Official",
+     "sec": 4.1,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Right_Official",
+     "sec": 4.07,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLight_HitLeft",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLight_HitMiddle",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLight_HitRight_Official",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "JumpNextLevel",
+     "sec": 1.43,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RunLeft",
+     "sec": 0.5,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RunRight",
+     "sec": 0.63,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RunRightAround",
+     "sec": 0.6,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "DashBack",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRun_RightFoot",
+     "sec": 0.4,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "DashFront",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Die",
+     "sec": 1.57,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Born",
+     "sec": 13.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Left",
+     "sec": 4.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_LeftDown",
+     "sec": 4.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Right",
+     "sec": 4.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_RightDown",
+     "sec": 3.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "NormalAttack_QTE_PinkLight",
+     "sec": 3.83,
+     "hit": 0.33,
+     "loop": false
+    },
+    {
+     "name": "PinkLight_SpecialAttack_QTE",
+     "sec": 4.67,
+     "hit": 0.29,
+     "loop": false
+    },
+    {
+     "name": "PinkLight_DashAttack_QTE",
+     "sec": 5.6,
+     "hit": 0.37,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Loop",
+     "sec": 2.92,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_ChargeEnd",
+     "sec": 3.89,
+     "hit": 0.1,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_RightUp_Attack_ChargeEnd",
+     "sec": 4.17,
+     "hit": 0.12,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_RightUp_Attack_Loop",
+     "sec": 2.92,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_RightUp_Attack",
+     "sec": 0.42,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_DefenceAcceptAttack_ChargeEnd",
+     "sec": 4.17,
+     "hit": 0.15,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_DefenceAcceptAttack_Loop",
+     "sec": 2.92,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_DefenceAcceptAttack",
+     "sec": 0.42,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_LeftUp_Attack_ChargeEnd",
+     "sec": 4.17,
+     "hit": 0.12,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_LeftUp_Attack_Loop",
+     "sec": 2.92,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_LeftUp_Attack",
+     "sec": 0.42,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_RightDown_Attack_ChargeEnd",
+     "sec": 4.17,
+     "hit": 0.12,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_RightDown_Attack_Loop",
+     "sec": 2.92,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_RightDown_Attack",
+     "sec": 0.42,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_LeftDown_Attack",
+     "sec": 0.42,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_LeftDown_Attack_Loop",
+     "sec": 2.92,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "PinkLightCombo_4_Parry_LeftDown_Attack_ChargeEnd",
+     "sec": 4.17,
+     "hit": 0.12,
+     "loop": false
+    }
+   ],
+   "voices": [
+    "BuffChooseVoice_1001_1_JP",
+    "BuffChooseVoice_1001_2_JP",
+    "BuffChooseVoice_1001_3_JP",
+    "BuffEquipVoice_1001_1_JP",
+    "BuffEquipVoice_1001_2_JP",
+    "BuffEquipVoice_1001_3_JP",
+    "ChooseCharVocie_1001_1_JP",
+    "ChooseCharVocie_1001_2_JP",
+    "DieVocie_1001_1_JP",
+    "DieVocie_1001_2_JP",
+    "DieVocie_1001_3_JP",
+    "EquipWearVocie_1001_1_JP",
+    "EquipWearVocie_1001_2_JP",
+    "EquipWearVocie_1001_3_JP",
+    "FightStartVoice_1001_1_JP",
+    "FightStartVoice_1001_2_JP",
+    "FightWellVoice_1001_1_JP",
+    "FightWellVoice_1001_2_JP",
+    "FightWellVoice_1001_3_JP",
+    "FightWellVoice_1001_4_JP",
+    "FightWellVoice_1001_5_JP",
+    "FightWellVoice_1001_6_JP",
+    "HardAttackVoice_1001_1_JP",
+    "HardAttackVoice_1001_2_JP",
+    "HardAttackVoice_1001_3_JP",
+    "HardHurtVocie_1001_1_JP",
+    "HardHurtVocie_1001_2_JP",
+    "HardHurtVocie_1001_3_JP",
+    "HealthLowVocie_1001_1_JP",
+    "HealthLowVocie_1001_2_JP",
+    "HealthLowVocie_1001_3_JP",
+    "LightAttackVoice_1001_1_JP",
+    "LightAttackVoice_1001_2_JP",
+    "LightAttackVoice_1001_3_JP",
+    "LightHurtVocie_1001_1_JP",
+    "LightHurtVocie_1001_2_JP",
+    "LightHurtVocie_1001_3_JP",
+    "ShowPoseVocie_1001_JP",
+    "SceneChat_1001_2_JP",
+    "SceneChat_1001_3_JP",
+    "SceneChat_1001_4_JP",
+    "SceneChat_1001_5_JP",
+    "SceneChat_1001_7_JP",
+    "SceneChat_1001_8_JP",
+    "SceneChat_1001_9_JP",
+    "SceneChat_1001_10_JP",
+    "SceneChat_1001_11_JP",
+    "SceneChat_1001_12_JP",
+    "SceneChat_1001_13_JP",
+    "SceneChat_1001_14_JP",
+    "SceneChat_1001_15_JP",
+    "SceneChat_1001_16_JP",
+    "SceneChat_1001_17_JP",
+    "SceneChat_1001_18_JP",
+    "SceneChat_1001_20_JP",
+    "SceneChat_1001_23_JP",
+    "SceneChat_1001_26_JP",
+    "SceneChat_1001_27_JP",
+    "SceneChat_1001_28_JP",
+    "SceneChat_1001_29_JP"
+   ]
+  },
+  "1002": {
+   "name": [
+    "慶慶",
+    "WhiteLight",
+    "庆庆"
+   ],
+   "weapon": null,
+   "motions": [
+    {
+     "name": "Run",
+     "sec": 0.51,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunStop",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRun",
+     "sec": 0.4,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunTurn",
+     "sec": 1.2,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRunStop",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Defence",
+     "sec": 3.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashBack",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DefenceAccept",
+     "sec": 4.1,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Idle",
+     "sec": 2.0,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "WhiteLigthtCombo0",
+     "sec": 3.67,
+     "hit": 0.06,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo1",
+     "sec": 4.33,
+     "hit": 0.09,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo2",
+     "sec": 3.83,
+     "hit": 0.1,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo3",
+     "sec": 4.67,
+     "hit": 0.21,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo4",
+     "sec": 4.17,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack",
+     "sec": 9.83,
+     "hit": 0.03,
+     "loop": false
+    },
+    {
+     "name": "Interection",
+     "sec": 2.05,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashAttack",
+     "sec": 4.67,
+     "hit": 0.09,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigtht_HitHeavy_Left_Official",
+     "sec": 4.07,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigtht_HitHeavy_Right_Official",
+     "sec": 4.07,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigtht_HitHeavy_Middile_Official",
+     "sec": 4.07,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigtht_HitLeft",
+     "sec": 1.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigtht_HitMiddle",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigtht_HitRight_Official",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "JumpNextLevel",
+     "sec": 1.5,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Die",
+     "sec": 1.57,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashFront",
+     "sec": 3.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Born",
+     "sec": 21.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Left",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_LeftDown",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Right",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_RightDown",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack_QTE_WhiteLight",
+     "sec": 5.93,
+     "hit": 0.18,
+     "loop": false
+    },
+    {
+     "name": "NormalAttack_QTE_WhiteLight",
+     "sec": 4.0,
+     "hit": 0.27,
+     "loop": false
+    },
+    {
+     "name": "DaskAttack_QTE_White",
+     "sec": 4.0,
+     "hit": 0.31,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo4_DefenceAcceptAttack",
+     "sec": 4.27,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo4_Parry_LeftDown_Attack",
+     "sec": 4.27,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo4_Parry_LeftUp_Attack",
+     "sec": 4.27,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo4_Parry_RightDown_Attack",
+     "sec": 4.17,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo4_Parry_RightUp_Attack",
+     "sec": 4.17,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "WhiteLigthtCombo4_DefenceAttack",
+     "sec": 4.17,
+     "hit": 0.2,
+     "loop": false
+    }
+   ],
+   "voices": [
+    "BuffChooseVoice_1002_1_JP",
+    "BuffChooseVoice_1002_2_JP",
+    "BuffChooseVoice_1002_3_JP",
+    "BuffEquipVoice_1002_1_JP",
+    "BuffEquipVoice_1002_2_JP",
+    "BuffEquipVoice_1002_3_JP",
+    "ChooseCharVocie_1002_1_JP",
+    "ChooseCharVocie_1002_2_JP",
+    "DieVocie_1002_1_JP",
+    "DieVocie_1002_2_JP",
+    "DieVocie_1002_3_JP",
+    "EquipWearVocie_1002_1_JP",
+    "EquipWearVocie_1002_2_JP",
+    "EquipWearVocie_1002_3_JP",
+    "FightStartVoice_1002_1_JP",
+    "FightStartVoice_1002_2_JP",
+    "FightWellVoice_1002_1_JP",
+    "FightWellVoice_1002_2_JP",
+    "FightWellVoice_1002_3_JP",
+    "FightWellVoice_1002_4_JP",
+    "FightWellVoice_1002_5_JP",
+    "FightWellVoice_1002_6_JP",
+    "HardAttackVoice_1002_1_JP",
+    "HardAttackVoice_1002_2_JP",
+    "HardAttackVoice_1002_3_JP",
+    "HardHurtVocie_1002_1_JP",
+    "HardHurtVocie_1002_2_JP",
+    "HardHurtVocie_1002_3_JP",
+    "HealthLowVocie_1002_1_JP",
+    "HealthLowVocie_1002_2_JP",
+    "HealthLowVocie_1002_3_JP",
+    "LightAttackVoice_1002_1_JP",
+    "LightAttackVoice_1002_2_JP",
+    "LightAttackVoice_1002_3_JP",
+    "LightHurtVocie_1002_1_JP",
+    "LightHurtVocie_1002_2_JP",
+    "LightHurtVocie_1002_3_JP",
+    "ShowPoseVocie_1002_JP",
+    "SceneChat_1002_1_JP",
+    "SceneChat_1002_2_JP",
+    "SceneChat_1002_3_JP",
+    "SceneChat_1002_5_JP",
+    "SceneChat_1002_6_JP",
+    "SceneChat_1002_7_JP",
+    "SceneChat_1002_8_JP",
+    "SceneChat_1002_9_JP",
+    "SceneChat_1002_10_JP",
+    "SceneChat_1002_11_JP",
+    "SceneChat_1002_12_JP",
+    "SceneChat_1002_13_JP",
+    "SceneChat_1002_15_JP",
+    "SceneChat_1002_16_JP",
+    "SceneChat_1002_17_JP",
+    "SceneChat_1002_18_JP",
+    "SceneChat_1002_21_JP",
+    "SceneChat_1002_23_JP",
+    "SceneChat_1002_25_JP",
+    "SceneChat_1002_26_JP",
+    "SceneChat_1002_27_JP"
+   ]
+  },
+  "1003": {
+   "name": [
+    "紫冬",
+    "PurpleLight",
+    "紫冬"
+   ],
+   "weapon": null,
+   "motions": [
+    {
+     "name": "Run",
+     "sec": 0.51,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunStop",
+     "sec": 2.3,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRun",
+     "sec": 0.4,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunTurn",
+     "sec": 1.2,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRunStop",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Defence",
+     "sec": 4.17,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DefenceAccept",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Idle",
+     "sec": 2.0,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "GunCombo0",
+     "sec": 3.67,
+     "hit": 0.1,
+     "loop": false
+    },
+    {
+     "name": "GunCombo1",
+     "sec": 3.67,
+     "hit": 0.07,
+     "loop": false
+    },
+    {
+     "name": "GunCombo2",
+     "sec": 3.67,
+     "hit": 0.14,
+     "loop": false
+    },
+    {
+     "name": "GunCombo3",
+     "sec": 4.5,
+     "hit": 0.08,
+     "loop": false
+    },
+    {
+     "name": "GunCombo4",
+     "sec": 4.67,
+     "hit": 0.07,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack",
+     "sec": 5.0,
+     "hit": 0.04,
+     "loop": false
+    },
+    {
+     "name": "Interection",
+     "sec": 2.05,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashAttack",
+     "sec": 4.0,
+     "hit": 0.12,
+     "loop": false
+    },
+    {
+     "name": "HitHeavy_Left_PurpleLight",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitHeavy_Middle_PurpleLight",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitHeavy_Right_PurpleLight",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitLeft_PurpleLight",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitMiddle_PurpleLight",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitRight_PurpleLight",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "JumpNextLevel",
+     "sec": 1.43,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Die",
+     "sec": 1.57,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashFront",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashBack",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Born",
+     "sec": 11.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Left",
+     "sec": 3.17,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_LeftDown",
+     "sec": 3.17,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Right",
+     "sec": 3.17,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_RightDown",
+     "sec": 3.17,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack_QTE_PurpleLight",
+     "sec": 3.67,
+     "hit": 0.15,
+     "loop": false
+    },
+    {
+     "name": "DashAttack_QTE_PurpleLight",
+     "sec": 3.67,
+     "hit": 0.17,
+     "loop": false
+    },
+    {
+     "name": "NormalAttack_QTE_PurpleLight",
+     "sec": 4.5,
+     "hit": 0.18,
+     "loop": false
+    }
+   ],
+   "voices": [
+    "BuffChooseVoice_1003_1_JP",
+    "BuffChooseVoice_1003_2_JP",
+    "BuffChooseVoice_1003_3_JP",
+    "BuffEquipVoice_1003_1_JP",
+    "BuffEquipVoice_1003_2_JP",
+    "BuffEquipVoice_1003_3_JP",
+    "ChooseCharVocie_1003_1_JP",
+    "ChooseCharVocie_1003_2_JP",
+    "DieVocie_1003_1_JP",
+    "DieVocie_1003_2_JP",
+    "DieVocie_1003_3_JP",
+    "EquipWearVocie_1003_1_JP",
+    "EquipWearVocie_1003_2_JP",
+    "EquipWearVocie_1003_3_JP",
+    "FightStartVoice_1003_1_JP",
+    "FightStartVoice_1003_2_JP",
+    "FightWellVoice_1003_1_JP",
+    "FightWellVoice_1003_2_JP",
+    "FightWellVoice_1003_3_JP",
+    "FightWellVoice_1003_4_JP",
+    "FightWellVoice_1003_5_JP",
+    "FightWellVoice_1003_6_JP",
+    "HardAttackVoice_1003_1_JP",
+    "HardAttackVoice_1003_2_JP",
+    "HardAttackVoice_1003_3_JP",
+    "HardHurtVocie_1003_1_JP",
+    "HardHurtVocie_1003_2_JP",
+    "HardHurtVocie_1003_3_JP",
+    "HealthLowVocie_1003_1_JP",
+    "HealthLowVocie_1003_2_JP",
+    "HealthLowVocie_1003_3_JP",
+    "LightAttackVoice_1003_1_JP",
+    "LightAttackVoice_1003_2_JP",
+    "LightAttackVoice_1003_3_JP",
+    "LightHurtVocie_1003_1_JP",
+    "LightHurtVocie_1003_2_JP",
+    "LightHurtVocie_1003_3_JP",
+    "ShowPoseVocie_1003_JP",
+    "SceneChat_1003_1_JP",
+    "SceneChat_1003_2_JP",
+    "SceneChat_1003_4_JP",
+    "SceneChat_1003_5_JP",
+    "SceneChat_1003_6_JP",
+    "SceneChat_1003_8_JP",
+    "SceneChat_1003_9_JP",
+    "SceneChat_1003_10_JP",
+    "SceneChat_1003_11_JP",
+    "SceneChat_1003_12_JP",
+    "SceneChat_1003_13_JP",
+    "SceneChat_1003_14_JP",
+    "SceneChat_1003_15_JP",
+    "SceneChat_1003_16_JP",
+    "SceneChat_1003_21_JP",
+    "SceneChat_1003_23_JP",
+    "SceneChat_1003_25_JP",
+    "SceneChat_1003_26_JP",
+    "SceneChat_1003_27_JP",
+    "SceneChat_1003_28_JP",
+    "SceneChat_1003_29_JP",
+    "SceneChat_1003_31_JP",
+    "SceneChat_1003_32_JP",
+    "SceneChat_1003_33_JP",
+    "SceneChat_1003_34_JP",
+    "SceneChat_1003_35_JP",
+    "SceneChat_1003_36_JP",
+    "SceneChat_1003_38_JP"
+   ]
+  },
+  "1005": {
+   "name": [
+    "風禾",
+    "Feh",
+    "风禾"
+   ],
+   "weapon": null,
+   "motions": [
+    {
+     "name": "Run",
+     "sec": 0.51,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunStop",
+     "sec": 2.3,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRun",
+     "sec": 0.4,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunTurn",
+     "sec": 1.2,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRunStop",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Defence",
+     "sec": 4.17,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DefenceAccept",
+     "sec": 4.23,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Idle",
+     "sec": 1.67,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "GreenLightCombo_0",
+     "sec": 4.33,
+     "hit": 0.1,
+     "loop": false
+    },
+    {
+     "name": "GreenLightCombo_1",
+     "sec": 5.0,
+     "hit": 0.04,
+     "loop": false
+    },
+    {
+     "name": "GreenLightCombo_2",
+     "sec": 5.83,
+     "hit": 0.04,
+     "loop": false
+    },
+    {
+     "name": "GreenLightCombo_3",
+     "sec": 4.83,
+     "hit": 0.04,
+     "loop": false
+    },
+    {
+     "name": "GreenLightCombo_4",
+     "sec": 6.0,
+     "hit": 0.13,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack",
+     "sec": 7.17,
+     "hit": 0.08,
+     "loop": false
+    },
+    {
+     "name": "Interection",
+     "sec": 2.05,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashAttack",
+     "sec": 6.67,
+     "hit": 0.02,
+     "loop": false
+    },
+    {
+     "name": "HitHeavy_Left_GreenLight",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitHeavy_Middle_GreenLight",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitHeavy_Right_GreenLight",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitLeft_GreenLight",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitMiddle_GreenLight",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "HitRight_GreenLight",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "JumpNextLevel",
+     "sec": 1.43,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Die",
+     "sec": 1.57,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashFront",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashBack",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Born",
+     "sec": 14.5,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Left",
+     "sec": 3.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_LeftDown",
+     "sec": 3.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Right",
+     "sec": 3.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_RightDown",
+     "sec": 3.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "NormalAttack_QTE_GreenLight",
+     "sec": 4.0,
+     "hit": 0.24,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack_QTE_GreenLight",
+     "sec": 4.33,
+     "hit": 0.24,
+     "loop": false
+    },
+    {
+     "name": "DashAttack_QTE_GreenLight",
+     "sec": 4.17,
+     "hit": 0.26,
+     "loop": false
+    }
+   ],
+   "voices": [
+    "BuffChooseVoice_1005_1_JP",
+    "BuffChooseVoice_1005_2_JP",
+    "BuffChooseVoice_1005_3_JP",
+    "BuffEquipVoice_1005_1_JP",
+    "BuffEquipVoice_1005_2_JP",
+    "BuffEquipVoice_1005_3_JP",
+    "ChooseCharVocie_1005_1_JP",
+    "ChooseCharVocie_1005_2_JP",
+    "DieVocie_1005_1_JP",
+    "DieVocie_1005_2_JP",
+    "DieVocie_1005_3_JP",
+    "EquipWearVocie_1005_1_JP",
+    "EquipWearVocie_1005_2_JP",
+    "EquipWearVocie_1005_3_JP",
+    "FightStartVoice_1005_1_JP",
+    "FightStartVoice_1005_2_JP",
+    "FightWellVoice_1005_1_JP",
+    "FightWellVoice_1005_2_JP",
+    "FightWellVoice_1005_3_JP",
+    "FightWellVoice_1005_4_JP",
+    "FightWellVoice_1005_5_JP",
+    "FightWellVoice_1005_6_JP",
+    "HardAttackVoice_1005_1_JP",
+    "HardAttackVoice_1005_2_JP",
+    "HardAttackVoice_1005_3_JP",
+    "HardHurtVocie_1005_1_JP",
+    "HardHurtVocie_1005_2_JP",
+    "HardHurtVocie_1005_3_JP",
+    "HealthLowVocie_1005_1_JP",
+    "HealthLowVocie_1005_2_JP",
+    "HealthLowVocie_1005_3_JP",
+    "LightAttackVoice_1005_1_JP",
+    "LightAttackVoice_1005_2_JP",
+    "LightAttackVoice_1005_3_JP",
+    "LightHurtVocie_1005_1_JP",
+    "LightHurtVocie_1005_2_JP",
+    "LightHurtVocie_1005_3_JP",
+    "ShowPoseVocie_1005_JP",
+    "SceneChat_1005_1_JP",
+    "SceneChat_1005_2_JP",
+    "SceneChat_1005_3_JP",
+    "SceneChat_1005_4_JP",
+    "SceneChat_1005_5_JP",
+    "SceneChat_1005_7_JP",
+    "SceneChat_1005_8_JP",
+    "SceneChat_1005_9_JP",
+    "SceneChat_1005_10_JP",
+    "SceneChat_1005_11_JP",
+    "SceneChat_1005_12_JP",
+    "SceneChat_1005_13_JP",
+    "SceneChat_1005_14_JP",
+    "SceneChat_1005_15_JP",
+    "SceneChat_1005_16_JP",
+    "SceneChat_1005_18_JP",
+    "SceneChat_1005_19_JP",
+    "SceneChat_1005_20_JP",
+    "SceneChat_1005_21_JP",
+    "SceneChat_1005_22_JP",
+    "SceneChat_1005_23_JP",
+    "SceneChat_1005_25_JP",
+    "SceneChat_1005_27_JP",
+    "SceneChat_1005_28_JP",
+    "SceneChat_1005_29_JP",
+    "SceneChat_1005_30_JP"
+   ]
+  },
+  "1006": {
+   "name": [
+    "赤悠",
+    "RedLight",
+    "赤悠"
+   ],
+   "weapon": 1041,
+   "motions": [
+    {
+     "name": "Run",
+     "sec": 0.51,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunStop",
+     "sec": 2.5,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRun",
+     "sec": 0.4,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RunTurn",
+     "sec": 1.2,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "FastRunStop",
+     "sec": 3.5,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Defence_1",
+     "sec": 3.83,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Defence_2",
+     "sec": 3.83,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DefenceAccept",
+     "sec": 4.13,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Idle",
+     "sec": 2.0,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "RedLightCombo0",
+     "sec": 3.83,
+     "hit": 0.08,
+     "loop": false
+    },
+    {
+     "name": "RedLightCombo1",
+     "sec": 3.5,
+     "hit": 0.05,
+     "loop": false
+    },
+    {
+     "name": "RedLightCombo2",
+     "sec": 3.33,
+     "hit": 0.05,
+     "loop": false
+    },
+    {
+     "name": "RedLightCombo3",
+     "sec": 5.17,
+     "hit": 0.06,
+     "loop": false
+    },
+    {
+     "name": "RedLightCombo4",
+     "sec": 5.33,
+     "hit": 0.13,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack",
+     "sec": 5.67,
+     "hit": 0.11,
+     "loop": false
+    },
+    {
+     "name": "Interection",
+     "sec": 2.05,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashAttack",
+     "sec": 5.5,
+     "hit": 0.08,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Middile_Official",
+     "sec": 4.1,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Right_Official",
+     "sec": 4.1,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitLeft",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitMiddle",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitRight_Official",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "JumpNextLevel",
+     "sec": 1.43,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Die",
+     "sec": 1.6,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashFront",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashBack",
+     "sec": 2.83,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Born",
+     "sec": 10.17,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Left",
+     "sec": 2.6,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Right",
+     "sec": 2.57,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_LeftDown",
+     "sec": 2.57,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_RightDown",
+     "sec": 2.57,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack_QTE_RedLight",
+     "sec": 4.0,
+     "hit": 0.26,
+     "loop": false
+    },
+    {
+     "name": "NormalAttack_QTE_RedLight",
+     "sec": 3.83,
+     "hit": 0.31,
+     "loop": false
+    },
+    {
+     "name": "DashAttack_QTE_RedLight",
+     "sec": 4.0,
+     "hit": 0.26,
+     "loop": false
+    }
+   ],
+   "voices": [
+    "BuffChooseVoice_1006_1_JP",
+    "BuffChooseVoice_1006_2_JP",
+    "BuffChooseVoice_1006_3_JP",
+    "BuffEquipVoice_1006_1_JP",
+    "BuffEquipVoice_1006_2_JP",
+    "BuffEquipVoice_1006_3_JP",
+    "ChooseCharVocie_1006_1_JP",
+    "ChooseCharVocie_1006_2_JP",
+    "DieVocie_1006_1_JP",
+    "DieVocie_1006_2_JP",
+    "DieVocie_1006_3_JP",
+    "EquipWearVocie_1006_1_JP",
+    "EquipWearVocie_1006_2_JP",
+    "EquipWearVocie_1006_3_JP",
+    "FightStartVoice_1006_1_JP",
+    "FightStartVoice_1006_2_JP",
+    "FightWellVoice_1006_1_JP",
+    "FightWellVoice_1006_2_JP",
+    "FightWellVoice_1006_3_JP",
+    "FightWellVoice_1006_4_JP",
+    "FightWellVoice_1006_5_JP",
+    "FightWellVoice_1006_6_JP",
+    "HardAttackVoice_1006_1_JP",
+    "HardAttackVoice_1006_2_JP",
+    "HardAttackVoice_1006_3_JP",
+    "HardHurtVocie_1006_1_JP",
+    "HardHurtVocie_1006_2_JP",
+    "HardHurtVocie_1006_3_JP",
+    "HealthLowVocie_1006_1_JP",
+    "HealthLowVocie_1006_2_JP",
+    "HealthLowVocie_1006_3_JP",
+    "LightAttackVoice_1006_1_JP",
+    "LightAttackVoice_1006_2_JP",
+    "LightAttackVoice_1006_3_JP",
+    "LightHurtVocie_1006_1_JP",
+    "LightHurtVocie_1006_2_JP",
+    "LightHurtVocie_1006_3_JP",
+    "ShowPoseVocie_1006_JP",
+    "SceneChat_1006_1_JP",
+    "SceneChat_1006_3_JP",
+    "SceneChat_1006_4_JP",
+    "SceneChat_1006_5_JP",
+    "SceneChat_1006_6_JP",
+    "SceneChat_1006_7_JP",
+    "SceneChat_1006_8_JP",
+    "SceneChat_1006_9_JP",
+    "SceneChat_1006_10_JP",
+    "SceneChat_1006_11_JP",
+    "SceneChat_1006_12_JP",
+    "SceneChat_1006_13_JP",
+    "SceneChat_1006_14_JP",
+    "SceneChat_1006_15_JP",
+    "SceneChat_1006_16_JP",
+    "SceneChat_1006_17_JP",
+    "SceneChat_1006_18_JP",
+    "SceneChat_1006_19_JP",
+    "SceneChat_1006_20_JP",
+    "SceneChat_1006_22_JP",
+    "SceneChat_1006_25_JP",
+    "SceneChat_1006_26_JP",
+    "SceneChat_1006_28_JP",
+    "SceneChat_1006_29_JP"
+   ]
+  },
+  "1008": {
+   "name": [
+    "律真",
+    "K",
+    "律真"
+   ],
+   "weapon": null,
+   "motions": [
+    {
+     "name": "Run",
+     "sec": 0.6,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "Idle",
+     "sec": 1.67,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "GreyLightCombo0",
+     "sec": 2.67,
+     "hit": 0.15,
+     "loop": false
+    },
+    {
+     "name": "GreyLightCombo1",
+     "sec": 3.67,
+     "hit": 0.07,
+     "loop": false
+    },
+    {
+     "name": "GreyLightCombo2",
+     "sec": 3.5,
+     "hit": 0.08,
+     "loop": false
+    },
+    {
+     "name": "GreyLightCombo3",
+     "sec": 4.67,
+     "hit": 0.07,
+     "loop": false
+    },
+    {
+     "name": "GreyLightCombo4",
+     "sec": 3.33,
+     "hit": 0.13,
+     "loop": false
+    },
+    {
+     "name": "FastRun",
+     "sec": 0.4,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "FastRunStop",
+     "sec": 1.77,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RunStop",
+     "sec": 1.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashBack",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashFront",
+     "sec": 3.27,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RunTurn",
+     "sec": 1.43,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack",
+     "sec": 6.0,
+     "hit": 0.13,
+     "loop": false
+    },
+    {
+     "name": "DashAttack",
+     "sec": 4.67,
+     "hit": 0.08,
+     "loop": false
+    },
+    {
+     "name": "Defence",
+     "sec": 3.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DefenceAccept",
+     "sec": 2.83,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "GreyLightCombo4_DefenceAttack",
+     "sec": 3.67,
+     "hit": 0.23,
+     "loop": false
+    },
+    {
+     "name": "JumpNextLevel",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Born",
+     "sec": 10.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Left_Official",
+     "sec": 3.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Middile_Official",
+     "sec": 3.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Right_Official",
+     "sec": 3.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitLeft",
+     "sec": 1.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitMiddle",
+     "sec": 1.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitRight_Official",
+     "sec": 1.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Die",
+     "sec": 1.57,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Left",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_LeftDown",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Right",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_RightDown",
+     "sec": 3.0,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "NormalAttack_QTE_GreyLight",
+     "sec": 4.47,
+     "hit": 0.16,
+     "loop": false
+    },
+    {
+     "name": "DashAttack_QTE_GreyLight",
+     "sec": 3.5,
+     "hit": 0.26,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack_QTE_GreyLight",
+     "sec": 4.77,
+     "hit": 0.19,
+     "loop": false
+    }
+   ],
+   "voices": [
+    "BuffChooseVoice_1008_1_JP",
+    "BuffChooseVoice_1008_2_JP",
+    "BuffChooseVoice_1008_3_JP",
+    "BuffEquipVoice_1008_1_JP",
+    "BuffEquipVoice_1008_2_JP",
+    "BuffEquipVoice_1008_3_JP",
+    "ChooseCharVocie_1008_1_JP",
+    "ChooseCharVocie_1008_2_JP",
+    "DieVocie_1008_1_JP",
+    "DieVocie_1008_2_JP",
+    "DieVocie_1008_3_JP",
+    "EquipWearVocie_1008_1_JP",
+    "EquipWearVocie_1008_2_JP",
+    "EquipWearVocie_1008_3_JP",
+    "FightStartVoice_1008_1_JP",
+    "FightStartVoice_1008_2_JP",
+    "FightWellVoice_1008_1_JP",
+    "FightWellVoice_1008_2_JP",
+    "FightWellVoice_1008_3_JP",
+    "FightWellVoice_1008_4_JP",
+    "FightWellVoice_1008_5_JP",
+    "FightWellVoice_1008_6_JP",
+    "HardAttackVoice_1008_1_JP",
+    "HardAttackVoice_1008_2_JP",
+    "HardAttackVoice_1008_3_JP",
+    "HardHurtVocie_1008_1_JP",
+    "HardHurtVocie_1008_2_JP",
+    "HardHurtVocie_1008_3_JP",
+    "HealthLowVocie_1008_1_JP",
+    "HealthLowVocie_1008_2_JP",
+    "HealthLowVocie_1008_3_JP",
+    "LightAttackVoice_1008_1_JP",
+    "LightAttackVoice_1008_2_JP",
+    "LightAttackVoice_1008_3_JP",
+    "LightHurtVocie_1008_1_JP",
+    "LightHurtVocie_1008_2_JP",
+    "LightHurtVocie_1008_3_JP",
+    "ShowPoseVocie_1008_JP",
+    "SceneChat_1008_3_JP",
+    "SceneChat_1008_5_JP",
+    "SceneChat_1008_7_JP",
+    "SceneChat_1008_8_JP",
+    "SceneChat_1008_9_JP",
+    "SceneChat_1008_11_JP",
+    "SceneChat_1008_12_JP"
+   ]
+  },
+  "1009": {
+   "name": [
+    "霜色",
+    "Froste",
+    "霜色"
+   ],
+   "weapon": null,
+   "motions": [
+    {
+     "name": "Idle",
+     "sec": 2.67,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "BlackLight_NormalAttack_0",
+     "sec": 2.83,
+     "hit": 0.16,
+     "loop": false
+    },
+    {
+     "name": "BlackLight_NormalAttack_1",
+     "sec": 3.5,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "BlackLight_NormalAttack_2",
+     "sec": 3.0,
+     "hit": 0.09,
+     "loop": false
+    },
+    {
+     "name": "BlackLight_NormalAttack_3",
+     "sec": 4.83,
+     "hit": 0.06,
+     "loop": false
+    },
+    {
+     "name": "BlackLight_NormalAttack_4",
+     "sec": 3.83,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "BlackLight_NormalAttack_4_DefenceAttack",
+     "sec": 3.83,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "BlackLight_NormalAttack_4_DefenceAcceptAttack",
+     "sec": 3.83,
+     "hit": 0.2,
+     "loop": false
+    },
+    {
+     "name": "Run",
+     "sec": 0.67,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "FastRun",
+     "sec": 0.4,
+     "hit": null,
+     "loop": true
+    },
+    {
+     "name": "FastRunStop",
+     "sec": 2.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RunStop",
+     "sec": 2.23,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashBack",
+     "sec": 4.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashFront",
+     "sec": 4.07,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RunTurn",
+     "sec": 1.2,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack",
+     "sec": 6.2,
+     "hit": 0.1,
+     "loop": false
+    },
+    {
+     "name": "DashAttack",
+     "sec": 4.67,
+     "hit": 0.08,
+     "loop": false
+    },
+    {
+     "name": "Defence",
+     "sec": 3.17,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DefenceAccept",
+     "sec": 5.6,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "JumpNextLevel",
+     "sec": 1.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Born",
+     "sec": 21.67,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Left_Official",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Middile_Official",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitHeavy_Right_Official",
+     "sec": 4.37,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitLeft",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitMiddle",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "RedLight_HitRight_Official",
+     "sec": 2.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Die",
+     "sec": 1.73,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Left",
+     "sec": 2.8,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_LeftDown",
+     "sec": 3.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_Right",
+     "sec": 3.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "Parry_RightDown",
+     "sec": 3.33,
+     "hit": null,
+     "loop": false
+    },
+    {
+     "name": "DashAttack_QTE_BlackLight",
+     "sec": 7.83,
+     "hit": 0.17,
+     "loop": false
+    },
+    {
+     "name": "NormalAttack_QTE_BlackLight",
+     "sec": 5.5,
+     "hit": 0.22,
+     "loop": false
+    },
+    {
+     "name": "SpecialAttack_QTE_BlackLight",
+     "sec": 5.17,
+     "hit": 0.06,
+     "loop": false
+    }
+   ],
+   "voices": [
+    "BuffChooseVoice_1009_1_JP",
+    "BuffChooseVoice_1009_2_JP",
+    "BuffChooseVoice_1009_3_JP",
+    "BuffEquipVoice_1009_1_JP",
+    "BuffEquipVoice_1009_2_JP",
+    "BuffEquipVoice_1009_3_JP",
+    "ChooseCharVocie_1009_1_JP",
+    "ChooseCharVocie_1009_2_JP",
+    "DieVocie_1009_1_JP",
+    "DieVocie_1009_2_JP",
+    "DieVocie_1009_3_JP",
+    "EquipWearVocie_1009_1_JP",
+    "EquipWearVocie_1009_2_JP",
+    "EquipWearVocie_1009_3_JP",
+    "FightStartVoice_1009_1_JP",
+    "FightStartVoice_1009_2_JP",
+    "FightWellVoice_1009_1_JP",
+    "FightWellVoice_1009_2_JP",
+    "FightWellVoice_1009_3_JP",
+    "FightWellVoice_1009_4_JP",
+    "FightWellVoice_1009_5_JP",
+    "FightWellVoice_1009_6_JP",
+    "HardAttackVoice_1009_1_JP",
+    "HardAttackVoice_1009_2_JP",
+    "HardAttackVoice_1009_3_JP",
+    "HardHurtVocie_1009_1_JP",
+    "HardHurtVocie_1009_2_JP",
+    "HardHurtVocie_1009_3_JP",
+    "HealthLowVocie_1009_1_JP",
+    "HealthLowVocie_1009_2_JP",
+    "HealthLowVocie_1009_3_JP",
+    "LightAttackVoice_1009_1_JP",
+    "LightAttackVoice_1009_2_JP",
+    "LightAttackVoice_1009_3_JP",
+    "LightHurtVocie_1009_1_JP",
+    "LightHurtVocie_1009_2_JP",
+    "LightHurtVocie_1009_3_JP",
+    "ShowPoseVocie_1009_JP",
+    "SceneChat_1009_1_JP",
+    "SceneChat_1009_2_JP",
+    "SceneChat_1009_3_JP",
+    "SceneChat_1009_4_JP",
+    "SceneChat_1009_5_JP",
+    "SceneChat_1009_6_JP",
+    "SceneChat_1009_8_JP",
+    "SceneChat_1009_9_JP",
+    "SceneChat_1009_10_JP",
+    "SceneChat_1009_11_JP",
+    "SceneChat_1009_12_JP",
+    "SceneChat_1009_13_JP",
+    "SceneChat_1009_16_JP",
+    "SceneChat_1009_17_JP",
+    "SceneChat_1009_18_JP",
+    "SceneChat_1009_20_JP",
+    "SceneChat_1009_22_JP",
+    "SceneChat_1009_23_JP",
+    "SceneChat_1009_24_JP"
+   ]
+  }
+ }
+}

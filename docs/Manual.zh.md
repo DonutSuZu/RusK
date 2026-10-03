@@ -124,6 +124,7 @@ Ved疗愈所\                 ← 游戏文件夹 (有 ved.exe)
 
 - 新角色不会保存在存档中。卸载 Pack 或 Mod 也不会损坏存档
 - 制作方法: [docs/ModPack.md](ModPack.md) (日文)
+- 自己制作时推荐使用 **RusK Pack Creator** (`RusK-Pack-Creator.exe`, 见 [发布页面](https://github.com/DonutSuZu/RusK/releases)): 填好各项后点击"放入游戏"即可生成 Pack
 
 ---
 
