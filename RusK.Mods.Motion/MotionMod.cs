@@ -57,8 +57,21 @@ public sealed class MotionMod : RuskMod
             }
         }
         catch (Exception e) { Ctx.Log.Warning($"Motion: motions フォルダを読めません: {e.Message}"); }
+        // キャラの Mod Pack の動き (character.json の "motions" に書いたファイル)
+        Packs = CharacterPacks.Load(Ctx.DataDirectory, s => Ctx.Log.Warning("Motion: " + s));
+        var done = new HashSet<string>(list.Select(m => m.File), StringComparer.OrdinalIgnoreCase);
+        foreach (var p in Packs)
+            foreach (var (file, _, _) in p.Motions.Values)
+            {
+                if (!done.Add(file) || !File.Exists(file)) continue;
+                try { list.AddRange(GltfMotion.Load(file)); }
+                catch (Exception e) { Ctx.Log.Warning($"Motion: {Path.GetFileName(file)} を読めません: {e.Message}"); }
+            }
         return list;
     }
+
+    /// <summary>キャラの Mod Pack (LoadAll で読み直す)</summary>
+    internal static List<CharacterPack> Packs = new();
 
     internal static void OpenFolder()
     {

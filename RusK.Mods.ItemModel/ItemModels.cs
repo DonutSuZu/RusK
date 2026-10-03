@@ -140,6 +140,35 @@ internal static class ItemModels
             }
         }
         catch (Exception e) { VrmEnv.Ctx?.Log.Warning($"ItemModel: assignments.txt を読めません: {e.Message}"); }
+        AddPacks();
+    }
+
+    /// <summary>キャラの Mod Pack (character.json の "weapon") の武器。手で割り当てたものが優先。保存はしない</summary>
+    private static readonly HashSet<string> PackKeys = new();
+
+    private static void AddPacks()
+    {
+        PackKeys.Clear();
+        try
+        {
+            foreach (var p in RusK.Mods.Shared.CharacterPacks.Load(VrmEnv.Ctx.DataDirectory, s => VrmEnv.Ctx?.Log.Warning("ItemModel: " + s)))
+            {
+                if (p.WeaponFile == null || p.WeaponEquip < 0) continue;
+                var key = $"{p.Id}:{p.WeaponEquip}";
+                if (Assignments.ContainsKey(key)) continue;
+                if (!System.IO.File.Exists(p.WeaponFile)) { VrmEnv.Ctx?.Log.Warning($"ItemModel: キャラ {p.Id} の武器がありません: {p.WeaponFile}"); continue; }
+                Assignments[key] = new Assignment
+                {
+                    File = p.WeaponFile,
+                    Position = new Vector3(p.WeaponPosition[0], p.WeaponPosition[1], p.WeaponPosition[2]),
+                    Rotation = new Vector3(p.WeaponRotation[0], p.WeaponRotation[1], p.WeaponRotation[2]),
+                    Scale = p.WeaponScale, Glow = p.WeaponGlow, GlowColor = p.WeaponGlowColor, GlowStrength = p.WeaponGlowStrength,
+                };
+                PackKeys.Add(key);
+            }
+            if (PackKeys.Count > 0) VrmEnv.Ctx?.Log.Info($"ItemModel: Mod Pack の武器 {PackKeys.Count} 個");
+        }
+        catch (Exception e) { VrmEnv.Ctx?.Log.Warning($"ItemModel: Mod Pack を読めません: {e.Message}"); }
     }
 
     private static DateTime _stamp;
@@ -167,7 +196,7 @@ internal static class ItemModels
         {
             Directory.CreateDirectory(VrmEnv.Ctx.DataDirectory);
             string V(Vector3 v) => string.Join(",", new[] { v.x, v.y, v.z }.Select(f => f.ToString("0.###", CultureInfo.InvariantCulture)));
-            System.IO.File.WriteAllLines(AssignFile, Assignments.Select(kv =>
+            System.IO.File.WriteAllLines(AssignFile, Assignments.Where(kv => !PackKeys.Contains(kv.Key)).Select(kv =>
                 $"{kv.Key}|{kv.Value.File}|{V(kv.Value.Position)}|{V(kv.Value.Rotation)}|" +
                 kv.Value.Scale.ToString("0.###", CultureInfo.InvariantCulture) +
                 $"|{(kv.Value.Glow ? 1 : 0)}|{kv.Value.GlowColor}|" +

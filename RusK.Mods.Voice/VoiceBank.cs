@@ -57,6 +57,22 @@ internal sealed class VoiceBank
         {
             _ctx.Log.Warning($"Voice: フォルダを読めません: {e.Message}");
         }
+        // キャラの Mod Pack の声 (character.json の "voices"、無ければ voices フォルダ): そのキャラ専用
+        _packOwner.Clear();
+        try
+        {
+            foreach (var p in RusK.Mods.Shared.CharacterPacks.FromFolder(Path.GetFullPath(Path.Combine(Folder, "..", "characters"))))
+            {
+                if (p.Voices == null || !Directory.Exists(p.Voices)) continue;
+                foreach (var path in Directory.EnumerateFiles(p.Voices, "*.*", SearchOption.AllDirectories)
+                             .Where(x => Extensions.Contains(Path.GetExtension(x).ToLowerInvariant())))
+                {
+                    _packOwner[Path.GetFullPath(path)] = p.Id;
+                    _pending.Enqueue(path);
+                }
+            }
+        }
+        catch (Exception e) { _ctx.Log.Warning($"Voice: Mod Pack の声を読めません: {e.Message}"); }
         _total = _pending.Count;
         _failed = 0;
     }
@@ -144,10 +160,13 @@ internal sealed class VoiceBank
     }
 
     /// <summary>voices の直下が数字のフォルダ (9000 以上 = 新しいキャラの番号) なら、その番号。無ければ -1</summary>
+    private readonly Dictionary<string, long> _packOwner = new(StringComparer.OrdinalIgnoreCase);
+
     private long OwnerOf(string path)
     {
         try
         {
+            if (_packOwner.TryGetValue(Path.GetFullPath(path), out var packId)) return packId;
             var rel = Path.GetRelativePath(Folder, path);
             var first = rel.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
             return rel.Contains(Path.DirectorySeparatorChar) && long.TryParse(first, out var id) && id >= 9000 ? id : -1;

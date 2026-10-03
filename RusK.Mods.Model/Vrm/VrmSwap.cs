@@ -233,6 +233,27 @@ internal static class VrmSwap
             }
         }
         catch (Exception e) { ModelLab.Ctx?.Log.Warning($"Model: assignments.txt を読めません: {e.Message}"); }
+        finally { AddPacks(); }
+    }
+
+    /// <summary>キャラの Mod Pack (character.json の "model") の見た目。手で割り当てたものが優先。保存はしない</summary>
+    private static readonly Dictionary<long, string> PackModels = new();
+
+    private static void AddPacks()
+    {
+        PackModels.Clear();
+        try
+        {
+            foreach (var p in CharacterPacks.Load(ModelLab.Ctx.DataDirectory, s => ModelLab.Ctx?.Log.Warning("Model: " + s)))
+            {
+                if (p.Model == null || Assignments.ContainsKey(p.Id)) continue;
+                if (!System.IO.File.Exists(p.Model)) { ModelLab.Ctx?.Log.Warning($"Model: キャラ {p.Id} のモデルがありません: {p.Model}"); continue; }
+                Assignments[p.Id] = p.Model;
+                PackModels[p.Id] = p.Model;
+            }
+            if (PackModels.Count > 0) ModelLab.Ctx?.Log.Info($"Model: Mod Pack の見た目 {PackModels.Count} 個");
+        }
+        catch (Exception e) { ModelLab.Ctx?.Log.Warning($"Model: Mod Pack を読めません: {e.Message}"); }
     }
 
     private static void SaveAssignments()
@@ -240,7 +261,10 @@ internal static class VrmSwap
         try
         {
             Directory.CreateDirectory(ModelLab.Ctx.DataDirectory);
-            System.IO.File.WriteAllLines(AssignFile, Assignments.Select(kv => $"{kv.Key}={kv.Value}"), new UTF8Encoding(false));
+            // Mod Pack から足したもの (変えていないもの) は書かない
+            System.IO.File.WriteAllLines(AssignFile, Assignments
+                .Where(kv => !(PackModels.TryGetValue(kv.Key, out var pm) && pm == kv.Value))
+                .Select(kv => $"{kv.Key}={kv.Value}"), new UTF8Encoding(false));
         }
         catch (Exception e) { ModelLab.Ctx?.Log.Warning($"Model: assignments.txt を保存できません: {e.Message}"); }
     }

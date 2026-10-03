@@ -144,6 +144,34 @@ internal static class MotionBinder
             }
         }
         catch (Exception e) { MotionMod.Ctx.Log.Warning($"Motion: bindings.txt を読めません: {e.Message}"); }
+        AddPacks();
+    }
+
+    /// <summary>キャラの Mod Pack (character.json の "motions") の割り当て。手で割り当てたものが優先。保存はしない</summary>
+    private static readonly Dictionary<string, string> PackBindings = new();
+
+    private static void AddPacks()
+    {
+        PackBindings.Clear();
+        try
+        {
+            _ = MotionLibrary.All; // Mod Pack も一緒に読む (MotionMod.Packs が決まる)
+            foreach (var p in MotionMod.Packs)
+                foreach (var kv in p.Motions)
+                {
+                    var key = Key(p.Id, kv.Key);
+                    if (Bindings.ContainsKey(key)) continue;
+                    var (file, anim, hit) = kv.Value;
+                    var rel = Path.GetRelativePath(MotionMod.Folder, file);
+                    anim ??= MotionLibrary.All.FirstOrDefault(m => string.Equals(m.File, file, StringComparison.OrdinalIgnoreCase))?.Name;
+                    if (anim == null) { MotionMod.Ctx.Log.Warning($"Motion: キャラ {p.Id} の {kv.Key} の動きがありません: {file}"); continue; }
+                    var value = $"{rel}#{anim}" + (hit is float h ? "@" + h.ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
+                    Bindings[key] = value;
+                    PackBindings[key] = value;
+                }
+            if (PackBindings.Count > 0) MotionMod.Ctx.Log.Info($"Motion: Mod Pack の動きの割り当て {PackBindings.Count} 個");
+        }
+        catch (Exception e) { MotionMod.Ctx.Log.Warning($"Motion: Mod Pack を読めません: {e.Message}"); }
     }
 
     private static void Save()
@@ -151,7 +179,9 @@ internal static class MotionBinder
         try
         {
             Directory.CreateDirectory(MotionMod.Ctx.DataDirectory);
-            File.WriteAllLines(FilePath, Bindings.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}"), new UTF8Encoding(false));
+            File.WriteAllLines(FilePath, Bindings
+                .Where(kv => !(PackBindings.TryGetValue(kv.Key, out var pv) && pv == kv.Value))
+                .OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}"), new UTF8Encoding(false));
         }
         catch (Exception e) { MotionMod.Ctx.Log.Warning($"Motion: bindings.txt を保存できません: {e.Message}"); }
     }
