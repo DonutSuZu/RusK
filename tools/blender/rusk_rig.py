@@ -58,6 +58,11 @@ def load(glb):
     bpy.ops.object.mode_set(mode="POSE")
     for pb in arm.pose.bones:
         pb.rotation_mode = "QUATERNION"
+        # 読み込んだ骨は回転の鍵が閉じていることがあり、画面で R を押しても回らない → 開けておく
+        pb.lock_rotation = (False, False, False)
+        pb.lock_rotation_w = False
+        pb.lock_rotations_4d = False
+        pb.lock_location = (False, False, False)
     bpy.context.scene.render.fps = 30
     return arm
 
