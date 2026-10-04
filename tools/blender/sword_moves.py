@@ -282,9 +282,10 @@ def build(rig_path, name, move, out_dir, preview_dir):
     rr.export(arm, os.path.join(out_dir, f"Sword{name}.glb"), anim)
 
 
-argv = sys.argv[sys.argv.index("--") + 1:]
-rig, out = argv[0], argv[1]
-preview = argv[2] if len(argv) > 2 and argv[2] not in MOVES else None
-names = [a for a in argv[2:] if a in MOVES] or list(MOVES)
-for n in names:
-    build(rig, n, MOVES[n], out, preview)
+if __name__ == "__main__":  # ほかのスクリプト (homura_templates.py) から技の姿勢を借りるときは動かさない
+    argv = sys.argv[sys.argv.index("--") + 1:]
+    rig, out = argv[0], argv[1]
+    preview = argv[2] if len(argv) > 2 and argv[2] not in MOVES else None
+    names = [a for a in argv[2:] if a in MOVES] or list(MOVES)
+    for n in names:
+        build(rig, n, MOVES[n], out, preview)
