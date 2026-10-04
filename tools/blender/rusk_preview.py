@@ -57,7 +57,13 @@ def _import_pmx(path):
 
 def setup(rig_glb, pmx, sword_pmx=None, sword_scale=1.0, save=None):
     game = rr.load(rig_glb)
-    bpy.ops.object.mode_set(mode="OBJECT")
+    return attach(game, pmx, sword_pmx, sword_scale, save)
+
+
+def attach(game, pmx, sword_pmx=None, sword_scale=1.0, save=None, pose_action="Idle"):
+    """読み込み済みのゲームの骨格 (雛形の .blend など) に、キャラの PMX をつなぐ。pose_action の最初のコマの姿勢でつなぐ"""
+    if bpy.context.object and bpy.context.object.mode != "OBJECT":
+        bpy.ops.object.mode_set(mode="OBJECT")
     for o in bpy.data.objects:
         if o.type in ("EMPTY", "CAMERA", "LIGHT") or o.name.startswith("Icosphere"):
             o.hide_set(True)
@@ -65,7 +71,7 @@ def setup(rig_glb, pmx, sword_pmx=None, sword_scale=1.0, save=None):
         b.hide = not (b.name.startswith("Bip001") or b.name in ("BN_weapon_01", "WeaponHolder_0"))
     game.data.display_type = "STICK"
     # 立ち姿勢でつなぐ (キャラの腕が下りている姿勢に近い方が、つないだときの誤差が少ない)
-    play("Idle", 0.0)
+    play(pose_action, 0.0)
 
     # ---- キャラ
     new = _import_pmx(pmx)
