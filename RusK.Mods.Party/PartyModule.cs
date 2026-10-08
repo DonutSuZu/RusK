@@ -13,7 +13,7 @@ namespace RusK.Mods.Party;
 /// アクティブ3人 (ZZZ 風のキャラ切り替え)。
 /// 選んだ仲間 2 人を戦闘ステージで控えに用意し、「次へ」「前へ」のキーで切り替える。
 /// </summary>
-[RuskMod("party", "Party", "1.5.1",
+[RuskMod("party", "Party", "1.6.0",
     Author = "you",
     GameVersion = "0.0.1878",
     Description = "アクティブ3人。仲間を選んで、戦闘中にキーでキャラを切り替える")]
@@ -142,12 +142,12 @@ public sealed class PartyModule : Module
 
     public override void OnUpdate()
     {
-        PartyManager.Cooldown = _cooldown.Value;
+        PartyManager.Cooldown = PartyBridge.ForcedCooldown >= 0f ? PartyBridge.ForcedCooldown : _cooldown.Value;
         PartyManager.SafeSwitch = _safeSwitch.Value;
         JustSwitch.Enabled = _just.Value;
         JustSwitch.Window = _justWindow.Value;
         JustSwitch.GuardTime = _guardTime.Value;
-        JustSwitch.IgnoreCooldown = _justIgnoreCooldown.Value;
+        JustSwitch.IgnoreCooldown = _justIgnoreCooldown.Value && !PartyBridge.ForceJustCooldown;
         BuffShare.Enabled = _shareBuffs.Value;
         NextKeyValue = _nextKey.Value;
         PrevKeyValue = _prevKey.Value;

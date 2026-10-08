@@ -1,0 +1,9 @@
+{
+  "回避にスタミナを使う縛り。3 人で共有の 1 本のゲージ。Party の切り替えのクールタイムも固定する": "A challenge mod: dodging uses stamina. One gauge shared by all three. Also locks the Party switch cooldown",
+  "回避にスタミナを使う縛り (パーティの 3 人で 1 本のゲージ)。無くなると回避できない。Party の切り替えのクールタイムも固定する": "Challenge: dodging uses stamina (one gauge shared by the three party members). You cannot dodge when it runs out. Also locks the Party switch cooldown",
+  "回避 1 回で使うスタミナ (ゲージは 100。少しでも残っていれば回避できる)": "Stamina used per dodge (the gauge is 100; you can dodge while any is left)",
+  "回避してから回復が始まるまでの時間": "Delay after a dodge before stamina starts to recover",
+  "1 秒に回復するスタミナ": "Stamina recovered per second",
+  "ジャスト回避が決まったときに返すスタミナ": "Stamina returned on a perfect dodge",
+  "Party の切り替えのクールタイム (固定。ジャスト切り替えにも効く)": "Party switch cooldown (locked; also applies to just switches)"
+}

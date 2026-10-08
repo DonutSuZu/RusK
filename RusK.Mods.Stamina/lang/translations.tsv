@@ -1,0 +1,8 @@
+# 元の文	英語	中国語 (簡体字)
+回避にスタミナを使う縛り。3 人で共有の 1 本のゲージ。Party の切り替えのクールタイムも固定する	A challenge mod: dodging uses stamina. One gauge shared by all three. Also locks the Party switch cooldown	回避消耗耐力的挑战 Mod。3 人共用 1 条耐力槽。同时固定 Party 的切换冷却
+回避にスタミナを使う縛り (パーティの 3 人で 1 本のゲージ)。無くなると回避できない。Party の切り替えのクールタイムも固定する	Challenge: dodging uses stamina (one gauge shared by the three party members). You cannot dodge when it runs out. Also locks the Party switch cooldown	挑战: 回避消耗耐力 (队伍 3 人共用 1 条耐力槽)。耐力耗尽时无法回避。同时固定 Party 的切换冷却
+回避 1 回で使うスタミナ (ゲージは 100。少しでも残っていれば回避できる)	Stamina used per dodge (the gauge is 100; you can dodge while any is left)	每次回避消耗的耐力 (耐力槽为 100, 只要还有剩余就能回避)
+回避してから回復が始まるまでの時間	Delay after a dodge before stamina starts to recover	回避后到开始恢复耐力的时间
+1 秒に回復するスタミナ	Stamina recovered per second	每秒恢复的耐力
+ジャスト回避が決まったときに返すスタミナ	Stamina returned on a perfect dodge	完美回避时返还的耐力
+Party の切り替えのクールタイム (固定。ジャスト切り替えにも効く)	Party switch cooldown (locked; also applies to just switches)	Party 的切换冷却 (固定, 对完美切换也生效)

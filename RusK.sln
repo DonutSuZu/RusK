@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Motion", "RusK.Mo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Character", "RusK.Mods.Character\RusK.Mods.Character.csproj", "{079EE06C-2572-4738-93C9-4BDAC6C8BD49}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RusK.Mods.Stamina", "RusK.Mods.Stamina\RusK.Mods.Stamina.csproj", "{9AE946C9-C7F0-4B08-977C-7519E47A55B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,5 +110,9 @@ Global
 		{079EE06C-2572-4738-93C9-4BDAC6C8BD49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{079EE06C-2572-4738-93C9-4BDAC6C8BD49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{079EE06C-2572-4738-93C9-4BDAC6C8BD49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AE946C9-C7F0-4B08-977C-7519E47A55B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AE946C9-C7F0-4B08-977C-7519E47A55B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AE946C9-C7F0-4B08-977C-7519E47A55B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AE946C9-C7F0-4B08-977C-7519E47A55B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

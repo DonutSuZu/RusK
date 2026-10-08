@@ -16,7 +16,7 @@ namespace RusK.Mods.Party;
 public static class PartyBridge
 {
     /// <summary>入口の版。互換性のない変更をしたら上げる (2: バトルスタイルとエンドフィールド用の入口)</summary>
-    public const int Version = 4; // 3: 編成 (Party Formation 用)、4: エンドフィールドスタイルのキー
+    public const int Version = 5; // 3: 編成 (Party Formation 用)、4: エンドフィールドスタイルのキー、5: クールタイムの固定 (Stamina 用)
 
     /// <summary>パーティのキャラ (操作中のキャラと控え)</summary>
     public static List<PlayerController> Members()
@@ -73,6 +73,12 @@ public static class PartyBridge
 
     /// <summary>true の間、操作中のキャラは攻撃もダメージも受けない (切り替えガードも働かない)</summary>
     public static bool BlockHits;
+
+    /// <summary>ほかの Mod (Stamina など) が切り替えのクールタイムを固定するとき、その秒数 (0 以上)。負なら Party の設定のまま</summary>
+    public static float ForcedCooldown = -1f;
+
+    /// <summary>ほかの Mod が、ジャスト切り替えにもクールタイムを効かせるとき true (Party の設定より優先)</summary>
+    public static bool ForceJustCooldown;
 
     /// <summary>true の間、Party の切り替えキーで切り替えない (ほかの Mod がそのキーを使う)</summary>
     public static bool SuppressSwitchKeys;
