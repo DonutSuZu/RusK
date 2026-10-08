@@ -1,7 +1,13 @@
 {
   "schema": 1,
-  "gameVersion": "0.0.1878 (c9d3e1a)",
+  "gameVersion": "0.0.1881 (ca12417)",
   "news": [
+    {
+      "date": "2026-10-09",
+      "ja": "ゲーム 0.0.1881 に対応しました (今までの Mod がそのまま動きます。更新は要りません)。新しい縛りの Mod「Stamina」(回避にスタミナを使う) を試用版で公開しました: https://github.com/DonutSuZu/RusK/releases/tag/stamina-v1.0.0",
+      "en": "Supports game version 0.0.1881 (all existing mods keep working, no update needed). A new challenge mod, Stamina (dodging uses stamina), is out as a pre-release: https://github.com/DonutSuZu/RusK/releases/tag/stamina-v1.0.0",
+      "zh": "已支持游戏版本 0.0.1881 (现有 Mod 可直接使用, 无需更新)。新的挑战 Mod「Stamina」(回避消耗耐力) 以预发布版发布: https://github.com/DonutSuZu/RusK/releases/tag/stamina-v1.0.0"
+    },
     {
       "date": "2026-10-03",
       "ja": "キャラの Mod Pack が、フォルダを 1 つ置くだけで動くようになりました。使い方のマニュアル (入れ方・ファイルを置く場所・困ったとき) を公開しました: https://github.com/DonutSuZu/RusK/blob/main/docs/Manual.md",
