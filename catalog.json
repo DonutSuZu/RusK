@@ -1,7 +1,13 @@
 {
   "schema": 1,
-  "gameVersion": "0.0.1883 (a989fa1)",
+  "gameVersion": "0.0.1884 (81c7a24)",
   "news": [
+    {
+      "date": "2026-10-15",
+      "ja": "ゲーム 0.0.1884 に対応しました (今までの Mod がそのまま動きます。更新は要りません)。",
+      "en": "Supports game version 0.0.1884 (all existing mods keep working, no update needed).",
+      "zh": "已支持游戏版本 0.0.1884 (现有 Mod 可直接使用, 无需更新)。"
+    },
     {
       "date": "2026-10-12",
       "ja": "ゲーム 0.0.1882・0.0.1883 に対応しました (今までの Mod がそのまま動きます。更新は要りません)。",
